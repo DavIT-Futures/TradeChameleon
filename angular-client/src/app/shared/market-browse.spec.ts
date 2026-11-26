@@ -7,7 +7,7 @@ const quote = (symbol: string, mid: number, changePct: number, spread = 0.02): Q
 
 const instrument = (over: Partial<InstrumentView>): InstrumentView => ({
   symbol: 'X', name: 'X', assetClass: 'STOCK', exchange: 'X', currency: 'USD', decimals: 2, category: 'Other',
-  unit: 'share', contractSize: 1, pipSize: null, optionChain: false, description: '', quote: quote('X', 1, 0), ...over,
+  unit: 'share', contractSize: 1, pipSize: null, optionChain: false, description: '', marginRate: 0.2, leverage: 5, quote: quote('X', 1, 0), ...over,
 });
 
 const fmt = (v: number, d = 2) => v.toFixed(d);

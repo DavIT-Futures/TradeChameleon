@@ -79,6 +79,10 @@ const TYPE_LABELS: Record<OrderType, string> = { MARKET: 'Market', LIMIT: 'Limit
             <span class="muted">Estimated {{ side() === 'BUY' ? 'cost' : 'proceeds' }}</span>
             <strong class="num">{{ estimate() | price: 2 }} {{ instrument().currency }}</strong>
           </div>
+          <div class="margin-hint">
+            <span>As a CFD (1:{{ instrument().leverage }}) margin would be</span>
+            <span class="num">{{ estimate() * instrument().marginRate | price: 2 }} {{ instrument().currency }}</span>
+          </div>
           @if (problem(); as p) {
             <div class="alert alert--error" role="alert"><strong>{{ p.title }}</strong>{{ p.detail }}</div>
           }

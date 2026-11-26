@@ -29,12 +29,20 @@ import { TenantService } from '../../core/tenant';
           @if (auth.user(); as u) {
             <span>{{ u.name }} <span class="badge">{{ u.roles.join(', ') }}</span></span>
           }
+          <button class="btn btn--ghost btn--small" type="button" (click)="tenant.cycleScheme()"
+                  [attr.aria-label]="'Colour scheme: ' + tenant.scheme()" [title]="'Colour scheme: ' + tenant.scheme()">
+            {{ tenant.scheme() === 'dark' ? '☾' : tenant.scheme() === 'light' ? '☀' : '◐' }}
+          </button>
           <button class="btn btn--ghost btn--small" (click)="logout()">Sign out</button>
         </div>
       </header>
       <nav class="shell__nav" aria-label="Main">
         <a routerLink="/dashboard" routerLinkActive="active">▦ Dashboard</a>
         <a routerLink="/markets" routerLinkActive="active">↗ Markets</a>
+        <a routerLink="/screener" routerLinkActive="active">⌕ Screener</a>
+        <a routerLink="/compare" routerLinkActive="active">⇄ Compare</a>
+        <a routerLink="/calendar" routerLinkActive="active">▤ Calendar</a>
+        <a routerLink="/news" routerLinkActive="active">✎ News</a>
         <a routerLink="/portfolio" routerLinkActive="active">◔ Portfolio</a>
         <a routerLink="/account" routerLinkActive="active">≡ Account</a>
         <a routerLink="/alerts" routerLinkActive="active">🔔 Alerts</a>

@@ -8,12 +8,13 @@ import { MoneyPipe, PercentPipe, PricePipe, QuantityPipe } from '../../core/form
 import { PriceStreamService } from '../../core/price-stream';
 import { toProblem } from '../../core/problem';
 import { ToastService } from '../../core/toast';
+import { RiskCard } from './risk-card';
 
 type StatusFilter = Order['status'] | 'ALL';
 
 @Component({
   selector: 'tc-portfolio',
-  imports: [RouterLink, MoneyPipe, PercentPipe, PricePipe, QuantityPipe],
+  imports: [RouterLink, RiskCard, MoneyPipe, PercentPipe, PricePipe, QuantityPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -72,6 +73,7 @@ type StatusFilter = Order['status'] | 'ALL';
             </table>
           </div>
         </section>
+        <tc-risk-card />
       } @else if (portfolio.isLoading()) {
         <div class="card"><div class="skeleton" style="block-size: 8rem"></div></div>
       }

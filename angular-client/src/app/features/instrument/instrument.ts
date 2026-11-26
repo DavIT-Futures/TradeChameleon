@@ -12,6 +12,7 @@ import { every } from '../../shared/polling';
 import { PriceChart } from '../../shared/price-chart';
 import { AlertCard } from './alert-card';
 import { ContractCard } from './contract-card';
+import { NewsCard } from './news-card';
 import { OptionChainCard } from './option-chain-card';
 import { DepthCard } from './depth-card';
 import { OrderTicket } from './order-ticket';
@@ -21,7 +22,7 @@ const INTERVAL_MS: Record<Interval, number> = { '5s': 5_000, '15s': 15_000, '1m'
 
 @Component({
   selector: 'tc-instrument',
-  imports: [RouterLink, PriceChart, CandleChart, PricePipe, PercentPipe, OrderTicket, DepthCard, AlertCard, ContractCard, OptionChainCard],
+  imports: [RouterLink, PriceChart, CandleChart, PricePipe, PercentPipe, OrderTicket, DepthCard, AlertCard, ContractCard, OptionChainCard, NewsCard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -79,6 +80,7 @@ const INTERVAL_MS: Record<Interval, number> = { '5s': 5_000, '15s': 15_000, '1m'
               }
             </section>
             <tc-depth-card [symbol]="i.symbol" [decimals]="i.decimals" />
+            <tc-news-card [symbol]="i.symbol" />
           </div>
           <div class="stack">
             @if (quote(); as q) {

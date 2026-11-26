@@ -1,9 +1,20 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import type { Tenant } from '../api/types';
+import type { Tenant, Theme } from '../api/types';
+import { SchemePreference, themeFor } from '../shared/insights';
 
 const STORAGE_KEY = 'tc.tenant';
+const SCHEME_KEY = 'tc.scheme';
+
+function storedScheme(): SchemePreference {
+  try {
+    const v = localStorage.getItem(SCHEME_KEY);
+    return v === 'light' || v === 'dark' ? v : 'brand';
+  } catch {
+    return 'brand';
+  }
+}
 
 /**
  * Which broker does this browser tab belong to? Mirrors the backend's resolution order:
@@ -25,8 +36,8 @@ export function resolveTenantFromLocation(location: Pick<Location, 'hostname' | 
 }
 
 /** Writes the tenant theme into CSS custom properties; the whole UI re-skins instantly. */
-export function applyTheme(tenant: Tenant, root: HTMLElement = document.documentElement): void {
-  const t = tenant.theme;
+export function applyTheme(tenant: Tenant, root: HTMLElement = document.documentElement, theme: Theme = tenant.theme): void {
+  const t = theme;
   const vars: Record<string, string> = {
     '--tc-primary': t.primary,
     '--tc-on-primary': t.onPrimary,
@@ -62,12 +73,33 @@ export class TenantService {
   readonly locale = computed(() => this.loaded()?.locale ?? 'en-GB');
   readonly currency = computed(() => this.loaded()?.currency ?? 'GBP');
   readonly features = computed(() => this.loaded()?.features);
+  /** User override of the broker's colour scheme: 'brand' (default), 'light' or 'dark'. */
+  readonly scheme = signal<SchemePreference>(storedScheme());
+
+  constructor() {
+    // Re-skin whenever the broker or the user's scheme preference changes.
+    effect(() => {
+      const tenant = this.loaded();
+      if (tenant) applyTheme(tenant, document.documentElement, themeFor(tenant.theme, this.scheme()));
+    });
+  }
+
+  /** brand → dark → light → brand */
+  cycleScheme(): void {
+    const next: SchemePreference = this.scheme() === 'brand' ? 'dark' : this.scheme() === 'dark' ? 'light' : 'brand';
+    this.scheme.set(next);
+    try {
+      localStorage.setItem(SCHEME_KEY, next);
+    } catch {
+      /* private mode: the choice simply is not remembered */
+    }
+  }
 
   /** Called by provideAppInitializer: the app renders only once the brand is known (no flash of wrong theme). */
   async load(): Promise<Tenant> {
     const tenant = await firstValueFrom(this.http.get<Tenant>('/api/tenants/current'));
     this.loaded.set(tenant);
-    applyTheme(tenant);
+    applyTheme(tenant, document.documentElement, themeFor(tenant.theme, this.scheme()));
     document.title = tenant.name;
     const icon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
     if (icon) icon.href = tenant.logoUrl;
