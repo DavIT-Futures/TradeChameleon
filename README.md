@@ -1,4 +1,4 @@
-﻿# 🦎 TradeChameleon
+# 🦎 TradeChameleon
 
 [![Release](https://img.shields.io/github/v/release/DavIT-Futures/TradeChameleon?color=brightgreen&label=Release)](https://github.com/DavIT-Futures/TradeChameleon/releases/latest)
 [![CI](https://github.com/DavIT-Futures/TradeChameleon/actions/workflows/ci.yml/badge.svg)](https://github.com/DavIT-Futures/TradeChameleon/actions/workflows/ci.yml)
@@ -25,12 +25,16 @@ markup and feature flags. One broker is portfolio-only (no trading).
 | React client | React 19, Vite, React Router, TanStack Query, `useSyncExternalStore`, Vitest + Testing Library |
 | Styling | Plain modern CSS shared by both clients, themed with custom properties |
 
-📘 **Technical guide (36 chapters, Polish/English, Mermaid diagrams, real code and real API responses):
+📘 **Technical guide (38 chapters, Polish/English, Mermaid diagrams, real code and real API responses):
 [davit-futures.github.io/TradeChameleon](https://davit-futures.github.io/TradeChameleon/)**. The source is
 [`docs/guide.html`](docs/guide.html); the [Publish guide](.github/workflows/pages.yml) workflow deploys it to GitHub Pages on every push to `main`.
 
 ## Trading features
 
+- 37 instruments in 8 asset classes: stocks, ETFs, forex, crypto, bonds, **commodities**, **indices** and **options**
+- **Market browser**: overview per class (breadth, best/worst), class tabs, sub-categories, search and sorting
+- Class-specific **contract details** (pips and pip value for FX, contract value for commodities, value per point for indices)
+- **Option chains** with Black-Scholes prices and greeks (Δ, Γ, Θ, ν, IV) for optionable underlyings
 - Live prices over SSE with per-broker spreads, sparklines and price flashes
 - Market, limit, **stop** and **stop-limit** orders; **stop-loss / take-profit** on positions, closed automatically
 - **Candlestick chart** (5s / 15s / 1m / 5m) with **SMA 20, EMA 9 and RSI 14**, plus a line chart
@@ -43,10 +47,10 @@ markup and feature flags. One broker is portfolio-only (no trading).
 
 | Id | Name | Locale / currency | Asset classes | Markup | Notes |
 |---|---|---|---|---|---|
-| `aurora` | Aurora Markets | en-GB / GBP | STOCK, ETF, FX, CRYPTO | 5 bps | default broker |
-| `kestrel` | Kestrel Trade | de-DE / EUR | STOCK, ETF, CRYPTO | 12 bps | dark theme |
-| `wisla` | Wisła Invest | pl-PL / PLN | STOCK, ETF, BOND, FX | 20 bps | market orders only |
-| `sakura` | Sakura Wealth | ja-JP / JPY | STOCK, ETF, BOND | 0 bps | portfolio only |
+| `aurora` | Aurora Markets | en-GB / GBP | STOCK, ETF, FX, CRYPTO, COMMODITY, INDEX, OPTION | 5 bps | default broker |
+| `kestrel` | Kestrel Trade | de-DE / EUR | STOCK, ETF, CRYPTO, INDEX, OPTION | 12 bps | dark theme |
+| `wisla` | Wisła Invest | pl-PL / PLN | STOCK, ETF, BOND, FX, COMMODITY, INDEX | 20 bps | market orders only |
+| `sakura` | Sakura Wealth | ja-JP / JPY | STOCK, ETF, BOND, INDEX | 0 bps | portfolio only |
 
 The broker is resolved from the `*.localhost` subdomain, then `?tenant=`, then the `X-Tenant-Id` header,
 otherwise the default (`aurora`).

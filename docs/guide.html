@@ -124,10 +124,10 @@
 <table>
 <thead><tr><th>Broker</th><th>Locale / CCY</th><th><span class="pl">Klasy aktywów</span><span class="en">Asset classes</span></th><th>Markup</th><th><span class="pl">Flagi</span><span class="en">Flags</span></th></tr></thead>
 <tbody>
-<tr><td>aurora · Aurora Markets</td><td>en-GB · GBP</td><td>STOCK, ETF, FX, CRYPTO</td><td>5 bps</td><td>trading, limitOrders, simulatorPanel</td></tr>
-<tr><td>kestrel · Kestrel Trade (dark)</td><td>de-DE · EUR</td><td>STOCK, ETF, CRYPTO</td><td>12 bps</td><td>trading, limitOrders, simulatorPanel</td></tr>
-<tr><td>wisla · Wisła Invest</td><td>pl-PL · PLN</td><td>STOCK, ETF, BOND, FX</td><td>20 bps</td><td>trading (market only), simulatorPanel</td></tr>
-<tr><td>sakura · Sakura Wealth</td><td>ja-JP · JPY</td><td>STOCK, ETF, BOND</td><td>0 bps</td><td><span class="pl">tylko portfel</span><span class="en">portfolio only</span></td></tr>
+<tr><td>aurora · Aurora Markets</td><td>en-GB · GBP</td><td>STOCK, ETF, FX, CRYPTO, COMMODITY, INDEX, OPTION</td><td>5 bps</td><td>trading, limitOrders, simulatorPanel</td></tr>
+<tr><td>kestrel · Kestrel Trade (dark)</td><td>de-DE · EUR</td><td>STOCK, ETF, CRYPTO, INDEX, OPTION</td><td>12 bps</td><td>trading, limitOrders, simulatorPanel</td></tr>
+<tr><td>wisla · Wisła Invest</td><td>pl-PL · PLN</td><td>STOCK, ETF, BOND, FX, COMMODITY, INDEX</td><td>20 bps</td><td>trading (market only), simulatorPanel</td></tr>
+<tr><td>sakura · Sakura Wealth</td><td>ja-JP · JPY</td><td>STOCK, ETF, BOND, INDEX</td><td>0 bps</td><td><span class="pl">tylko portfel</span><span class="en">portfolio only</span></td></tr>
 </tbody>
 </table>
 </section>
@@ -2012,6 +2012,160 @@ if (fill.side() == Side.SELL &amp;&amp; current.quantity().signum() &gt; 0) {
 <p>Nowe testy: <code>ProFeaturesIntegrationTests</code> (14 scenariuszy, część z podniesioną zmiennością w symulatorze, by ceny szybko dochodziły do wyzwalaczy), <code>MarketAnalyticsTest</code> i <code>OrderRulesTest</code>. Razem backend ma 59 testów; klienci po 19 (Angular) i 18 (React).</p></div>
 <div class="en"><p>The <strong>Account</strong> screen in both clients shows cash, realised and unrealised P&amp;L, the deposit/withdrawal form, the statement and closed trades. <code>PortfolioView</code> has a new <code>realizedPnl</code> field, and positions have <code>stopLoss</code>/<code>takeProfit</code> and <code>decimals</code>.</p>
 <p>New tests: <code>ProFeaturesIntegrationTests</code> (14 scenarios, some with raised simulator volatility so prices reach triggers quickly), <code>MarketAnalyticsTest</code> and <code>OrderRulesTest</code>. The backend now has 59 tests; the clients 19 (Angular) and 18 (React).</p></div>
+</section>
+
+<section class="chapter" id="catalogue">
+<h2><span class="pl">Katalog rynków i klasy instrumentów</span><span class="en">Market catalogue and asset classes</span></h2>
+<div class="pl"><p>Platforma zna osiem klas: akcje, ETF-y, forex, kryptowaluty, obligacje, <strong>surowce</strong>, <strong>indeksy</strong> i <strong>opcje</strong>. Migracja <code>V5__market_catalogue.sql</code> dodaje 19 instrumentów (złoto, srebro, miedź, ropa WTI i Brent, gaz, pszenica, sześć indeksów, cztery pary walutowe, dwie kryptowaluty) oraz metadane potrzebne do przeglądania: podkategorię, jednostkę notowania, wielkość kontraktu, wielkość pipsa (forex) i flagę <code>optionable</code>. Każdy broker dostał własny zestaw klas, więc ten sam katalog wygląda u każdej marki inaczej.</p></div>
+<div class="en"><p>The platform knows eight classes: stocks, ETFs, forex, crypto, bonds, <strong>commodities</strong>, <strong>indices</strong> and <strong>options</strong>. Migration <code>V5__market_catalogue.sql</code> adds 19 instruments (gold, silver, copper, WTI and Brent crude, natural gas, wheat, six indices, four FX pairs, two cryptocurrencies) plus the metadata browsing needs: sub-category, quotation unit, contract size, pip size (forex) and an <code>optionable</code> flag. Each broker got its own set of classes, so the same catalogue looks different for every brand.</p></div>
+<table>
+<thead><tr><th>Broker</th><th><span class="pl">Klasy po V5</span><span class="en">Classes after V5</span></th></tr></thead>
+<tbody>
+<tr><td>Aurora</td><td>STOCK, ETF, FX, CRYPTO, COMMODITY, INDEX, OPTION</td></tr>
+<tr><td>Kestrel</td><td>STOCK, ETF, CRYPTO, INDEX, OPTION</td></tr>
+<tr><td>Wisła</td><td>STOCK, ETF, BOND, FX, COMMODITY, INDEX</td></tr>
+<tr><td>Sakura</td><td>STOCK, ETF, BOND, INDEX</td></tr>
+</tbody>
+</table>
+<p class="file">backend/src/main/resources/db/migration/V5__market_catalogue.sql</p>
+<pre><code class="language-sql">alter table instrument add column category      varchar(32)    not null default 'Other';
+alter table instrument add column unit          varchar(24)    not null default 'unit';
+alter table instrument add column contract_size numeric(20, 4) not null default 1;   -- units per contract / lot
+alter table instrument add column pip_size      numeric(20, 8);                       -- FX only
+alter table instrument add column optionable    boolean        not null default false;
+
+insert into instrument (symbol, name, asset_class, exchange, currency, decimals, base_price,
+                        category, unit, contract_size, pip_size, optionable, description) values
+('XAUUSD', 'Gold',       'COMMODITY', 'COMEX', 'USD', 2, 2648.30, 'Metals',   'troy oz',     100,    null, true,  '…'),
+('USDJPY', 'US Dollar / Japanese Yen', 'FX', 'FX', 'JPY', 3, 151.420, 'Majors', 'base unit', 100000, 0.01, false, '…'),
+('SPX500', 'US 500',     'INDEX',     'CME',   'USD', 1, 5998.7,  'Americas', 'index point', 10,     null, true,  '…');</code></pre>
+<div class="pl"><p><strong>Przegląd rynku</strong> (<code>GET /api/market/overview</code>) liczy dla każdej klasy: liczbę instrumentów, średnią zmianę, liczbę rosnących i spadających (pasek „breadth”) oraz najlepszy i najgorszy instrument. Na ekranie Markets to klikalne karty nad tabelą.</p></div>
+<div class="en"><p><strong>The market overview</strong> (<code>GET /api/market/overview</code>) computes for each class: the number of instruments, the average change, gainers and losers (the breadth bar) and the best and worst instrument. On the Markets screen these are clickable cards above the table.</p></div>
+<p class="file">GET /api/market/overview (aurora) → 200 (<span class="pl">fragment</span><span class="en">excerpt</span>)</p>
+<pre><code class="language-json">[
+  { "assetClass": "STOCK", "instruments": 8, "avgChangePct": 0.02, "gainers": 4, "losers": 4,
+    "best":  { "symbol": "MSFT", "name": "Microsoft Corp.", "changePct": 1.52 },
+    "worst": { "symbol": "7203", "name": "Toyota Motor", "changePct": -1.72 } },
+  …
+  { "assetClass": "OPTION", "instruments": 9, "avgChangePct": 0, "gainers": 0, "losers": 0, "best": null, "worst": null }
+]</code></pre>
+<div class="pl"><p>Ekran <strong>Markets</strong> w obu klientach: karty przeglądu, zakładki klas z licznikami (wybrana klasa jest w adresie: <code>/markets?class=FX</code>), chipy podkategorii (np. Majors, Crosses, Exotics), wyszukiwanie po symbolu, nazwie, sektorze i opisie oraz sortowanie (A–Z, największe wzrosty i spadki, najwęższy spread). Spread jest pokazywany w pipsach dla forex i w punktach bazowych dla pozostałych klas. Logika jest w czystych funkcjach (<code>market-browse.ts</code> / <code>marketBrowse.ts</code>) z testami.</p>
+<p>W Angularze klasa z adresu trafia do komponentu jako <code>input()</code> (dzięki <code>withComponentInputBinding</code>), a <code>linkedSignal</code> zamienia ją w edytowalny stan, który kategoria resetuje przy zmianie zakładki. W React stanem jest sam URL (<code>useSearchParams</code>).</p></div>
+<div class="en"><p>The <strong>Markets</strong> screen in both clients: overview cards, class tabs with counts (the selected class lives in the URL: <code>/markets?class=FX</code>), sub-category chips (e.g. Majors, Crosses, Exotics), search over symbol, name, sector and description, and sorting (A–Z, top gainers and losers, tightest spread). Spreads are shown in pips for forex and in basis points elsewhere. The logic sits in pure functions (<code>market-browse.ts</code> / <code>marketBrowse.ts</code>) with tests.</p>
+<p>In Angular the class from the URL arrives as an <code>input()</code> (thanks to <code>withComponentInputBinding</code>) and <code>linkedSignal</code> turns it into editable state; the category resets whenever the tab changes. In React the URL itself is the state (<code>useSearchParams</code>).</p></div>
+<p class="file">angular-client/src/app/features/markets/markets.ts</p>
+<pre><code class="language-typescript">/** ?class=FX query parameter, bound by withComponentInputBinding(). */
+readonly class = input&lt;string&gt;();
+
+/** Writable, but follows the query parameter whenever it changes. */
+protected readonly tab = linkedSignal&lt;Tab&gt;(() =&gt; (this.class() as Tab | undefined) ?? 'ALL');
+/** Resets to "all categories" whenever the tab changes. */
+protected readonly category = linkedSignal&lt;Tab, string | null&gt;({ source: this.tab, computation: () =&gt; null });
+
+protected readonly rows = computed(() =&gt; sortRows(
+  this.inTab()
+    .filter((r) =&gt; this.category() === null || r.instrument.category === this.category())
+    .filter((r) =&gt; matches(r.instrument, this.search())),
+  this.sort()));</code></pre>
+<div class="pl"><p><strong>Szczegóły kontraktu</strong> zależą od klasy i są przeliczane przy każdym ticku:</p></div>
+<div class="en"><p><strong>Contract details</strong> depend on the class and are recomputed on every tick:</p></div>
+<table>
+<thead><tr><th><span class="pl">Klasa</span><span class="en">Class</span></th><th><span class="pl">Co pokazujemy</span><span class="en">What we show</span></th></tr></thead>
+<tbody>
+<tr><td>Forex</td><td><span class="pl">waluta bazowa i kwotowana, pips, spread w pipsach, lot (100 000), wartość pipsa na lot = lot × pips (10 USD dla EURUSD), nominał lota</span><span class="en">base/quote currency, pip size, spread in pips, lot (100,000), pip value per lot = lot × pip (10 USD for EURUSD), lot notional</span></td></tr>
+<tr><td>Commodities</td><td><span class="pl">jednostka (troy oz, baryłka, MMBtu, buszel), wielkość kontraktu, wartość kontraktu, wartość ruchu o 1%</span><span class="en">unit (troy oz, barrel, MMBtu, bushel), contract size, contract value, value of a 1% move</span></td></tr>
+<tr><td>Indices</td><td><span class="pl">region, wartość punktu, wartość kontraktu, spread w punktach</span><span class="en">region, value per point, contract value, spread in points</span></td></tr>
+<tr><td>Stocks / ETF / Crypto / Bonds</td><td><span class="pl">sektor lub typ, giełda, jednostka, spread w bps (krypto: 24/7, obligacje: % nominału)</span><span class="en">sector or type, exchange, unit, spread in bps (crypto: 24/7, bonds: % of nominal)</span></td></tr>
+</tbody>
+</table>
+<p class="file">GET /api/market/instruments/USDJPY (aurora) → 200</p>
+<pre><code class="language-json">{
+  "symbol": "USDJPY",
+  "name": "US Dollar / Japanese Yen",
+  "assetClass": "FX",
+  "currency": "JPY",
+  "decimals": 3,
+  "category": "Majors",
+  "unit": "base unit",
+  "contractSize": 100000,
+  "pipSize": 0.01,
+  "optionChain": false,
+  "quote": { "bid": 151.682, "ask": 151.774, "mid": 151.728, "changePct": 0.21 }
+}</code></pre>
+<div class="note"><span class="pl">Surowce i indeksy handluje się jak każdy inny instrument (zlecenia rynkowe, z limitem i stop, SL/TP). Ilość to liczba jednostek notowania, a nie kontraktów; wielkość kontraktu jest informacyjna.</span><span class="en">Commodities and indices trade like any other instrument (market, limit and stop orders, SL/TP). Quantity is the number of quoted units, not contracts; the contract size is informational.</span></div>
+</section>
+
+<section class="chapter" id="options">
+<h2><span class="pl">Łańcuch opcji: Black-Scholes i greckie</span><span class="en">Option chain: Black-Scholes and the greeks</span></h2>
+<div class="pl"><p>Opcja kupna (call) daje prawo kupić instrument bazowy po cenie wykonania (strike) w dniu wygaśnięcia; opcja sprzedaży (put) daje prawo sprzedać. Łańcuch opcji to tabela: calle po lewej, strike pośrodku, puty po prawej, osobno dla każdego terminu. Opcje nie są osobnymi instrumentami w bazie. Backend wylicza łańcuch <em>na żądanie</em> z bieżącej ceny instrumentu bazowego:</p>
+<ul>
+<li><strong>Terminy:</strong> najbliższy piątek po 7, 30, 60 i 120 dniach.</li>
+<li><strong>Strike'i:</strong> 11 poziomów wokół ceny, z „okrągłym” krokiem (1, 2 lub 5 × 10ⁿ blisko 2,5% ceny).</li>
+<li><strong>Zmienność implikowana:</strong> bazowa dla klasy (akcje 30%, indeksy 16%, krypto 58%…) z „uśmiechem” (droższe skrzydła) i lekką skośnością.</li>
+<li><strong>Cena i greckie:</strong> model Blacka-Scholesa dla opcji europejskich, r = 3%.</li>
+</ul>
+<p>Dostęp: broker musi oferować klasę OPTION (Aurora, Kestrel), a instrument bazowy musi mieć <code>optionable = true</code>. Wisła dostaje 403 <code>options-disabled</code>, a instrument bez opcji (np. EURUSD) zwraca 404.</p></div>
+<div class="en"><p>A call gives the right to buy the underlying at the strike price on expiry; a put gives the right to sell. An option chain is a table: calls on the left, the strike in the middle, puts on the right, one table per expiry. Options are not separate instruments in the database. The backend computes the chain <em>on request</em> from the underlying's live price:</p>
+<ul>
+<li><strong>Expiries:</strong> the next Friday after 7, 30, 60 and 120 days.</li>
+<li><strong>Strikes:</strong> 11 levels around the money with a "round" step (1, 2 or 5 × 10ⁿ near 2.5% of the price).</li>
+<li><strong>Implied volatility:</strong> a base per class (stocks 30%, indices 16%, crypto 58%…) with a smile (pricier wings) and a slight skew.</li>
+<li><strong>Price and greeks:</strong> Black-Scholes for European options, r = 3%.</li>
+</ul>
+<p>Access: the broker must offer the OPTION class (Aurora, Kestrel) and the underlying must have <code>optionable = true</code>. Wisła gets a 403 <code>options-disabled</code>, and an instrument without options (e.g. EURUSD) returns 404.</p></div>
+<p class="file">backend/src/main/java/com/tradechameleon/market/OptionPricer.java</p>
+<pre><code class="language-java">static Greeks call(double s, double k, double t, double r, double sigma) {
+    double sqrtT = Math.sqrt(t);
+    double d1 = (Math.log(s / k) + (r + sigma * sigma / 2) * t) / (sigma * sqrtT);
+    double d2 = d1 - sigma * sqrtT;
+    double discount = Math.exp(-r * t);
+    double price = s * cdf(d1) - k * discount * cdf(d2);
+    double theta = (-s * pdf(d1) * sigma / (2 * sqrtT) - r * k * discount * cdf(d2)) / 365;
+    return new Greeks(price, cdf(d1), gamma(s, d1, sigma, sqrtT), theta, vega(s, d1, sqrtT));
+}
+
+/** Standard normal CDF, Abramowitz &amp; Stegun 26.2.17 (absolute error &lt; 7.5e-8). */
+static double cdf(double x) {
+    if (x &lt; 0) {
+        return 1 - cdf(-x);
+    }
+    double t = 1 / (1 + 0.2316419 * x);
+    double poly = t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+    return 1 - pdf(x) * poly;
+}</code></pre>
+<table>
+<thead><tr><th><span class="pl">Grecka</span><span class="en">Greek</span></th><th><span class="pl">Znaczenie</span><span class="en">Meaning</span></th></tr></thead>
+<tbody>
+<tr><td>Δ delta</td><td><span class="pl">zmiana ceny opcji przy ruchu instrumentu bazowego o 1; call 0…1, put −1…0; przybliżone prawdopodobieństwo wygaśnięcia „w pieniądzu”</span><span class="en">option price change per 1 move of the underlying; call 0…1, put −1…0; roughly the probability of expiring in the money</span></td></tr>
+<tr><td>Γ gamma</td><td><span class="pl">jak szybko zmienia się delta; największa przy cenie wykonania</span><span class="en">how fast delta changes; largest at the money</span></td></tr>
+<tr><td>Θ theta</td><td><span class="pl">utrata wartości w czasie, na dzień kalendarzowy (zwykle ujemna)</span><span class="en">time decay per calendar day (usually negative)</span></td></tr>
+<tr><td>ν vega</td><td><span class="pl">zmiana ceny przy wzroście zmienności o 1 punkt procentowy</span><span class="en">price change for a 1-point rise in volatility</span></td></tr>
+</tbody>
+</table>
+<div class="pl"><p>Testy jednostkowe sprawdzają model na znanych wartościach: parytet put-call <code>C − P = S − K·e^(−rT)</code>, książkowa cena opcji ATM (S = K = 100, T = 1, r = 5%, σ = 20% → 10,4506), znaki greckich, piątkowe terminy i „okrągłe” kroki strike'ów.</p></div>
+<div class="en"><p>Unit tests check the model against known values: put-call parity <code>C − P = S − K·e^(−rT)</code>, the textbook ATM price (S = K = 100, T = 1, r = 5%, σ = 20% → 10.4506), the signs of the greeks, Friday expiries and round strike steps.</p></div>
+<p class="file">GET /api/market/instruments/AAPL/options (aurora) → 200 (<span class="pl">2 z 11 wierszy</span><span class="en">2 of 11 rows</span>)</p>
+<pre><code class="language-json">{
+  "underlying": "AAPL",
+  "currency": "USD",
+  "spot": 227.56,
+  "rate": 0.03,
+  "contractSize": 100,
+  "expiries": ["2026-12-04", "2027-01-01", "2027-01-29", "2027-03-26"],
+  "expiry": "2027-01-01",
+  "daysToExpiry": 36,
+  "rows": [
+    { "strike": 220,
+      "call": { "bid": 13.00, "ask": 13.26, "mid": 13.13, "iv": 30.0, "delta": 0.669, "gamma": 0.01691, "theta": -0.119, "vega": 0.259, "inTheMoney": true },
+      "put":  { "bid": 4.87,  "ask": 4.97,  "mid": 4.92,  "iv": 30.0, "delta": -0.331, "gamma": 0.01691, "theta": -0.101, "vega": 0.259, "inTheMoney": false } },
+    { "strike": 230,
+      "call": { "bid": 7.52, "ask": 7.67, "mid": 7.60, "iv": 29.5, "delta": 0.485, "gamma": 0.0189, "theta": -0.125, "vega": 0.285, "inTheMoney": false },
+      "put":  { "bid": 9.26, "ask": 9.45, "mid": 9.36, "iv": 29.5, "delta": -0.515, "gamma": 0.0189, "theta": -0.106, "vega": 0.285, "inTheMoney": true } }
+  ]
+}</code></pre>
+<div class="pl"><p>W klientach łańcuch to osobny, leniwie ładowany komponent: w Angularze w bloku <code>@defer (on viewport)</code>, w React przez <code>React.lazy</code> + <code>Suspense</code>. Odświeża się co 3 s (cena bazowa się zmienia), pozwala wybrać termin i grecką do wyświetlenia, podświetla opcje „w pieniądzu” i strike najbliższy cenie. Link <code>/markets/AAPL#options</code> z zakładki Options przewija stronę od razu do łańcucha.</p></div>
+<div class="en"><p>In the clients the chain is a separate, lazily loaded component: in Angular inside <code>@defer (on viewport)</code>, in React via <code>React.lazy</code> + <code>Suspense</code>. It refreshes every 3 s (the underlying moves), lets you pick the expiry and the greek to display, shades in-the-money options and highlights the strike nearest to spot. The <code>/markets/AAPL#options</code> link from the Options tab scrolls straight to the chain.</p></div>
+<div class="warn"><span class="pl"><strong>Uproszczenia:</strong> opcje europejskie, bez dywidend, stała stopa procentowa, model zmienności zamiast prawdziwych kwotowań i brak handlu opcjami. Ćwiczenie: dodaj zlecenia na opcje z depozytem zabezpieczającym dla wystawców.</span><span class="en"><strong>Simplifications:</strong> European options, no dividends, a flat rate, a volatility model instead of real quotes, and no option trading. Exercise: add option orders with margin for writers.</span></div>
 </section>
 
 <section class="chapter" id="next-steps">
