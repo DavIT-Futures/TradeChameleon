@@ -1,0 +1,1820 @@
+<!doctype html>
+<html lang="pl" data-lang="pl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TradeChameleon · Technical guide / Podręcznik techniczny</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+<style>
+  :root {
+    --bg: #f7f8f6; --surface: #ffffff; --text: #17201d; --muted: #5d6a66; --border: #dfe4e2;
+    --primary: #0f766e; --accent: #f59e0b; --code-bg: #0f172a; --note: #ecfdf5; --warn: #fff7ed;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1117; --surface: #151b23; --text: #e6edf3; --muted: #9aa7b4; --border: #2b3440;
+      --primary: #2dd4bf; --accent: #fbbf24; --code-bg: #0b0f16; --note: #0f2a24; --warn: #2b1d0b;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 1rem; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.65 "Segoe UI", system-ui, sans-serif; }
+  [data-lang="pl"] .en, [data-lang="en"] .pl { display: none !important; }
+  .layout { display: grid; grid-template-columns: 300px 1fr; min-height: 100vh; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } nav.toc { position: static !important; height: auto !important; } }
+  nav.toc { position: sticky; top: 0; height: 100vh; overflow: auto; padding: 1.25rem; background: var(--surface); border-right: 1px solid var(--border); }
+  nav.toc h1 { font-size: 1.15rem; margin: 0 0 .25rem; display: flex; gap: .5rem; align-items: center; }
+  nav.toc ol { padding-left: 1.4rem; margin: .5rem 0; font-size: .9rem; }
+  nav.toc li { margin: .15rem 0; }
+  nav.toc a { color: var(--text); text-decoration: none; }
+  nav.toc a:hover, nav.toc a.active { color: var(--primary); }
+  nav.toc .part { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: .9rem 0 .2rem; list-style: none; margin-left: -1.4rem; }
+  .lang { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; margin: .5rem 0 1rem; }
+  .lang button { border: 0; background: transparent; color: var(--text); padding: .3rem .9rem; cursor: pointer; font: inherit; font-size: .85rem; }
+  .lang button[aria-pressed="true"] { background: var(--primary); color: #fff; }
+  main { padding: 2rem clamp(1rem, 4vw, 4rem); max-width: 1000px; min-width: 0; }
+  header.hero { padding: 2rem; border-radius: 16px; color: #fff; margin-bottom: 2rem;
+    background: radial-gradient(40rem 20rem at 0% 0%, #14b8a6, transparent), radial-gradient(30rem 20rem at 100% 100%, #6366f1, transparent), #0f172a; }
+  header.hero h1 { margin: 0 0 .5rem; font-size: clamp(1.8rem, 1.2rem + 2vw, 2.6rem); }
+  header.hero p { margin: 0; opacity: .9; }
+  section.chapter { border-top: 1px solid var(--border); padding-top: 1.5rem; margin-top: 2.5rem; }
+  h2 { font-size: 1.6rem; margin: 0 0 1rem; }
+  h2 .num { color: var(--primary); margin-right: .4rem; }
+  h3 { font-size: 1.15rem; margin: 1.6rem 0 .5rem; }
+  p, li { max-width: 75ch; }
+  a { color: var(--primary); }
+  code { font-family: "Cascadia Code", "Cascadia Mono", ui-monospace, monospace; font-size: .88em; }
+  :not(pre) > code { background: color-mix(in oklab, var(--primary) 12%, transparent); padding: .1em .35em; border-radius: 4px; }
+  pre { background: var(--code-bg); color: #e2e8f0; padding: 1rem 1.2rem; border-radius: 10px; overflow-x: auto; font-size: .85rem; line-height: 1.5; }
+  pre code.hljs { background: transparent; padding: 0; }
+  .file { font-size: .78rem; color: var(--muted); margin: 1rem 0 -.6rem; font-family: ui-monospace, monospace; }
+  .mermaid { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; color: var(--text); }
+  .note, .warn { padding: .8rem 1rem; border-radius: 10px; border-left: 4px solid var(--primary); background: var(--note); margin: 1rem 0; }
+  .warn { border-color: var(--accent); background: var(--warn); }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: .92rem; }
+  th, td { border-bottom: 1px solid var(--border); padding: .45rem .5rem; text-align: left; vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; }
+  .brands { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .brands figure { margin: 0; text-align: center; font-size: .8rem; }
+  .brands img { width: 64px; height: 64px; }
+  .api { font-family: ui-monospace, monospace; font-weight: 600; }
+  .api b { color: var(--primary); }
+  footer { margin: 4rem 0 2rem; color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc" aria-label="Table of contents">
+  <h1>🦎 TradeChameleon</h1>
+  <div class="lang" role="group" aria-label="Language">
+    <button type="button" data-set-lang="pl">Polski</button>
+    <button type="button" data-set-lang="en">English</button>
+  </div>
+  <ol id="toc"></ol>
+</nav>
+<main>
+<header class="hero">
+  <h1><span class="pl">Podręcznik techniczny</span><span class="en">Technical guide</span></h1>
+  <p class="pl">Wielodostępna (multi-tenant), white-label platforma treningowa do handlu: Java 25 + Spring Boot 4 + Spring Modulith, PostgreSQL, OAuth2/JWT RS256, Angular 21 i React 19. Każdy fragment kodu pochodzi z repozytorium, każda odpowiedź API została przechwycona z działającego serwera.</p>
+  <p class="en">A multi-tenant, white-label training trading platform: Java 25 + Spring Boot 4 + Spring Modulith, PostgreSQL, OAuth2/JWT RS256, Angular 21 and React 19. Every code excerpt comes from the repository, every API response was captured from the running server.</p>
+</header>
+
+<div class="part-title"><span class="pl">Część I · Wprowadzenie</span><span class="en">Part I · Introduction</span></div>
+
+<section class="chapter" id="intro">
+<h2><span class="pl">Czym jest TradeChameleon</span><span class="en">What TradeChameleon is</span></h2>
+<div class="pl">
+<p>TradeChameleon to mała, ale kompletna platforma do nauki nowoczesnego full-stacku. Czterech fikcyjnych brokerów korzysta z <strong>jednego kodu</strong>: każdy ma własne logo SVG generowane w kodzie, kolory, czcionki, ustawienia regionalne, walutę, dozwolone klasy aktywów, narzut na spread i flagi funkcji. Jeden z brokerów (Sakura Wealth) jest wyłącznie portfelowy, bez handlu.</p>
+<p>Backend to modularny monolit w Spring Boot 4 na Javie 25. Dwa frontendy (Angular 21 i React 19) mają <em>te same ekrany</em> i ten sam CSS, dzięki czemu można porównywać oba frameworki linijka po linijce.</p>
+<h3>Jak czytać ten podręcznik</h3>
+<ul>
+<li>Część I: architektura, uruchomienie i model wielodostępności.</li>
+<li>Część II: Angular 21 (sygnały, httpResource, interceptory, guardy, @defer, Vitest).</li>
+<li>Część III: React 19 (Vite, React Router, TanStack Query, useSyncExternalStore, Testing Library).</li>
+<li>Część IV: backend Spring (Modulith, wirtualne wątki, zdarzenia, SSE, silnik cen).</li>
+<li>Część V: bezpieczeństwo (OAuth2, JWT RS256, wymiana na SSO przez OIDC).</li>
+<li>Część VI: API, baza danych i testy.</li>
+</ul>
+</div>
+<div class="en">
+<p>TradeChameleon is a small but complete platform for learning modern full-stack development. Four fictional brokers share <strong>one code base</strong>: each has its own SVG logo generated in code, colors, fonts, locale, currency, allowed asset classes, spread markup and feature flags. One broker (Sakura Wealth) is portfolio-only, without trading.</p>
+<p>The backend is a modular monolith on Spring Boot 4 and Java 25. The two front-ends (Angular 21 and React 19) have <em>the same screens</em> and the same CSS, so you can compare both frameworks line by line.</p>
+<h3>How to read this guide</h3>
+<ul>
+<li>Part I: architecture, getting started and the multi-tenancy model.</li>
+<li>Part II: Angular 21 (signals, httpResource, interceptors, guards, @defer, Vitest).</li>
+<li>Part III: React 19 (Vite, React Router, TanStack Query, useSyncExternalStore, Testing Library).</li>
+<li>Part IV: the Spring backend (Modulith, virtual threads, events, SSE, price engine).</li>
+<li>Part V: security (OAuth2, RS256 JWT, swapping in SSO via OIDC).</li>
+<li>Part VI: API, database and tests.</li>
+</ul>
+</div>
+<div class="brands">
+  <figure><img src="http://localhost:8080/api/tenants/aurora/logo.svg" alt="" /><figcaption>Aurora Markets</figcaption></figure>
+  <figure><img src="http://localhost:8080/api/tenants/kestrel/logo.svg" alt="" /><figcaption>Kestrel Trade</figcaption></figure>
+  <figure><img src="http://localhost:8080/api/tenants/wisla/logo.svg" alt="" /><figcaption>Wisła Invest</figcaption></figure>
+  <figure><img src="http://localhost:8080/api/tenants/sakura/logo.svg" alt="" /><figcaption>Sakura Wealth</figcaption></figure>
+</div>
+<p class="pl" style="font-size:.85rem;color:var(--muted)">Logotypy ładują się z działającego backendu (localhost:8080).</p>
+<p class="en" style="font-size:.85rem;color:var(--muted)">Logos are loaded from the running backend (localhost:8080).</p>
+<table>
+<thead><tr><th>Broker</th><th>Locale / CCY</th><th><span class="pl">Klasy aktywów</span><span class="en">Asset classes</span></th><th>Markup</th><th><span class="pl">Flagi</span><span class="en">Flags</span></th></tr></thead>
+<tbody>
+<tr><td>aurora · Aurora Markets</td><td>en-GB · GBP</td><td>STOCK, ETF, FX, CRYPTO</td><td>5 bps</td><td>trading, limitOrders, simulatorPanel</td></tr>
+<tr><td>kestrel · Kestrel Trade (dark)</td><td>de-DE · EUR</td><td>STOCK, ETF, CRYPTO</td><td>12 bps</td><td>trading, limitOrders, simulatorPanel</td></tr>
+<tr><td>wisla · Wisła Invest</td><td>pl-PL · PLN</td><td>STOCK, ETF, BOND, FX</td><td>20 bps</td><td>trading (market only), simulatorPanel</td></tr>
+<tr><td>sakura · Sakura Wealth</td><td>ja-JP · JPY</td><td>STOCK, ETF, BOND</td><td>0 bps</td><td><span class="pl">tylko portfel</span><span class="en">portfolio only</span></td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="chapter" id="architecture">
+<h2><span class="pl">Architektura w pigułce</span><span class="en">Architecture at a glance</span></h2>
+<div class="pl"><p>Przeglądarka rozmawia z backendem przez REST (JSON) i Server-Sent Events. Serwery deweloperskie Angulara (4200) i Vite (5173) przekierowują <code>/api</code> na Spring Boot (8080), dzięki czemu nie trzeba konfigurować CORS w trybie dev (CORS jest jednak włączony dla <code>*.localhost</code>). Backend jest jednym procesem z siedmioma modułami Spring Modulith, które komunikują się przez publiczne API i zdarzenia.</p></div>
+<div class="en"><p>The browser talks to the backend through REST (JSON) and Server-Sent Events. The Angular (4200) and Vite (5173) dev servers proxy <code>/api</code> to Spring Boot (8080), so no CORS setup is needed in development (CORS is still enabled for <code>*.localhost</code>). The backend is one process with seven Spring Modulith modules that talk through public APIs and events.</p></div>
+<pre class="mermaid">
+flowchart LR
+  subgraph Browser
+    NG[Angular 21 client<br/>:4200]
+    RE[React 19 client<br/>:5173]
+  end
+  subgraph Backend["Spring Boot 4 · Java 25 · :8080"]
+    T[tenant] --- I[identity]
+    M[market] --> S[simulator]
+    TR[trading] --> M
+    TR --> P[portfolio]
+    P --> M
+    SH[(shared)]
+  end
+  DB[(PostgreSQL 18<br/>Flyway)]
+  NG -- "REST + JWT" --> Backend
+  RE -- "REST + JWT" --> Backend
+  Backend -- "SSE quotes" --> NG
+  Backend -- "SSE quotes" --> RE
+  Backend -- JdbcClient --> DB
+</pre>
+<table>
+<thead><tr><th><span class="pl">Katalog</span><span class="en">Folder</span></th><th><span class="pl">Zawartość</span><span class="en">Contents</span></th></tr></thead>
+<tbody>
+<tr><td><code>backend/</code></td><td>Spring Boot 4, Maven wrapper, Flyway migrations, JUnit + Testcontainers</td></tr>
+<tr><td><code>angular-client/</code></td><td>Angular 21 standalone + zoneless, Vitest</td></tr>
+<tr><td><code>react-client/</code></td><td>React 19 + Vite, React Router, TanStack Query, Vitest + Testing Library</td></tr>
+<tr><td><code>shared/styles/</code></td><td><span class="pl">wspólny system stylów (CSS custom properties)</span><span class="en">shared design system (CSS custom properties)</span></td></tr>
+<tr><td><code>openapi/openapi.json</code></td><td><span class="pl">kontrakt API, źródło typów TypeScript</span><span class="en">API contract, source of the TypeScript types</span></td></tr>
+<tr><td><code>compose.yaml</code></td><td>PostgreSQL 18</td></tr>
+<tr><td><code>docs/guide.html</code></td><td><span class="pl">ten podręcznik</span><span class="en">this guide</span></td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="chapter" id="quickstart">
+<h2><span class="pl">Szybki start</span><span class="en">Quick start</span></h2>
+<div class="pl"><p>Potrzebujesz JDK 25, Node 24+ i Dockera (Docker Desktop na Windowsie wymaga WSL2). Na Windowsie wszystko zainstalujesz przez winget:</p></div>
+<div class="en"><p>You need JDK 25, Node 24+ and Docker (Docker Desktop on Windows requires WSL2). On Windows everything installs with winget:</p></div>
+<pre><code class="language-powershell">winget install EclipseAdoptium.Temurin.25.JDK
+winget install OpenJS.NodeJS.LTS
+winget install Microsoft.WSL
+winget install Docker.DockerDesktop</code></pre>
+<div class="pl"><p>Uruchomienie (każde polecenie w osobnym terminalu):</p></div>
+<div class="en"><p>Run it (each command in its own terminal):</p></div>
+<pre><code class="language-powershell">docker compose up -d                      # PostgreSQL 18 on :5432
+cd backend;        .\mvnw spring-boot:run  # API on :8080 (also starts compose.yaml by itself)
+cd angular-client; npm install; npm start  # http://localhost:4200
+cd react-client;   npm install; npm run dev # http://localhost:5173</code></pre>
+<div class="pl"><p>Otwórz <code>http://kestrel.localhost:4200</code> lub <code>http://wisla.localhost:5173</code>. Subdomeny <code>*.localhost</code> działają w przeglądarkach bez edycji pliku hosts. Użytkownicy demo: <code>trader@&lt;tenant&gt;.test</code> (rola TRADER) i <code>viewer@&lt;tenant&gt;.test</code> (VIEWER), hasło <code>demo</code>.</p></div>
+<div class="en"><p>Open <code>http://kestrel.localhost:4200</code> or <code>http://wisla.localhost:5173</code>. <code>*.localhost</code> subdomains work in browsers without editing the hosts file. Demo users: <code>trader@&lt;tenant&gt;.test</code> (role TRADER) and <code>viewer@&lt;tenant&gt;.test</code> (VIEWER), password <code>demo</code>.</p></div>
+<table>
+<thead><tr><th>URL</th><th><span class="pl">Co to jest</span><span class="en">What it is</span></th></tr></thead>
+<tbody>
+<tr><td><code>http://localhost:8080/swagger-ui.html</code></td><td>Swagger UI</td></tr>
+<tr><td><code>http://localhost:8080/scalar</code></td><td>Scalar API reference</td></tr>
+<tr><td><code>http://localhost:8080/v3/api-docs</code></td><td>OpenAPI 3.1 JSON</td></tr>
+<tr><td><code>http://localhost:8080/actuator/modulith</code></td><td><span class="pl">struktura modułów</span><span class="en">module structure</span></td></tr>
+<tr><td><code>http://localhost:8080/.well-known/openid-configuration</code></td><td>OIDC discovery (dev IdP)</td></tr>
+</tbody>
+</table>
+<div class="note"><span class="pl"><strong>Bez Dockera?</strong> Ustaw <code>SPRING_DOCKER_COMPOSE_ENABLED=false</code> i wskaż dowolnego Postgresa przez <code>spring.datasource.*</code>. Testy integracyjne uruchomisz wtedy z <code>-Dtc.test.external-db=true</code>.</span><span class="en"><strong>No Docker?</strong> Set <code>SPRING_DOCKER_COMPOSE_ENABLED=false</code> and point <code>spring.datasource.*</code> at any PostgreSQL. Integration tests then run with <code>-Dtc.test.external-db=true</code>.</span></div>
+</section>
+
+<section class="chapter" id="tenancy">
+<h2><span class="pl">Wielodostępność i white label</span><span class="en">Multi-tenancy and white label</span></h2>
+<div class="pl"><p>Wszyscy brokerzy dzielą jedną bazę i jeden proces; każda tabela biznesowa ma kolumnę <code>tenant_id</code>. Broker jest rozpoznawany przy <em>każdym</em> żądaniu, w tej kolejności: subdomena <code>*.localhost</code>, parametr <code>?tenant=</code>, nagłówek <code>X-Tenant-Id</code> (wysyłany przez SPA, bo proxy dev zmienia nagłówek Host), a na końcu broker domyślny. Jawnie podany, nieznany broker to błąd 400, a nie ciche przełączenie na domyślnego.</p></div>
+<div class="en"><p>All brokers share one database and one process; every business table has a <code>tenant_id</code> column. The broker is resolved on <em>every</em> request, in this order: <code>*.localhost</code> subdomain, <code>?tenant=</code> parameter, <code>X-Tenant-Id</code> header (sent by the SPAs because the dev proxy rewrites the Host header) and finally the default broker. An explicitly requested but unknown broker is a 400, not a silent fallback.</p></div>
+<pre class="mermaid">
+flowchart TD
+  R[HTTP request] --> A{"Host ends with .localhost?"}
+  A -- "kestrel.localhost" --> K[tenant = kestrel]
+  A -- no --> B{"?tenant= present?"}
+  B -- yes --> C{known?}
+  C -- yes --> K2[tenant = param]
+  C -- no --> E[400 unknown-tenant]
+  B -- no --> D{"X-Tenant-Id header?"}
+  D -- yes --> C
+  D -- no --> F[default tenant: aurora]
+</pre>
+<p class="file">backend/src/main/java/com/tradechameleon/tenant/TenantResolver.java</p>
+<pre><code class="language-java">public Tenant resolve(HttpServletRequest request) {
+    return fromSubdomain(request.getServerName())
+            .or(() -&gt; explicit(request.getParameter(PARAM)))
+            .or(() -&gt; explicit(request.getHeader(HEADER)))
+            .orElseGet(directory::defaultTenant);
+}</code></pre>
+<div class="pl"><p>Wynik trafia do <code>ScopedValue</code> z Javy 25 na czas całego żądania (rozdział o backendzie). Biały label to dane, nie kod: motyw, czcionki i flagi siedzą w tabeli <code>tenant</code>, a logo generuje <code>LogoGenerator</code> na podstawie kolumny <code>logo_shape</code>. Klienci pobierają <code>GET /api/tenants/current</code> i zapisują motyw w zmiennych CSS.</p></div>
+<div class="en"><p>The result is bound to a Java 25 <code>ScopedValue</code> for the whole request (see the backend chapters). White label is data, not code: theme, fonts and flags live in the <code>tenant</code> table and <code>LogoGenerator</code> draws the logo from the <code>logo_shape</code> column. Clients fetch <code>GET /api/tenants/current</code> and write the theme into CSS variables.</p></div>
+<p class="file">GET /api/tenants/current?tenant=sakura → 200 (<span class="pl">prawdziwa odpowiedź</span><span class="en">real response</span>)</p>
+<pre><code class="language-json">{
+  "id": "sakura",
+  "name": "Sakura Wealth",
+  "tagline": "Portfolio clarity, season after season",
+  "locale": "ja-JP",
+  "currency": "JPY",
+  "allowedAssetClasses": ["STOCK", "ETF", "BOND"],
+  "spreadMarkupBps": 0,
+  "logoUrl": "/api/tenants/sakura/logo.svg",
+  "theme": {
+    "primary": "#db2777", "onPrimary": "#ffffff", "accent": "#7c3aed",
+    "background": "#fff7fa", "surface": "#ffffff", "text": "#2a1720", "muted": "#7a6070",
+    "positive": "#15803d", "negative": "#be123c", "radius": "20px", "colorScheme": "light",
+    "fontBody": "\"Yu Gothic UI\", \"Hiragino Sans\", \"Segoe UI\", sans-serif",
+    "fontHeading": "\"Yu Gothic UI Semibold\", \"Hiragino Sans\", \"Segoe UI\", sans-serif"
+  },
+  "features": { "trading": false, "limitOrders": false, "simulatorPanel": false, "livePrices": true }
+}</code></pre>
+<div class="warn"><span class="pl"><strong>Izolacja:</strong> token wydany dla brokera A nie zadziała u brokera B (403 <code>tenant-mismatch</code>), a instrumenty spoza dozwolonych klas aktywów zwracają 404, żeby nie zdradzać oferty innych marek.</span><span class="en"><strong>Isolation:</strong> a token issued for broker A does not work at broker B (403 <code>tenant-mismatch</code>), and instruments outside the allowed asset classes return 404 so other brands' offers are not leaked.</span></div>
+</section>
+
+<div class="part-title"><span class="pl">Część II · Angular 21</span><span class="en">Part II · Angular 21</span></div>
+
+<section class="chapter" id="ng-setup">
+<h2><span class="pl">Angular 21: standalone i zoneless</span><span class="en">Angular 21: standalone and zoneless</span></h2>
+<div class="pl"><p>Projekt powstał poleceniem <code>ng new --zoneless --test-runner=vitest</code>. Nie ma <code>NgModule</code>: każdy komponent jest samodzielny (standalone to domyślne ustawienie od v19) i sam deklaruje swoje <code>imports</code>. Nie ma też <code>zone.js</code>: Angular nie „łata” już <code>setTimeout</code>, <code>fetch</code> i zdarzeń, tylko odświeża widok, gdy zmieni się sygnał czytany w szablonie, przyjdzie zdarzenie z szablonu albo zadziała <code>async</code> pipe. Mniej magii, mniejszy bundle, czytelne stosy wywołań.</p>
+<p>Cała konfiguracja aplikacji to lista providerów:</p></div>
+<div class="en"><p>The project was created with <code>ng new --zoneless --test-runner=vitest</code>. There are no <code>NgModule</code>s: every component is standalone (the default since v19) and declares its own <code>imports</code>. There is no <code>zone.js</code> either: Angular no longer patches <code>setTimeout</code>, <code>fetch</code> and events; it re-renders when a signal read by a template changes, a template event fires or the <code>async</code> pipe emits. Less magic, smaller bundle, readable stack traces.</p>
+<p>The entire application configuration is a list of providers:</p></div>
+<p class="file">angular-client/src/app/app.config.ts</p>
+<pre><code class="language-typescript">export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    // No zone.js: change detection is driven by signals (and events/async pipe).
+    provideZonelessChangeDetection(),
+    // Route params and query params arrive as component inputs (symbol = input.required&lt;string&gt;()).
+    provideRouter(routes, withComponentInputBinding()),
+    // Functional interceptors run in this order for requests (and in reverse for responses).
+    provideHttpClient(withFetch(), withInterceptors([tenantInterceptor, authInterceptor, problemInterceptor])),
+    // Resolve the broker (and apply its theme) before the first render.
+    provideAppInitializer(() =&gt; inject(TenantService).load()),
+  ],
+};</code></pre>
+<div class="pl"><p><code>provideAppInitializer</code> wstrzymuje pierwsze renderowanie do czasu pobrania brokera, więc użytkownik nigdy nie widzi „mignięcia” złego motywu. Wszystkie komponenty używają <code>ChangeDetectionStrategy.OnPush</code>, a struktura katalogów to <code>core/</code> (serwisy, interceptory, guardy), <code>shared/</code> (komponenty prezentacyjne) i <code>features/</code> (ekrany ładowane leniwie).</p></div>
+<div class="en"><p><code>provideAppInitializer</code> holds the first render until the broker is known, so the user never sees a flash of the wrong theme. All components use <code>ChangeDetectionStrategy.OnPush</code>, and the folders are <code>core/</code> (services, interceptors, guards), <code>shared/</code> (presentational components) and <code>features/</code> (lazily loaded screens).</p></div>
+<pre class="mermaid">
+flowchart TB
+  main[main.ts bootstrapApplication] --> cfg[app.config.ts providers]
+  cfg --> init[provideAppInitializer → TenantService.load]
+  init --> theme[applyTheme → CSS variables]
+  cfg --> router[provideRouter + withComponentInputBinding]
+  router --> login[features/login]
+  router --> shell[features/shell + authGuard]
+  shell --> dash[dashboard] & mk[markets] & ins[instrument] & pf[portfolio] & dev[dev-panel + featureGuard]
+</pre>
+</section>
+
+<section class="chapter" id="ng-signals">
+<h2><span class="pl">Sygnały: signal, computed, effect, linkedSignal</span><span class="en">Signals: signal, computed, effect, linkedSignal</span></h2>
+<div class="pl"><p>Sygnał to wartość, która wie, kto ją czyta. <code>signal()</code> przechowuje stan, <code>computed()</code> wylicza stan pochodny leniwie i z pamięcią podręczną, <code>effect()</code> uruchamia efekt uboczny, gdy zmienią się czytane sygnały, a <code>linkedSignal()</code> to zapisywalny sygnał, który „resetuje się”, gdy zmieni się jego źródło. W zoneless Angularze sygnały są silnikiem odświeżania widoku.</p>
+<p>Serwis brokera eksponuje stan wyłącznie jako sygnały tylko do odczytu:</p></div>
+<div class="en"><p>A signal is a value that knows who reads it. <code>signal()</code> holds state, <code>computed()</code> derives state lazily and memoised, <code>effect()</code> runs a side effect when the signals it read change, and <code>linkedSignal()</code> is a writable signal that resets when its source changes. In zoneless Angular signals are the rendering engine.</p>
+<p>The tenant service exposes its state only as read-only signals:</p></div>
+<p class="file">angular-client/src/app/core/tenant.ts</p>
+<pre><code class="language-typescript">readonly requestedId = signal&lt;string | null&gt;(resolveTenantFromLocation(window.location, localStorage));
+private readonly loaded = signal&lt;Tenant | null&gt;(null);
+
+readonly tenant = this.loaded.asReadonly();
+readonly id = computed(() =&gt; this.loaded()?.id ?? this.requestedId());
+readonly locale = computed(() =&gt; this.loaded()?.locale ?? 'en-GB');
+readonly currency = computed(() =&gt; this.loaded()?.currency ?? 'GBP');
+readonly features = computed(() =&gt; this.loaded()?.features);</code></pre>
+<div class="pl"><p>Wykres instrumentu łączy historię z HTTP i ticki na żywo. <code>linkedSignal</code> startuje od historii (i resetuje się po przejściu na inny symbol), a <code>effect</code> dokleja kolejne punkty. <code>untracked</code> sprawia, że sam zapis nie staje się zależnością efektu:</p></div>
+<div class="en"><p>The instrument chart combines HTTP history with live ticks. <code>linkedSignal</code> starts from the history (and resets when you navigate to another symbol), and an <code>effect</code> appends new points. <code>untracked</code> keeps the write from becoming a dependency of the effect:</p></div>
+<p class="file">angular-client/src/app/features/instrument/instrument.ts</p>
+<pre><code class="language-typescript">protected readonly chart = linkedSignal&lt;PricePoint[] | undefined, ChartPoint[]&gt;({
+  source: () =&gt; this.history.value(),
+  computation: (points) =&gt; (points ?? []).map((p) =&gt; ({ t: Date.parse(p.t), price: p.price })),
+});
+
+constructor() {
+  effect(() =&gt; {
+    const live = this.stream.quotes().get(this.symbol());
+    if (!live) return;
+    const t = Date.parse(live.timestamp);
+    untracked(() =&gt;
+      this.chart.update((points) =&gt;
+        points.length &amp;&amp; points[points.length - 1].t &gt;= t ? points : [...points.slice(-179), { t, price: live.mid }],
+      ),
+    );
+  });
+}</code></pre>
+<div class="note"><span class="pl"><strong>Zasada:</strong> stan pochodny zawsze przez <code>computed</code>, nigdy przez <code>effect</code>, który zapisuje inny sygnał. Efekty są dla świata zewnętrznego (DOM, storage, logi).</span><span class="en"><strong>Rule:</strong> derived state always via <code>computed</code>, never via an <code>effect</code> that writes another signal. Effects are for the outside world (DOM, storage, logging).</span></div>
+<p class="pl">Komponenty przyjmują dane przez <code>input()</code> / <code>input.required()</code>, czyli też sygnały:</p>
+<p class="en">Components receive data through <code>input()</code> / <code>input.required()</code>, which are signals too:</p>
+<p class="file">angular-client/src/app/shared/sparkline.ts</p>
+<pre><code class="language-typescript">export class Sparkline {
+  readonly values = input.required&lt;readonly number[]&gt;();
+  protected readonly points = computed(() =&gt; sparklinePoints(this.values()));
+  protected readonly rising = computed(() =&gt; {
+    const v = this.values();
+    return v.length &lt; 2 || v[v.length - 1] &gt;= v[0];
+  });
+}</code></pre>
+</section>
+
+<section class="chapter" id="ng-httpresource">
+<h2><span class="pl">httpResource: żądania HTTP jako sygnały</span><span class="en">httpResource: HTTP requests as signals</span></h2>
+<div class="pl"><p><code>httpResource</code> zamienia GET w zasób reaktywny. Funkcja przekazana jako argument jest śledzona: jeśli czyta sygnał, zmiana tego sygnału automatycznie wysyła nowe żądanie (i anuluje poprzednie). Zasób wystawia <code>value()</code>, <code>isLoading()</code>, <code>error()</code>, <code>hasValue()</code> oraz metody <code>reload()</code> i <code>set()</code>. Działa przez <code>HttpClient</code>, więc przechodzi przez wszystkie interceptory.</p></div>
+<div class="en"><p><code>httpResource</code> turns a GET into a reactive resource. The function you pass is tracked: if it reads a signal, changing that signal automatically sends a new request (cancelling the previous one). The resource exposes <code>value()</code>, <code>isLoading()</code>, <code>error()</code>, <code>hasValue()</code> plus <code>reload()</code> and <code>set()</code>. It uses <code>HttpClient</code>, so every interceptor applies.</p></div>
+<p class="file">angular-client/src/app/features/portfolio/portfolio.ts</p>
+<pre><code class="language-typescript">protected readonly status = signal&lt;StatusFilter&gt;('ALL');
+
+protected readonly portfolio = httpResource&lt;PortfolioDto&gt;(() =&gt; '/api/portfolio');
+/** Re-fetches automatically whenever status() changes: the request is a function of signals. */
+protected readonly orders = httpResource&lt;Order[]&gt;(
+  () =&gt; {
+    const params: Record&lt;string, string | number&gt; = { limit: 50 };
+    if (this.status() !== 'ALL') params['status'] = this.status();
+    return { url: '/api/orders', params };
+  },
+  { defaultValue: [] },
+);
+
+/** Revalue positions with streamed mids: value_now = value_at_load * mid_now / mid_at_load. */
+protected readonly positions = computed(() =&gt; {
+  const quotes = this.stream.quotes();
+  return (this.portfolio.value()?.positions ?? []).map((p) =&gt; {
+    const live = quotes.get(p.symbol)?.mid ?? p.lastPrice;
+    return { ...p, live, liveValue: (p.marketValue * live) / p.lastPrice };
+  });
+});</code></pre>
+<div class="pl"><p>Zasób z parametrem trasy wygląda tak samo: <code>httpResource(() =&gt; `/api/market/instruments/${this.symbol()}`)</code>. Przejście z <code>/markets/SAP</code> do <code>/markets/ASML</code> zmienia input <code>symbol</code>, a zasób sam pobiera nowe dane. W panelu deweloperskim <code>linkedSignal(() =&gt; this.settings.value())</code> tworzy edytowalną kopię ustawień, którą po zapisie nadpisujemy przez <code>settings.set(...)</code>.</p>
+<p><strong>Kiedy nie używać:</strong> do mutacji (POST/PUT/DELETE) zostajemy przy <code>HttpClient</code> i <code>firstValueFrom</code>, bo <code>httpResource</code> jest przeznaczony do odczytu.</p></div>
+<div class="en"><p>A resource with a route parameter looks the same: <code>httpResource(() =&gt; `/api/market/instruments/${this.symbol()}`)</code>. Navigating from <code>/markets/SAP</code> to <code>/markets/ASML</code> changes the <code>symbol</code> input and the resource fetches by itself. In the developer panel <code>linkedSignal(() =&gt; this.settings.value())</code> creates an editable copy of the settings that we overwrite with <code>settings.set(...)</code> after saving.</p>
+<p><strong>When not to use it:</strong> for mutations (POST/PUT/DELETE) we stay with <code>HttpClient</code> and <code>firstValueFrom</code>, because <code>httpResource</code> is meant for reads.</p></div>
+</section>
+
+<section class="chapter" id="ng-interceptors">
+<h2><span class="pl">Funkcyjne interceptory HTTP</span><span class="en">Functional HTTP interceptors</span></h2>
+<div class="pl"><p>Interceptor to zwykła funkcja <code>(req, next) =&gt; Observable</code>. Wewnątrz działa <code>inject()</code>, więc nie potrzeba klas ani tokenów <code>HTTP_INTERCEPTORS</code>. Mamy trzy, każdy z jedną odpowiedzialnością:</p></div>
+<div class="en"><p>An interceptor is a plain function <code>(req, next) =&gt; Observable</code>. <code>inject()</code> works inside it, so no classes or <code>HTTP_INTERCEPTORS</code> tokens are needed. We have three, each with one job:</p></div>
+<p class="file">angular-client/src/app/core/interceptors.ts</p>
+<pre><code class="language-typescript">/** Adds X-Tenant-Id so the backend serves the right broker even though the dev proxy rewrites Host. */
+export const tenantInterceptor: HttpInterceptorFn = (req, next) =&gt; {
+  const id = inject(TenantService).requestedId();
+  return next(id ? req.clone({ setHeaders: { 'X-Tenant-Id': id } }) : req);
+};
+
+/** Attaches the bearer token; a 401 on a protected call means the token is gone or expired. */
+export const authInterceptor: HttpInterceptorFn = (req, next) =&gt; {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const token = auth.token();
+  const authReq = token &amp;&amp; !req.url.startsWith('/api/auth/') ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
+  return next(authReq).pipe(
+    catchError((error: unknown) =&gt; {
+      if (error instanceof HttpErrorResponse &amp;&amp; error.status === 401 &amp;&amp; !req.url.startsWith('/api/auth/')) {
+        auth.logout();
+        void router.navigate(['/login'], { queryParams: { reason: 'expired' } });
+      }
+      return throwError(() =&gt; error);
+    }),
+  );
+};
+
+export const problemInterceptor: HttpInterceptorFn = (req, next) =&gt; {
+  const toasts = inject(ToastService);
+  return next(req).pipe(
+    retry({
+      count: req.method === 'GET' ? 2 : 0,
+      delay: (error: unknown, attempt) =&gt;
+        error instanceof HttpErrorResponse &amp;&amp; error.status === 503 ? timer(250 * attempt) : throwError(() =&gt; error),
+    }),
+    catchError((error: unknown) =&gt; {
+      if (error instanceof HttpErrorResponse &amp;&amp; (error.status === 0 || error.status &gt;= 500)) {
+        const problem = toProblem(error);
+        toasts.show('error', problem.title ?? 'Error', `${problem.detail ?? ''} [${problemSlug(problem)}]`);
+      }
+      return throwError(() =&gt; error);
+    }),
+  );
+};</code></pre>
+<pre class="mermaid">
+sequenceDiagram
+  participant C as Component
+  participant T as tenantInterceptor
+  participant A as authInterceptor
+  participant P as problemInterceptor
+  participant B as Backend
+  C->>T: GET /api/portfolio
+  T->>A: + X-Tenant-Id: kestrel
+  A->>P: + Authorization: Bearer …
+  P->>B: request
+  B-->>P: 503 simulated-failure
+  P->>B: retry after 250 ms
+  B-->>P: 200 JSON
+  P-->>C: PortfolioView
+</pre>
+<div class="pl"><p>Błędy 4xx nie są globalnie „połykane”: formularz zlecenia sam pokazuje <em>Problem Details</em> (np. <code>insufficient-funds</code>) obok przycisku, bo tylko on wie, gdzie je wyświetlić. Ponawiane są wyłącznie bezpieczne GET-y, nigdy POST zlecenia.</p></div>
+<div class="en"><p>4xx errors are not swallowed globally: the order form shows the <em>Problem Details</em> (e.g. <code>insufficient-funds</code>) next to the button itself, because only it knows where to display them. Only safe GETs are retried, never an order POST.</p></div>
+</section>
+
+<section class="chapter" id="ng-routing">
+<h2><span class="pl">Routing, leniwe ładowanie i funkcyjne guardy</span><span class="en">Routing, lazy loading and functional guards</span></h2>
+<div class="pl"><p>Każdy ekran ładuje się przez <code>loadComponent</code>, więc trafia do osobnego chunka JS. Guardy to funkcje <code>CanActivateFn</code>; <code>featureGuard</code> to fabryka guardów, która ukrywa panel deweloperski u brokerów bez flagi <code>simulatorPanel</code>.</p></div>
+<div class="en"><p>Every screen loads through <code>loadComponent</code>, so it ends up in its own JS chunk. Guards are <code>CanActivateFn</code> functions; <code>featureGuard</code> is a guard factory that hides the developer panel for brokers without the <code>simulatorPanel</code> flag.</p></div>
+<p class="file">angular-client/src/app/app.routes.ts</p>
+<pre><code class="language-typescript">export const routes: Routes = [
+  { path: 'login', loadComponent: () =&gt; import('./features/login/login').then((m) =&gt; m.Login), title: 'Sign in' },
+  {
+    path: '',
+    loadComponent: () =&gt; import('./features/shell/shell').then((m) =&gt; m.Shell),
+    canActivate: [authGuard],
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      { path: 'dashboard', loadComponent: () =&gt; import('./features/dashboard/dashboard').then((m) =&gt; m.Dashboard), title: 'Dashboard' },
+      { path: 'markets', loadComponent: () =&gt; import('./features/markets/markets').then((m) =&gt; m.Markets), title: 'Markets' },
+      { path: 'markets/:symbol', loadComponent: () =&gt; import('./features/instrument/instrument').then((m) =&gt; m.Instrument), title: 'Instrument' },
+      { path: 'portfolio', loadComponent: () =&gt; import('./features/portfolio/portfolio').then((m) =&gt; m.Portfolio), title: 'Portfolio' },
+      {
+        path: 'dev',
+        canActivate: [featureGuard('simulatorPanel')],
+        loadComponent: () =&gt; import('./features/dev/dev-panel').then((m) =&gt; m.DevPanel),
+        title: 'Developer',
+      },
+    ],
+  },
+  { path: '**', redirectTo: '' },
+];</code></pre>
+<p class="file">angular-client/src/app/core/guards.ts</p>
+<pre><code class="language-typescript">export const authGuard: CanActivateFn = (_route, state) =&gt; {
+  const auth = inject(AuthService);
+  const tenant = inject(TenantService);
+  if (auth.isLoggedIn() &amp;&amp; auth.tenantId() !== tenant.id()) {
+    auth.logout();
+  }
+  return auth.isLoggedIn() ? true : inject(Router).createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
+};
+
+export function featureGuard(flag: keyof Features): CanActivateFn {
+  return () =&gt; (inject(TenantService).features()?.[flag] ? true : inject(Router).createUrlTree(['/dashboard']));
+}</code></pre>
+<div class="pl"><p>Dzięki <code>withComponentInputBinding()</code> parametr <code>:symbol</code> i parametry zapytania (<code>returnUrl</code>, <code>reason</code>) trafiają prosto do <code>input()</code> komponentu, bez <code>ActivatedRoute</code> i subskrypcji. Guard zwraca <code>UrlTree</code> zamiast wołać <code>navigate()</code>, co pozwala routerowi poprawnie anulować nawigację.</p></div>
+<div class="en"><p>Thanks to <code>withComponentInputBinding()</code> the <code>:symbol</code> parameter and query parameters (<code>returnUrl</code>, <code>reason</code>) go straight into the component's <code>input()</code>s, with no <code>ActivatedRoute</code> and no subscriptions. The guard returns a <code>UrlTree</code> instead of calling <code>navigate()</code>, which lets the router cancel the navigation properly.</p></div>
+</section>
+
+<section class="chapter" id="ng-templates">
+<h2><span class="pl">Szablony: @if, @for, @let i @defer</span><span class="en">Templates: @if, @for, @let and @defer</span></h2>
+<div class="pl"><p>Wbudowany control flow zastępuje <code>*ngIf</code>/<code>*ngFor</code>: jest szybszy, typowany i nie wymaga importów. <code>@for</code> wymaga <code>track</code>, a <code>@empty</code> obsługuje pustą listę. <code>@let</code> deklaruje lokalną zmienną szablonu.</p></div>
+<div class="en"><p>Built-in control flow replaces <code>*ngIf</code>/<code>*ngFor</code>: faster, typed and import-free. <code>@for</code> requires <code>track</code>, and <code>@empty</code> handles an empty list. <code>@let</code> declares a local template variable.</p></div>
+<p class="file">angular-client/src/app/features/markets/markets.ts (template)</p>
+<pre><code class="language-html">@for (row of rows(); track row.symbol) {
+  &lt;tr&gt;
+    &lt;td&gt;&lt;a [routerLink]="[row.symbol]"&gt;{{ row.symbol }}&lt;/a&gt;&lt;/td&gt;
+    &lt;td&gt;&lt;tc-sparkline [values]="stream.sparklines()[row.symbol] ?? []" /&gt;&lt;/td&gt;
+    &lt;td class="num" [tcFlash]="row.quote.bid"&gt;{{ row.quote.bid | price: row.decimals }}&lt;/td&gt;
+    &lt;td class="num" [tcFlash]="row.quote.ask"&gt;{{ row.quote.ask | price: row.decimals }}&lt;/td&gt;
+  &lt;/tr&gt;
+} @empty {
+  @if (!instruments.isLoading()) { &lt;tr&gt;&lt;td colspan="6" class="muted"&gt;No instruments match.&lt;/td&gt;&lt;/tr&gt; }
+}</code></pre>
+<div class="pl"><p><code>@defer</code> to leniwe ładowanie na poziomie szablonu. Kod komponentu <code>Allocation</code> jest wydzielany do osobnego chunka i pobierany dopiero, gdy karta wjedzie w obszar widoku. <code>@placeholder</code> pokazuje się przed wyzwalaczem, <code>@loading</code> w trakcie pobierania (z minimalnym czasem, żeby nie migało).</p></div>
+<div class="en"><p><code>@defer</code> is lazy loading at template level. The <code>Allocation</code> component's code is split into its own chunk and fetched only when the card scrolls into view. <code>@placeholder</code> shows before the trigger, <code>@loading</code> while downloading (with a minimum time to avoid flicker).</p></div>
+<p class="file">angular-client/src/app/features/dashboard/dashboard.ts (template)</p>
+<pre><code class="language-html">@defer (on viewport) {
+  @if (portfolio.value(); as p) {
+    &lt;tc-allocation [portfolio]="p" /&gt;
+  }
+} @placeholder {
+  &lt;div class="card"&gt;&lt;div class="skeleton" style="block-size: 6rem"&gt;&lt;/div&gt;&lt;/div&gt;
+} @loading (minimum 300ms) {
+  &lt;div class="card"&gt;&lt;div class="skeleton" style="block-size: 6rem"&gt;&lt;/div&gt;&lt;/div&gt;
+}</code></pre>
+<p class="pl">Wykres ceny to czyste SVG; <code>@let</code> trzyma wyliczoną geometrię, aby nie wołać <code>geometry()</code> wielokrotnie:</p>
+<p class="en">The price chart is pure SVG; <code>@let</code> keeps the computed geometry so <code>geometry()</code> is not called repeatedly:</p>
+<p class="file">angular-client/src/app/shared/price-chart.ts (template)</p>
+<pre><code class="language-html">@let g = geometry();
+&lt;svg class="chart" [attr.viewBox]="'0 0 ' + width + ' ' + height" role="img" [attr.aria-label]="label()"&gt;
+  @for (tick of g.yTicks; track $index) {
+    &lt;line class="chart__grid" x1="8" [attr.x2]="width - 64" [attr.y1]="tick.y" [attr.y2]="tick.y" /&gt;
+    &lt;text class="chart__label" [attr.x]="width - 58" [attr.y]="tick.y + 4"&gt;{{ tick.value | price: decimals() }}&lt;/text&gt;
+  }
+  &lt;path class="chart__area" [attr.d]="g.area" /&gt;
+  &lt;path class="chart__line" [attr.d]="g.line" /&gt;
+&lt;/svg&gt;</code></pre>
+</section>
+
+<section class="chapter" id="ng-forms">
+<h2><span class="pl">Formularze: typowane Reactive Forms i sygnały</span><span class="en">Forms: typed Reactive Forms and signals</span></h2>
+<div class="pl"><p>Bilet zlecenia używa <code>NonNullableFormBuilder</code> (typowane kontrolki bez <code>null</code>) oraz <code>toSignal()</code>, które przenosi strumień <code>valueChanges</code> ze świata RxJS do sygnałów. Dzięki temu szacowany koszt i walidacja to zwykłe <code>computed</code>. Strona (BUY/SELL) i typ (MARKET/LIMIT) to sygnały, bo to przełączniki, a nie pola tekstowe.</p></div>
+<div class="en"><p>The order ticket uses <code>NonNullableFormBuilder</code> (typed controls without <code>null</code>) and <code>toSignal()</code>, which carries the <code>valueChanges</code> stream from RxJS into signals. The estimated cost and validity are then plain <code>computed</code>s. Side (BUY/SELL) and type (MARKET/LIMIT) are signals because they are toggles, not text fields.</p></div>
+<p class="file">angular-client/src/app/features/instrument/order-ticket.ts</p>
+<pre><code class="language-typescript">protected readonly side = signal&lt;Side&gt;('BUY');
+protected readonly type = signal&lt;OrderType&gt;('MARKET');
+
+protected readonly form = inject(NonNullableFormBuilder).group({
+  quantity: [1, [Validators.required, Validators.min(0.00000001)]],
+  limitPrice: [0, [Validators.min(0)]],
+});
+
+/** Bridge from the RxJS world of reactive forms into signals. */
+private readonly values = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
+
+protected readonly estimate = computed(() =&gt; {
+  const qty = Number(this.values().quantity ?? 0);
+  const price = this.type() === 'LIMIT' ? Number(this.values().limitPrice ?? 0)
+    : this.side() === 'BUY' ? this.quote().ask : this.quote().bid;
+  return qty * price;
+});
+
+protected async submit(): Promise&lt;void&gt; {
+  if (!this.valid()) return;
+  const v = this.form.getRawValue();
+  const body: PlaceOrderRequest = {
+    symbol: this.instrument().symbol,
+    side: this.side(),
+    type: this.type(),
+    quantity: Number(v.quantity),
+    limitPrice: this.type() === 'LIMIT' ? Number(v.limitPrice) : null,
+  };
+  this.busy.set(true);
+  this.problem.set(null);
+  try {
+    const order = await firstValueFrom(this.http.post&lt;Order&gt;('/api/orders', body));
+    // … toast
+  } catch (e) {
+    this.problem.set(toProblem(e));
+  } finally {
+    this.busy.set(false);
+  }
+}</code></pre>
+<div class="pl"><p>Typ <code>PlaceOrderRequest</code> pochodzi z OpenAPI. Gdy backend doda pole wymagane, kompilator Angulara wskaże dokładnie to miejsce. Bilet nie wyświetla formularza u brokera bez handlu (Sakura) ani użytkownikowi z rolą VIEWER, a przycisk „Limit” jest wyłączony u brokera bez zleceń z limitem (Wisła). Backend i tak sprawdza te reguły: UI tylko je odzwierciedla.</p></div>
+<div class="en"><p>The <code>PlaceOrderRequest</code> type comes from OpenAPI. When the backend adds a required field, the Angular compiler points at exactly this place. The ticket hides the form for the portfolio-only broker (Sakura) and for VIEWER users, and the "Limit" button is disabled at the broker without limit orders (Wisła). The backend enforces these rules anyway: the UI only mirrors them.</p></div>
+</section>
+
+<section class="chapter" id="ng-sse">
+<h2><span class="pl">Ceny na żywo w Angularze: SSE, dyrektywa i SVG</span><span class="en">Live prices in Angular: SSE, a directive and SVG</span></h2>
+<div class="pl"><p><code>EventSource</code> to natywne API przeglądarki do Server-Sent Events: jedno długie połączenie HTTP, automatyczne wznawianie i nazwane zdarzenia. Serwis zapisuje każdy tick w sygnale; zoneless Angular odświeży tylko widoki, które ten sygnał czytają. <code>EventSource</code> nie pozwala wysłać nagłówków, dlatego broker jedzie w <code>?tenant=</code>, a dane rynkowe są publiczne (bez tokenu).</p></div>
+<div class="en"><p><code>EventSource</code> is the browser's native Server-Sent Events API: one long HTTP connection, automatic reconnects and named events. The service writes every tick into a signal; zoneless Angular re-renders only the views that read it. <code>EventSource</code> cannot send headers, so the broker travels as <code>?tenant=</code> and market data is public (no token).</p></div>
+<p class="file">angular-client/src/app/core/price-stream.ts</p>
+<pre><code class="language-typescript">connect(): void {
+  if (this.source) return;
+  this.status.set('connecting');
+  const id = this.tenant.id();
+  this.source = new EventSource(`/api/market/stream${id ? `?tenant=${encodeURIComponent(id)}` : ''}`);
+  this.source.onopen = () =&gt; this.status.set('live');
+  this.source.onerror = () =&gt; this.status.set(this.source?.readyState === EventSource.CLOSED ? 'error' : 'connecting');
+  this.source.addEventListener('quotes', (event) =&gt; this.onQuotes(JSON.parse((event as MessageEvent&lt;string&gt;).data)));
+}</code></pre>
+<div class="pl"><p>Komórki z ceną „błyskają” na zielono lub czerwono. To dyrektywa atrybutowa z sygnałowym inputem i efektem, bez <code>ngOnChanges</code>:</p></div>
+<div class="en"><p>Price cells flash green or red. It is an attribute directive with a signal input and an effect, no <code>ngOnChanges</code>:</p></div>
+<p class="file">angular-client/src/app/shared/flash.ts</p>
+<pre><code class="language-typescript">@Directive({ selector: '[tcFlash]' })
+export class Flash {
+  readonly tcFlash = input&lt;number | undefined&gt;();
+  private readonly el = inject&lt;ElementRef&lt;HTMLElement&gt;&gt;(ElementRef);
+  private previous: number | undefined;
+
+  constructor() {
+    effect(() =&gt; {
+      const value = this.tcFlash();
+      const prev = this.previous;
+      this.previous = value;
+      if (value == null || prev == null || value === prev) return;
+      const el = this.el.nativeElement;
+      el.classList.remove('flash-up', 'flash-down');
+      void el.offsetWidth; // restart the CSS animation
+      el.classList.add(value &gt; prev ? 'flash-up' : 'flash-down');
+    });
+  }
+}</code></pre>
+<div class="pl"><p>Sparkline'y i wykres nie używają biblioteki: geometria to czyste funkcje w <code>chart-geometry.ts</code> (identyczna kopia jest w kliencie React), a komponenty tylko wiążą wynik z atrybutami SVG. Taki podział ułatwia testy i pokazuje, że „wykres” to kilkadziesiąt linii matematyki.</p></div>
+<div class="en"><p>Sparklines and the chart use no library: the geometry is pure functions in <code>chart-geometry.ts</code> (an identical copy lives in the React client), and the components only bind the result to SVG attributes. This split makes testing easy and shows that a "chart" is a few dozen lines of maths.</p></div>
+</section>
+
+<section class="chapter" id="ng-testing">
+<h2><span class="pl">Testowanie Angulara z Vitest</span><span class="en">Testing Angular with Vitest</span></h2>
+<div class="pl"><p>Od Angulara 21 domyślnym runnerem jest Vitest (builder <code>@angular/build:unit-test</code>, środowisko jsdom). <code>npm test</code> uruchamia testy raz, <code>npm run test:watch</code> w trybie obserwacji. W zoneless teście nie ma <code>fakeAsync</code> ani <code>detectChanges()</code> na siłę: zmieniamy input i czekamy na <code>whenStable()</code>.</p></div>
+<div class="en"><p>Since Angular 21 Vitest is the default runner (builder <code>@angular/build:unit-test</code>, jsdom environment). <code>npm test</code> runs once, <code>npm run test:watch</code> watches. In zoneless tests there is no <code>fakeAsync</code> and no forced <code>detectChanges()</code>: set an input and await <code>whenStable()</code>.</p></div>
+<p class="file">angular-client/src/app/shared/sparkline.spec.ts</p>
+<pre><code class="language-typescript">it('reacts to new input values (signals, zoneless)', async () =&gt; {
+  const fixture = TestBed.createComponent(Sparkline);
+  fixture.componentRef.setInput('values', [3, 2, 1]);
+  await fixture.whenStable();
+  expect(fixture.nativeElement.querySelector('svg').classList).toContain('down');
+});</code></pre>
+<div class="pl"><p>Interceptory testujemy na prawdziwym <code>HttpClient</code> z <code>provideHttpClientTesting()</code>: wysyłamy żądanie, przechwytujemy je w <code>HttpTestingController</code> i sprawdzamy nagłówki.</p></div>
+<div class="en"><p>Interceptors are tested on a real <code>HttpClient</code> with <code>provideHttpClientTesting()</code>: send a request, catch it in <code>HttpTestingController</code> and assert the headers.</p></div>
+<p class="file">angular-client/src/app/core/interceptors.spec.ts</p>
+<pre><code class="language-typescript">it('adds the bearer token after login, but not to the login call itself', async () =&gt; {
+  const auth = TestBed.inject(AuthService);
+  const login = auth.login('trader@wisla.test', 'demo');
+  const tokenReq = backend.expectOne('/api/auth/token');
+  expect(tokenReq.request.headers.has('Authorization')).toBe(false);
+  tokenReq.flush({ accessToken: 'abc', tokenType: 'Bearer', expiresIn: 60,
+    user: { id: '1', name: 'T', email: 'trader@wisla.test', roles: ['TRADER'], tenant: 'wisla' } });
+  await login;
+
+  http.get('/api/portfolio').subscribe();
+  expect(backend.expectOne('/api/portfolio').request.headers.get('Authorization')).toBe('Bearer abc');
+});</code></pre>
+<pre><code class="language-text"> Test Files  4 passed (4)
+      Tests  13 passed (13)</code></pre>
+</section>
+
+<div class="part-title"><span class="pl">Część III · React 19</span><span class="en">Part III · React 19</span></div>
+
+<section class="chapter" id="react-setup">
+<h2><span class="pl">React 19 i Vite</span><span class="en">React 19 and Vite</span></h2>
+<div class="pl"><p>Klient React powstał z <code>create-vite --template react-ts</code>. Vite serwuje moduły ES w trybie dev (natychmiastowy start, HMR) i buduje produkcję przez Rolldown. Ta sama konfiguracja obsługuje proxy do API, dostęp do wspólnego CSS spoza katalogu projektu oraz Vitest:</p></div>
+<div class="en"><p>The React client was created with <code>create-vite --template react-ts</code>. Vite serves ES modules in dev (instant start, HMR) and builds production with Rolldown. One config handles the API proxy, access to the shared CSS outside the project folder and Vitest:</p></div>
+<p class="file">react-client/vite.config.ts</p>
+<pre><code class="language-typescript">export default defineConfig({
+  plugins: [react()],
+  server: {
+    port: 5173,
+    // The dev proxy forwards API calls to Spring Boot; the tenant travels in X-Tenant-Id.
+    proxy: {
+      '/api': { target: 'http://localhost:8080', changeOrigin: true },
+    },
+    // ../shared/styles is imported from outside the project root.
+    fs: { allow: ['..'] },
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/test-setup.ts'],
+    css: false,
+  },
+})</code></pre>
+<div class="pl"><p>Drzewo providerów w <code>main.tsx</code>: <code>QueryClientProvider</code> (cache danych serwera) → <code>TenantProvider</code> (broker i motyw) → <code>RouterProvider</code>. Odpowiednik Angularowego <code>provideAppInitializer</code> to <code>TenantProvider</code>, który nie renderuje dzieci, dopóki broker nie zostanie pobrany:</p></div>
+<div class="en"><p>The provider tree in <code>main.tsx</code>: <code>QueryClientProvider</code> (server-state cache) → <code>TenantProvider</code> (broker and theme) → <code>RouterProvider</code>. The counterpart of Angular's <code>provideAppInitializer</code> is <code>TenantProvider</code>, which renders no children until the broker is loaded:</p></div>
+<p class="file">react-client/src/core/TenantProvider.tsx</p>
+<pre><code class="language-typescript">export function TenantProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient()
+  const [requested, setRequested] = useState(getRequestedTenant)
+  const { data: tenant, error } = useQuery({
+    queryKey: ['tenant', 'current', requested],
+    queryFn: () =&gt; unwrap(api.GET('/api/tenants/current')),
+    staleTime: Infinity,
+  })
+
+  useEffect(() =&gt; {
+    if (!tenant) return
+    applyTheme(tenant)
+    document.title = `${tenant.name} · React`
+  }, [tenant])
+
+  if (error) return &lt;div className="login"&gt;&lt;div className="alert alert--error"&gt;The API is not reachable.&lt;/div&gt;&lt;/div&gt;
+  if (!tenant) return null
+  // …
+  return &lt;TenantContext value={{ tenant, switchTo }}&gt;{children}&lt;/TenantContext&gt;
+}</code></pre>
+<div class="note"><span class="pl">W React 19 kontekst renderuje się bezpośrednio jako <code>&lt;TenantContext value=…&gt;</code> (bez <code>.Provider</code>), a czytamy go przez <code>use(TenantContext)</code>.</span><span class="en">In React 19 a context renders directly as <code>&lt;TenantContext value=…&gt;</code> (no <code>.Provider</code>) and is read with <code>use(TenantContext)</code>.</span></div>
+</section>
+
+<section class="chapter" id="react-router">
+<h2><span class="pl">React Router: data router i leniwe trasy</span><span class="en">React Router: data router and lazy routes</span></h2>
+<div class="pl"><p><code>createBrowserRouter</code> przyjmuje drzewo tras jako dane. Właściwość <code>lazy</code> ładuje moduł trasy dopiero przy pierwszej nawigacji, co daje jeden chunk na ekran, tak jak <code>loadComponent</code> w Angularze. Guardy w React to zwykłe komponenty, które renderują dzieci albo <code>&lt;Navigate&gt;</code>.</p></div>
+<div class="en"><p><code>createBrowserRouter</code> takes the route tree as data. The <code>lazy</code> property loads a route's module on first navigation, giving one chunk per screen, like Angular's <code>loadComponent</code>. Guards in React are plain components that render their children or a <code>&lt;Navigate&gt;</code>.</p></div>
+<p class="file">react-client/src/main.tsx</p>
+<pre><code class="language-typescript">const page = (load: () =&gt; Promise&lt;{ default: React.ComponentType }&gt;) =&gt; async () =&gt; ({ Component: (await load()).default })
+
+const router = createBrowserRouter([
+  { path: '/login', lazy: page(() =&gt; import('./pages/Login')) },
+  {
+    path: '/',
+    element: &lt;RequireAuth&gt;&lt;ShellRoute /&gt;&lt;/RequireAuth&gt;,
+    children: [
+      { index: true, element: &lt;Navigate to="/dashboard" replace /&gt; },
+      { path: 'dashboard', lazy: page(() =&gt; import('./pages/Dashboard')) },
+      { path: 'markets', lazy: page(() =&gt; import('./pages/Markets')) },
+      { path: 'markets/:symbol', lazy: page(() =&gt; import('./pages/Instrument')) },
+      { path: 'portfolio', lazy: page(() =&gt; import('./pages/Portfolio')) },
+      { path: 'dev', element: &lt;RequireFeature flag="simulatorPanel"&gt;&lt;DevRoute /&gt;&lt;/RequireFeature&gt; },
+    ],
+  },
+  { path: '*', element: &lt;Navigate to="/" replace /&gt; },
+])</code></pre>
+<p class="file">react-client/src/components/Guards.tsx</p>
+<pre><code class="language-typescript">export function RequireAuth({ children }: { children: ReactNode }) {
+  const { session } = useAuth()
+  const { tenant } = useTenant()
+  const location = useLocation()
+  // A session of another broker is useless here: the API would answer 403 tenant-mismatch.
+  if (!session || session.user.tenant !== tenant.id) {
+    return &lt;Navigate to={`/login?returnUrl=${encodeURIComponent(location.pathname)}`} replace /&gt;
+  }
+  return children
+}</code></pre>
+<table>
+<thead><tr><th>Angular</th><th>React</th></tr></thead>
+<tbody>
+<tr><td><code>loadComponent</code></td><td><code>lazy</code> / <code>React.lazy</code></td></tr>
+<tr><td><code>CanActivateFn</code> → <code>UrlTree</code></td><td><span class="pl">komponent</span><span class="en">component</span> → <code>&lt;Navigate&gt;</code></td></tr>
+<tr><td><code>input.required&lt;string&gt;()</code> + <code>withComponentInputBinding</code></td><td><code>useParams()</code></td></tr>
+<tr><td><code>routerLinkActive</code></td><td><code>&lt;NavLink&gt;</code> (<span class="pl">klasa</span><span class="en">class</span> <code>active</code>)</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="chapter" id="react-query">
+<h2><span class="pl">TanStack Query: stan serwera</span><span class="en">TanStack Query: server state</span></h2>
+<div class="pl"><p>TanStack Query to cache odpowiedzi serwera: deduplikuje żądania, ponawia je, unieważnia i odświeża w tle. Klucze zapytań zaczynają się od id brokera, więc cache dwóch marek nigdy się nie miesza. <code>queryOptions()</code> trzyma klucz, funkcję i typ wyniku razem.</p></div>
+<div class="en"><p>TanStack Query is a cache of server responses: it deduplicates, retries, invalidates and refetches in the background. Query keys start with the broker id so two brands' caches never mix. <code>queryOptions()</code> keeps the key, the fetcher and the result type together.</p></div>
+<p class="file">react-client/src/api/queries.ts</p>
+<pre><code class="language-typescript">const t = () =&gt; getRequestedTenant() ?? 'default'
+
+export const queries = {
+  instrument: (symbol: string) =&gt;
+    queryOptions({
+      queryKey: [t(), 'instrument', symbol],
+      queryFn: () =&gt; unwrap(api.GET('/api/market/instruments/{symbol}', { params: { path: { symbol } } })),
+      retry: false,
+    }),
+  portfolio: () =&gt; queryOptions({ queryKey: [t(), 'portfolio'], queryFn: () =&gt; unwrap(api.GET('/api/portfolio')) }),
+  orders: (status?: Order['status'], limit = 50) =&gt;
+    queryOptions({
+      queryKey: [t(), 'orders', status ?? 'ALL', limit],
+      queryFn: () =&gt; unwrap(api.GET('/api/orders', { params: { query: { status, limit } } })),
+    }),
+}</code></pre>
+<div class="pl"><p>Mutacje przez <code>useMutation</code>. Po złożeniu zlecenia unieważniamy portfel i listę zleceń. Portfel aktualizuje się na backendzie asynchronicznie (zdarzenie po commicie), dlatego odświeżamy go z małym opóźnieniem, co dobrze ilustruje <em>eventual consistency</em>.</p></div>
+<div class="en"><p>Mutations use <code>useMutation</code>. After placing an order we invalidate the portfolio and the order list. The backend updates the portfolio asynchronously (an event after commit), so we refetch after a short delay, a nice illustration of <em>eventual consistency</em>.</p></div>
+<p class="file">react-client/src/pages/OrderTicket.tsx</p>
+<pre><code class="language-typescript">const place = useMutation({
+  mutationFn: (body: PlaceOrderRequest) =&gt; unwrap(api.POST('/api/orders', { body })),
+  onSuccess: (order) =&gt; {
+    showToast('success', order.status === 'FILLED' ? 'Order filled' : 'Order placed', /* … */)
+    // the portfolio is updated asynchronously by the backend: refetch shortly after
+    setTimeout(() =&gt; void queryClient.invalidateQueries({
+      predicate: (q) =&gt; ['portfolio', 'orders'].includes(String(q.queryKey[1])) }), 300)
+  },
+})</code></pre>
+<div class="pl"><p>Globalna polityka ponawiania odpowiada interceptorowi z Angulara: ponawiamy tylko 503, nigdy 4xx, a błędy 5xx trafiają do toastów przez <code>QueryCache.onError</code>.</p></div>
+<div class="en"><p>The global retry policy mirrors the Angular interceptor: only 503 is retried, never 4xx, and 5xx errors become toasts through <code>QueryCache.onError</code>.</p></div>
+<pre><code class="language-typescript">const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5_000,
+      retry: (count, error) =&gt; (error instanceof ApiError ? error.status === 503 &amp;&amp; count &lt; 2 : count &lt; 1),
+      retryDelay: (attempt) =&gt; 250 * (attempt + 1),
+    },
+  },
+})</code></pre>
+</section>
+
+<section class="chapter" id="react-uses">
+<h2><span class="pl">useSyncExternalStore: stan poza Reactem</span><span class="en">useSyncExternalStore: state outside React</span></h2>
+<div class="pl"><p>Sesja, toasty i strumień cen żyją poza drzewem komponentów, w małych „sklepach”. <code>useSyncExternalStore(subscribe, getSnapshot)</code> to oficjalny sposób, by React czytał zewnętrzny stan bez „rozdarć” (tearing) podczas renderowania współbieżnego. Warunek: <code>getSnapshot</code> musi zwracać <em>niezmienny</em> obiekt i ten sam obiekt, jeśli nic się nie zmieniło.</p></div>
+<div class="en"><p>Session, toasts and the price stream live outside the component tree in tiny stores. <code>useSyncExternalStore(subscribe, getSnapshot)</code> is the official way for React to read external state without tearing during concurrent rendering. The rule: <code>getSnapshot</code> must return an <em>immutable</em> object, and the same object when nothing changed.</p></div>
+<p class="file">react-client/src/core/externalStore.ts</p>
+<pre><code class="language-typescript">export function createStore&lt;T&gt;(initial: T): Store&lt;T&gt; {
+  let state = initial
+  const listeners = new Set&lt;() =&gt; void&gt;()
+  return {
+    get: () =&gt; state,
+    set(next) {
+      const value = typeof next === 'function' ? (next as (prev: T) =&gt; T)(state) : next
+      if (Object.is(value, state)) return
+      state = value
+      listeners.forEach((l) =&gt; l())
+    },
+    subscribe(listener) {
+      listeners.add(listener)
+      return () =&gt; listeners.delete(listener)
+    },
+  }
+}</code></pre>
+<p class="file">react-client/src/core/priceStream.ts</p>
+<pre><code class="language-typescript">export function onQuotes(list: Quote[]): void {
+  streamStore.set((s) =&gt; {
+    const sparklines: Record&lt;string, number[] | undefined&gt; = { ...s.sparklines }
+    for (const q of list) {
+      sparklines[q.symbol] = [...(sparklines[q.symbol] ?? []).slice(-(SPARK_POINTS - 1)), q.mid]
+    }
+    return { status: 'live', quotes: new Map(list.map((q) =&gt; [q.symbol, q])), sparklines, lastTick: new Date() }
+  })
+}
+
+/** Subscribe to the whole stream state. */
+export function useStream(): StreamState {
+  return useSyncExternalStore(streamStore.subscribe, streamStore.get)
+}
+
+/** Subscribe to one quote only: the selector returns the same object until that symbol ticks. */
+export function useQuote(symbol: string): Quote | undefined {
+  return useSyncExternalStore(streamStore.subscribe, () =&gt; streamStore.get().quotes.get(symbol))
+}</code></pre>
+<div class="pl"><p>Połączenie SSE otwiera powłoka aplikacji w <code>useEffect(() =&gt; connectStream(), [])</code>. Funkcja zwraca „sprzątanie”, a licznik referencji sprawia, że podwójne montowanie efektów w <code>StrictMode</code> nie otwiera dwóch połączeń. Porównanie: w Angularze ten sam serwis trzyma stan w sygnałach, w React w sklepie zewnętrznym; oba podejścia dają precyzyjne odświeżanie.</p></div>
+<div class="en"><p>The shell opens the SSE connection in <code>useEffect(() =&gt; connectStream(), [])</code>. The function returns a cleanup, and reference counting keeps StrictMode's double effect mount from opening two connections. Compare: in Angular the same service keeps state in signals, in React in an external store; both give precise re-rendering.</p></div>
+</section>
+
+<section class="chapter" id="react-19">
+<h2><span class="pl">Nowości React 19: use, Actions, useDeferredValue, Suspense</span><span class="en">React 19 APIs: use, Actions, useDeferredValue, Suspense</span></h2>
+<div class="pl"><p><strong>Actions i <code>useActionState</code>.</strong> Formularz logowania przekazuje funkcję do atrybutu <code>action</code>. React wywołuje ją z <code>FormData</code> i sam śledzi stan oczekiwania (<code>isPending</code>), bez ręcznego <code>useState</code>.</p></div>
+<div class="en"><p><strong>Actions and <code>useActionState</code>.</strong> The login form passes a function to the <code>action</code> attribute. React calls it with <code>FormData</code> and tracks the pending state (<code>isPending</code>) for us, with no manual <code>useState</code>.</p></div>
+<p class="file">react-client/src/pages/Login.tsx</p>
+<pre><code class="language-typescript">const [, submit, isPending] = useActionState(async (_: null, form: FormData) =&gt; {
+  await login.mutateAsync({ username: String(form.get('username')), password: String(form.get('password')) }).catch(() =&gt; undefined)
+  return null
+}, null)
+
+// …
+&lt;form className="stack" action={submit}&gt;
+  …
+  &lt;button className="btn" type="submit" disabled={isPending}&gt;{isPending ? 'Signing in…' : 'Sign in'}&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+<div class="pl"><p><strong><code>useDeferredValue</code>.</strong> Na liście rynków pole wyszukiwania pozostaje responsywne, a filtrowanie używa „opóźnionej” wartości, którą React może policzyć z niższym priorytetem.</p>
+<p><strong><code>React.lazy</code> + <code>Suspense</code>.</strong> Karta alokacji na dashboardzie to osobny chunk, odpowiednik <code>@defer</code>.</p>
+<p><strong>Dostosowanie stanu przy zmianie danych.</strong> Wykres instrumentu resetuje lokalny stan, gdy przyjdzie nowa historia, bez <code>useEffect</code> (wzorzec „adjusting state when a prop changes”):</p></div>
+<div class="en"><p><strong><code>useDeferredValue</code>.</strong> On the markets list the search box stays responsive while filtering uses a deferred value that React can compute at lower priority.</p>
+<p><strong><code>React.lazy</code> + <code>Suspense</code>.</strong> The dashboard's allocation card is a separate chunk, the counterpart of <code>@defer</code>.</p>
+<p><strong>Adjusting state when data changes.</strong> The instrument chart resets local state when new history arrives, without <code>useEffect</code>:</p></div>
+<p class="file">react-client/src/pages/Instrument.tsx</p>
+<pre><code class="language-typescript">const [points, setPoints] = useState&lt;ChartPoint[]&gt;([])
+const [source, setSource] = useState(history.data)
+if (source !== history.data) {
+  setSource(history.data)
+  setPoints((history.data ?? []).map((p) =&gt; ({ t: Date.parse(p.t), price: p.price })))
+}
+useEffect(() =&gt; {
+  if (!liveQuote) return
+  const t = Date.parse(liveQuote.timestamp)
+  setPoints((prev) =&gt; (prev.length &amp;&amp; prev[prev.length - 1].t &gt;= t ? prev : [...prev.slice(-179), { t, price: liveQuote.mid }]))
+}, [liveQuote])</code></pre>
+<table>
+<thead><tr><th>Angular 21</th><th>React 19</th></tr></thead>
+<tbody>
+<tr><td><code>signal</code> / <code>computed</code></td><td><code>useState</code> / <span class="pl">wyliczenie w renderze lub</span><span class="en">compute during render or</span> <code>useMemo</code></td></tr>
+<tr><td><code>linkedSignal</code></td><td><span class="pl">stan + reset przy zmianie źródła</span><span class="en">state + reset on source change</span></td></tr>
+<tr><td><code>effect</code></td><td><code>useEffect</code></td></tr>
+<tr><td><code>httpResource</code></td><td><code>useQuery</code></td></tr>
+<tr><td><span class="pl">serwis z sygnałami</span><span class="en">service with signals</span></td><td><code>useSyncExternalStore</code></td></tr>
+<tr><td><code>@defer</code></td><td><code>React.lazy</code> + <code>Suspense</code></td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="chapter" id="react-testing">
+<h2><span class="pl">Testowanie Reacta: Vitest i Testing Library</span><span class="en">Testing React: Vitest and Testing Library</span></h2>
+<div class="pl"><p>Testing Library zachęca do testowania tak, jak używa aplikacji człowiek: szukamy elementów po roli i nazwie dostępnej (<code>getByRole('img', { name: 'Rising' })</code>), klikamy przez <code>userEvent</code>. Dzięki temu testy sprawdzają też dostępność.</p></div>
+<div class="en"><p>Testing Library encourages testing the way a person uses the app: find elements by role and accessible name (<code>getByRole('img', { name: 'Rising' })</code>) and click through <code>userEvent</code>. Tests therefore check accessibility too.</p></div>
+<p class="file">react-client/src/components/Toasts.test.tsx</p>
+<pre><code class="language-typescript">it('shows a toast from anywhere and dismisses it on click', async () =&gt; {
+  render(&lt;Toasts /&gt;)
+  act(() =&gt; showToast('error', 'Insufficient funds', 'Only 10 GBP available'))
+  expect(screen.getByText('Insufficient funds')).toBeInTheDocument()
+  await userEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
+  expect(screen.queryByText('Insufficient funds')).not.toBeInTheDocument()
+})</code></pre>
+<div class="pl"><p>Hooki testujemy przez <code>renderHook</code>. Test sklepu cen sprawdza, że każdy tick powoduje nowy snapshot i dokleja punkt do sparkline'u:</p></div>
+<div class="en"><p>Hooks are tested with <code>renderHook</code>. The price store test checks that each tick produces a new snapshot and appends a sparkline point:</p></div>
+<p class="file">react-client/src/core/priceStream.test.ts</p>
+<pre><code class="language-typescript">it('re-renders subscribers on every tick and builds sparklines', () =&gt; {
+  const { result } = renderHook(() =&gt; useStream())
+  act(() =&gt; onQuotes([quote('AAPL', 100), quote('SAP', 200)]))
+  act(() =&gt; onQuotes([quote('AAPL', 101), quote('SAP', 199)]))
+  expect(result.current.status).toBe('live')
+  expect(result.current.quotes.get('AAPL')?.mid).toBe(101)
+  expect(result.current.sparklines['SAP']?.slice(-2)).toEqual([200, 199])
+})</code></pre>
+<pre><code class="language-text"> RUN  v5.1.2 react-client
+ Test Files  5 passed (5)
+      Tests  12 passed (12)</code></pre>
+</section>
+
+<section class="chapter" id="shared-frontend">
+<h2><span class="pl">Wspólne fundamenty: typy z OpenAPI i motywy w CSS</span><span class="en">Shared foundations: OpenAPI types and CSS themes</span></h2>
+<div class="pl"><p><strong>Typy z kontraktu.</strong> Backend publikuje OpenAPI 3.1 pod <code>/v3/api-docs</code>; plik jest zapisany w <code>openapi/openapi.json</code>. Oba klienty generują z niego typy przez <code>npm run gen:api</code> (<code>openapi-typescript</code>). Angular używa ich z <code>HttpClient</code>, React z <code>openapi-fetch</code>, który sprawdza nawet ścieżki i parametry:</p></div>
+<div class="en"><p><strong>Types from the contract.</strong> The backend publishes OpenAPI 3.1 at <code>/v3/api-docs</code>; the file is saved as <code>openapi/openapi.json</code>. Both clients generate types from it with <code>npm run gen:api</code> (<code>openapi-typescript</code>). Angular uses them with <code>HttpClient</code>, React with <code>openapi-fetch</code>, which even checks paths and parameters:</p></div>
+<p class="file">angular-client/src/app/api/schema.d.ts (generated)</p>
+<pre><code class="language-typescript">Order: {
+    /** Format: uuid */
+    id: string;
+    tenantId: string;
+    userId: string;
+    symbol: string;
+    /** @enum {string} */
+    side: "BUY" | "SELL";
+    /** @enum {string} */
+    type: "MARKET" | "LIMIT";
+    quantity: number;
+    limitPrice: number | null;
+    /** @enum {string} */
+    status: "OPEN" | "FILLED" | "CANCELLED" | "REJECTED";
+    fillPrice: number | null;
+    rejectReason: string | null;
+    /** Format: date-time */
+    createdAt: string;
+    /** Format: date-time */
+    updatedAt: string;
+};</code></pre>
+<div class="pl"><p>Rekordy Javy nie mają pól opcjonalnych, więc <code>OpenApiConfig</code> oznacza wszystkie właściwości jako wymagane, a nieliczne pola mogące być <code>null</code> typuje jako <code>T | null</code>. Bez tego każde pole w TypeScripcie byłoby <code>?:</code>.</p>
+<p><strong>Motywy w CSS.</strong> Wspólny plik <code>shared/styles/tradechameleon.css</code> używa warstw <code>@layer</code>, zagnieżdżania, <code>color-mix()</code>, <code>:has()</code>, kontenerowych media queries i właściwości logicznych. Marka to kilkanaście zmiennych; reszta jest wyliczana:</p></div>
+<div class="en"><p>Java records have no optional fields, so <code>OpenApiConfig</code> marks every property as required and types the few nullable fields as <code>T | null</code>. Without it every TypeScript field would be <code>?:</code>.</p>
+<p><strong>CSS themes.</strong> The shared <code>shared/styles/tradechameleon.css</code> uses <code>@layer</code>, nesting, <code>color-mix()</code>, <code>:has()</code>, container queries and logical properties. A brand is a dozen variables; everything else is derived:</p></div>
+<p class="file">shared/styles/tradechameleon.css</p>
+<pre><code class="language-css">:root {
+  /* brand: overwritten per tenant at runtime */
+  --tc-primary: #0f766e;
+  --tc-surface: #ffffff;
+  --tc-text: #0f1f1c;
+  --tc-radius: 12px;
+  /* derived */
+  --tc-border: color-mix(in oklab, var(--tc-text) 12%, transparent);
+  --tc-primary-soft: color-mix(in oklab, var(--tc-primary) 14%, var(--tc-surface));
+  --tc-radius-sm: calc(var(--tc-radius) * 0.6);
+}
+
+.grid--2 {
+  grid-template-columns: 1fr;
+  @container (width &gt; 760px) { grid-template-columns: 3fr 2fr; }
+}
+
+.field {
+  &amp;:has(input:user-invalid) input { border-color: var(--tc-negative); }
+}</code></pre>
+<p class="file">angular-client/src/app/core/tenant.ts (react-client/src/core/tenant.ts: identical)</p>
+<pre><code class="language-typescript">export function applyTheme(tenant: Tenant, root: HTMLElement = document.documentElement): void {
+  const t = tenant.theme;
+  const vars: Record&lt;string, string&gt; = {
+    '--tc-primary': t.primary,
+    '--tc-on-primary': t.onPrimary,
+    '--tc-accent': t.accent,
+    '--tc-bg': t.background,
+    // …
+    '--tc-font-heading': t.fontHeading,
+  };
+  for (const [name, value] of Object.entries(vars)) {
+    root.style.setProperty(name, value);
+  }
+  root.style.colorScheme = t.colorScheme;
+  root.lang = tenant.locale;
+  root.dataset['tenant'] = tenant.id;
+}</code></pre>
+<div class="pl"><p>Formatowanie liczb i walut idzie przez <code>Intl.NumberFormat</code> z lokalizacją brokera: ta sama kwota to <code>100.000,00 €</code> u Kestrel, <code>400 000,00 zł</code> u Wisły i <code>￥15,000,000</code> u Sakury.</p></div>
+<div class="en"><p>Numbers and currencies are formatted with <code>Intl.NumberFormat</code> in the broker's locale: the same kind of amount is <code>100.000,00 €</code> at Kestrel, <code>400 000,00 zł</code> at Wisła and <code>￥15,000,000</code> at Sakura.</p></div>
+</section>
+
+<div class="part-title"><span class="pl">Część IV · Backend Spring</span><span class="en">Part IV · Spring backend</span></div>
+
+<section class="chapter" id="boot4">
+<h2><span class="pl">Spring Boot 4 na Javie 25: wirtualne wątki i ScopedValue</span><span class="en">Spring Boot 4 on Java 25: virtual threads and ScopedValue</span></h2>
+<div class="pl"><p>Spring Boot 4 (Spring Framework 7) wymaga nowoczesnej Javy, używa Jacksona 3 (<code>tools.jackson.*</code>), JSpecify do adnotacji null-safety i jest podzielony na drobniejsze startery (np. <code>spring-boot-starter-webmvc</code>, <code>spring-boot-starter-security-oauth2-resource-server</code>). Jedna właściwość przełącza cały serwer na <strong>wirtualne wątki</strong>:</p></div>
+<div class="en"><p>Spring Boot 4 (Spring Framework 7) requires a modern Java, uses Jackson 3 (<code>tools.jackson.*</code>), JSpecify for null-safety annotations and is split into finer-grained starters (e.g. <code>spring-boot-starter-webmvc</code>, <code>spring-boot-starter-security-oauth2-resource-server</code>). One property switches the whole server to <strong>virtual threads</strong>:</p></div>
+<p class="file">backend/src/main/resources/application.yml</p>
+<pre><code class="language-yaml">spring:
+  threads:
+    virtual:
+      enabled: true            # every request, scheduler and listener runs on virtual threads
+  mvc:
+    problemdetails:
+      enabled: true            # framework errors (400/404/405/415...) are rendered as RFC 9457 problem details</code></pre>
+<div class="pl"><p>Wątek wirtualny kosztuje kilkaset bajtów zamiast megabajta stosu. Blokujące wywołanie (JDBC, <code>Thread.sleep</code>, wysyłka SSE) „parkuje” wątek wirtualny i zwalnia wątek nośny. Dzięki temu kod pozostaje prosty i synchroniczny, a serwer obsługuje tysiące jednoczesnych żądań. Symulator opóźnień po prostu woła <code>Thread.sleep</code>, a silnik cen używa planisty na wątku wirtualnym:</p></div>
+<div class="en"><p>A virtual thread costs a few hundred bytes instead of a megabyte of stack. A blocking call (JDBC, <code>Thread.sleep</code>, an SSE send) parks the virtual thread and frees its carrier thread. Code stays simple and synchronous while the server handles thousands of concurrent requests. The latency simulator just calls <code>Thread.sleep</code>, and the price engine uses a scheduler on a virtual thread:</p></div>
+<pre><code class="language-java">scheduler = Executors.newSingleThreadScheduledExecutor(Thread.ofVirtual().name("price-engine").factory());
+// and in PriceStream: one virtual thread per SSE send
+private final ExecutorService senders = Executors.newVirtualThreadPerTaskExecutor();</code></pre>
+<div class="pl"><p><strong><code>ScopedValue</code></strong> (finalne w Javie 25) zastępuje <code>ThreadLocal</code> dla kontekstu żądania: jest niezmienne, automatycznie czyszczone po wyjściu z zakresu i tanie przy milionach wątków wirtualnych. Filtr brokera wiąże go na czas całego łańcucha filtrów:</p></div>
+<div class="en"><p><strong><code>ScopedValue</code></strong> (final in Java 25) replaces <code>ThreadLocal</code> for request context: immutable, automatically cleared when the scope ends and cheap with millions of virtual threads. The tenant filter binds it for the whole filter chain:</p></div>
+<p class="file">backend/src/main/java/com/tradechameleon/tenant/TenantContext.java</p>
+<pre><code class="language-java">public final class TenantContext {
+
+    static final ScopedValue&lt;Tenant&gt; CURRENT = ScopedValue.newInstance();
+
+    /** The tenant bound to the current request. Fails fast outside a request scope. */
+    public static Tenant current() {
+        if (!CURRENT.isBound()) {
+            throw new IllegalStateException("No tenant bound to the current scope");
+        }
+        return CURRENT.get();
+    }
+
+    public static &lt;R, X extends Throwable&gt; R callAs(Tenant tenant, ScopedValue.CallableOp&lt;R, X&gt; op) throws X {
+        return ScopedValue.where(CURRENT, tenant).call(op);
+    }
+}</code></pre>
+<p class="file">backend/src/main/java/com/tradechameleon/tenant/TenantFilter.java</p>
+<pre><code class="language-java">response.setHeader(TenantResolver.HEADER, tenant.id());
+try {
+    TenantContext.callAs(tenant, () -&gt; {
+        chain.doFilter(request, response);
+        return null;
+    });
+} catch (IOException | ServletException | RuntimeException e) {
+    throw e;
+} catch (Exception e) {
+    throw new ServletException(e);
+}</code></pre>
+<div class="pl"><p>Model domenowy to <strong>rekordy</strong> (<code>Tenant</code>, <code>Order</code>, <code>Quote</code>, <code>PortfolioView</code>), wyrażenia <code>switch</code> i bloki tekstowe (logo SVG). Konfiguracja jest typowana przez rekordy <code>@ConfigurationProperties</code> (<code>tc.tenants</code>, <code>tc.security</code>, <code>tc.market</code>).</p></div>
+<div class="en"><p>The domain model uses <strong>records</strong> (<code>Tenant</code>, <code>Order</code>, <code>Quote</code>, <code>PortfolioView</code>), <code>switch</code> expressions and text blocks (SVG logos). Configuration is typed with <code>@ConfigurationProperties</code> records (<code>tc.tenants</code>, <code>tc.security</code>, <code>tc.market</code>).</p></div>
+</section>
+
+<section class="chapter" id="modulith">
+<h2><span class="pl">Spring Modulith: moduły i zdarzenia</span><span class="en">Spring Modulith: modules and events</span></h2>
+<div class="pl"><p>Modularny monolit to jeden deployowalny artefakt z twardymi granicami wewnątrz. Spring Modulith traktuje każdy bezpośredni podpakiet <code>com.tradechameleon</code> jako moduł. Publiczne są tylko typy w głównym pakiecie modułu; podpakiety są wewnętrzne. Test <code>ApplicationModules.verify()</code> wykrywa cykle i sięganie do cudzych wnętrzności.</p></div>
+<div class="en"><p>A modular monolith is one deployable artifact with hard boundaries inside. Spring Modulith treats every direct sub-package of <code>com.tradechameleon</code> as a module. Only types in a module's root package are public; sub-packages are internal. The <code>ApplicationModules.verify()</code> test detects cycles and reaching into other modules' internals.</p></div>
+<pre class="mermaid">
+flowchart LR
+  tenant
+  identity --> tenant
+  simulator
+  market --> tenant
+  market --> simulator
+  portfolio --> market
+  portfolio --> identity
+  trading --> market
+  trading --> portfolio
+  trading --> identity
+  trading -. "OrderFilled (event)" .-> portfolio
+  market -. "PricesTicked (event)" .-> trading
+  market -. "PricesTicked (event)" .-> stream[PriceStream SSE]
+  shared[(shared: events, Problem Details, FX)]
+</pre>
+<table>
+<thead><tr><th><span class="pl">Moduł</span><span class="en">Module</span></th><th><span class="pl">Odpowiedzialność</span><span class="en">Responsibility</span></th><th><span class="pl">Publiczne API</span><span class="en">Public API</span></th></tr></thead>
+<tbody>
+<tr><td>tenant</td><td><span class="pl">brokerzy, rozpoznawanie, logo</span><span class="en">brokers, resolution, logos</span></td><td><code>TenantDirectory</code>, <code>TenantContext</code></td></tr>
+<tr><td>identity</td><td><span class="pl">JWT, dev IdP, reguły dostępu</span><span class="en">JWT, dev IdP, access rules</span></td><td><code>CurrentUser</code></td></tr>
+<tr><td>market</td><td><span class="pl">instrumenty, silnik cen, SSE</span><span class="en">instruments, price engine, SSE</span></td><td><code>MarketData</code>, <code>PricesTicked</code></td></tr>
+<tr><td>simulator</td><td><span class="pl">opóźnienia, awarie, zmienność</span><span class="en">latency, failures, volatility</span></td><td><code>Simulator</code></td></tr>
+<tr><td>trading</td><td><span class="pl">zlecenia rynkowe i z limitem</span><span class="en">market and limit orders</span></td><td><code>OrderService</code></td></tr>
+<tr><td>portfolio</td><td><span class="pl">gotówka i pozycje</span><span class="en">cash and positions</span></td><td><code>Portfolios</code></td></tr>
+<tr><td>shared</td><td><span class="pl">zdarzenia, błędy, kursy walut</span><span class="en">events, errors, FX</span></td><td><code>OrderFilled</code>, <code>DomainException</code></td></tr>
+</tbody>
+</table>
+<div class="pl"><p>Kluczowa decyzja: <strong>trading nie zapisuje gotówki ani pozycji</strong>. Publikuje zdarzenie <code>OrderFilled</code> w swojej transakcji, a portfel reaguje na nie <em>po commicie</em>. <code>@ApplicationModuleListener</code> to skrót dla <code>@Async</code> + <code>@Transactional(REQUIRES_NEW)</code> + <code>@TransactionalEventListener(AFTER_COMMIT)</code>. Rejestr publikacji zdarzeń (tabela <code>EVENT_PUBLICATION</code>) zapisuje każde zdarzenie razem z transakcją zlecenia i oznacza je jako zakończone dopiero, gdy słuchacz się powiedzie; po awarii zdarzenia są wysyłane ponownie.</p></div>
+<div class="en"><p>The key decision: <strong>trading never writes cash or positions</strong>. It publishes an <code>OrderFilled</code> event within its transaction, and the portfolio reacts <em>after commit</em>. <code>@ApplicationModuleListener</code> is shorthand for <code>@Async</code> + <code>@Transactional(REQUIRES_NEW)</code> + <code>@TransactionalEventListener(AFTER_COMMIT)</code>. The event publication registry (table <code>EVENT_PUBLICATION</code>) stores each event together with the order transaction and marks it complete only when the listener succeeds; after a crash events are republished.</p></div>
+<p class="file">backend/src/main/java/com/tradechameleon/portfolio/Portfolios.java</p>
+<pre><code class="language-java">@ApplicationModuleListener
+void on(OrderFilled fill) {
+    var account = repository.lockAccount(fill.tenantId(), fill.userId()).orElseThrow(
+            () -&gt; new IllegalStateException("No account for " + fill.userId()));
+    BigDecimal cashDelta = FxRates.convert(fill.notional(), fill.currency(), account.currency())
+            .multiply(BigDecimal.valueOf(-fill.side().sign()));
+    repository.updateCash(account.id(), account.cash().add(cashDelta));
+
+    var current = repository.position(account.id(), fill.symbol())
+            .orElse(new PortfolioRepository.PositionRow(fill.symbol(), BigDecimal.ZERO, BigDecimal.ZERO));
+    BigDecimal signedQty = fill.quantity().multiply(BigDecimal.valueOf(fill.side().sign()));
+    BigDecimal newQty = current.quantity().add(signedQty);
+    if (newQty.signum() == 0) {
+        repository.deletePosition(account.id(), fill.symbol());
+    } else {
+        BigDecimal avg = switch (fill.side()) {
+            // weighted average cost on buys
+            case BUY -&gt; current.quantity().multiply(current.avgPrice()).add(fill.notional())
+                    .divide(newQty, MathContext.DECIMAL64);
+            // sells realise P&amp;L and keep the average cost of the remaining shares
+            case SELL -&gt; current.avgPrice();
+        };
+        repository.upsertPosition(account.id(), fill.symbol(), newQty, avg);
+    }
+}</code></pre>
+<div class="note"><span class="pl"><strong>Uwaga dydaktyczna:</strong> sprawdzenie środków w trading czyta portfel synchronicznie, a jego aktualizacja jest asynchroniczna. Dwa szybkie zlecenia mogą więc „zobaczyć” ten sam stan gotówki. W produkcji rozwiązuje się to rezerwacją środków; tu zostawiamy to jako ćwiczenie.</span><span class="en"><strong>Teaching note:</strong> the funds check in trading reads the portfolio synchronously while its update is asynchronous, so two rapid orders can see the same cash balance. Production systems solve this with funds reservation; here it is left as an exercise.</span></div>
+</section>
+
+<section class="chapter" id="price-engine">
+<h2><span class="pl">Silnik cen i Server-Sent Events</span><span class="en">Price engine and Server-Sent Events</span></h2>
+<div class="pl"><p>Ceny są symulowane geometrycznym błądzeniem losowym z lekkim powrotem do średniej. Każdy instrument ma własny <code>Random</code> zasiany wartością <code>tc.market.seed</code> i symbolem, więc ścieżka cen jest <strong>deterministyczna</strong>: te same dane po każdym restarcie i w testach. Zmienność zależy od klasy aktywów i mnożnika z symulatora.</p></div>
+<div class="en"><p>Prices follow a geometric random walk with slight mean reversion. Every instrument has its own <code>Random</code> seeded from <code>tc.market.seed</code> and the symbol, so the price path is <strong>deterministic</strong>: the same data after every restart and in tests. Volatility depends on the asset class and the simulator multiplier.</p></div>
+<p class="file">backend/src/main/java/com/tradechameleon/market/PriceEngine.java</p>
+<pre><code class="language-java">BigDecimal step(double volatilityMultiplier, Instant at, int maxSize) {
+    double sigma = VOLATILITY.get(instrument.assetClass()) * volatilityMultiplier;
+    // Small mean reversion towards the base price keeps long demo sessions realistic.
+    double drift = 0.002 * (instrument.basePrice().doubleValue() - price) / price;
+    price = price * Math.exp(drift + sigma * random.nextGaussian());
+    BigDecimal rounded = BigDecimal.valueOf(price).setScale(instrument.decimals(), RoundingMode.HALF_UP);
+    // … append to the bounded history (sparklines, charts)
+    return rounded;
+}</code></pre>
+<div class="pl"><p>Cena „mid” jest wspólna, ale bid/ask zależą od brokera: <code>spread = spread rynkowy klasy aktywów + narzut brokera</code>, dzielony po równo wokół mid. Dlatego ten sam VWCE ma u Kestrel szerszy spread niż u Sakury (test integracyjny to sprawdza).</p></div>
+<div class="en"><p>The mid price is shared, but bid/ask depend on the broker: <code>spread = market spread of the asset class + broker markup</code>, split evenly around the mid. That is why the same VWCE has a wider spread at Kestrel than at Sakura (an integration test checks it).</p></div>
+<pre class="mermaid">
+sequenceDiagram
+  participant E as PriceEngine (virtual thread, 1/s)
+  participant Bus as ApplicationEventPublisher
+  participant M as LimitOrderMatcher
+  participant S as PriceStream
+  participant B1 as Browser (kestrel)
+  participant B2 as Browser (wisla)
+  E->>Bus: PricesTicked(ticks)
+  Bus->>M: on(PricesTicked) → fill crossing limit orders
+  Bus->>S: on(PricesTicked)
+  S->>S: quotes per tenant (markup, allowed classes)
+  par one virtual thread per subscriber
+    S-->>B1: event: quotes
+    S-->>B2: event: quotes
+  end
+</pre>
+<p class="file">backend/src/main/java/com/tradechameleon/market/PriceStream.java</p>
+<pre><code class="language-java">SseEmitter subscribe(Tenant tenant) {
+    var emitter = new SseEmitter(TIMEOUT.toMillis());
+    var list = subscribers.computeIfAbsent(tenant.id(), id -&gt; new CopyOnWriteArrayList&lt;&gt;());
+    list.add(emitter);
+    Runnable remove = () -&gt; list.remove(emitter);
+    emitter.onCompletion(remove);
+    emitter.onTimeout(remove);
+    emitter.onError(e -&gt; remove.run());
+    // Initial snapshot so the client renders immediately instead of waiting for the next tick.
+    send(emitter, snapshot(tenant), list);
+    return emitter;
+}
+
+@EventListener
+void on(PricesTicked tick) {
+    subscribers.forEach((tenantId, emitters) -&gt; {
+        if (emitters.isEmpty()) return;
+        Tenant tenant = tenants.get(tenantId);
+        if (!tenant.features().livePrices()) return;
+        List&lt;Quote&gt; quotes = snapshot(tenant);
+        for (SseEmitter emitter : emitters) {
+            senders.submit(() -&gt; send(emitter, quotes, emitters));
+        }
+    });
+}</code></pre>
+<p class="file">GET /api/market/stream?tenant=sakura → text/event-stream (<span class="pl">prawdziwy fragment</span><span class="en">real excerpt</span>)</p>
+<pre><code class="language-text">event:quotes
+id:1795707611036
+data: [{"symbol":"DE10Y","bid":101.189,"ask":101.241,"mid":101.215,"change":0.013,"changePct":0.01,"timestamp":"2026-11-26T15:40:11.035667300Z"},{"symbol":"JGB10Y","bid":99.635,"ask":99.685,"mid":99.660,"change":-0.170,"changePct":-0.17,…}, …]</code></pre>
+<div class="pl"><p>Dlaczego SSE, a nie WebSocket? Ruch jest jednokierunkowy (serwer → klient), SSE działa przez zwykłe HTTP (proxy, nagłówki, HTTP/2), ma wbudowane wznawianie i <code>Last-Event-ID</code>, a w przeglądarce wystarczy <code>new EventSource(url)</code>.</p></div>
+<div class="en"><p>Why SSE rather than WebSocket? Traffic is one-way (server → client), SSE runs over plain HTTP (proxies, headers, HTTP/2), has built-in reconnection and <code>Last-Event-ID</code>, and in the browser it is just <code>new EventSource(url)</code>.</p></div>
+</section>
+
+<section class="chapter" id="orders">
+<h2><span class="pl">Zlecenia rynkowe i z limitem</span><span class="en">Market and limit orders</span></h2>
+<div class="pl"><p>Zlecenie rynkowe realizuje się natychmiast po cenie ask (kupno) lub bid (sprzedaż) danego brokera. Zlecenie z limitem czeka jako <code>OPEN</code>, aż <code>LimitOrderMatcher</code> zobaczy cenę przecinającą limit; wtedy realizuje się po bieżącej, lepszej cenie. Przed każdą realizacją ponownie sprawdzamy środki i pozycje, a zmiany statusu to <em>compare-and-set</em> w SQL, więc anulowanie i realizacja nigdy nie wygrają obie.</p></div>
+<div class="en"><p>A market order fills immediately at the broker's ask (buy) or bid (sell). A limit order waits as <code>OPEN</code> until <code>LimitOrderMatcher</code> sees a price crossing the limit; it then fills at the current, better price. Funds and positions are re-checked before every fill, and status changes are a SQL <em>compare-and-set</em>, so a cancel and a fill can never both win.</p></div>
+<pre class="mermaid">
+stateDiagram-v2
+  [*] --> FILLED: MARKET order
+  [*] --> OPEN: LIMIT order
+  OPEN --> FILLED: price crosses limit
+  OPEN --> CANCELLED: cancelled by the user (DELETE)
+  OPEN --> REJECTED: funds/position gone at fill time
+  FILLED --> [*]
+  CANCELLED --> [*]
+  REJECTED --> [*]
+</pre>
+<p class="file">backend/src/main/java/com/tradechameleon/trading/OrderService.java</p>
+<pre><code class="language-java">@Transactional
+public Order place(Tenant tenant, String userId, PlaceOrderRequest request) {
+    if (!tenant.features().trading()) {
+        throw DomainException.forbidden("trading-disabled", "Trading disabled",
+                tenant.name() + " is a portfolio-only broker: orders are not accepted.");
+    }
+    if (request.type() == Order.OrderType.LIMIT &amp;&amp; !tenant.features().limitOrders()) {
+        throw DomainException.forbidden("limit-orders-disabled", "Limit orders disabled",
+                tenant.name() + " only supports market orders.");
+    }
+    Instrument instrument = market.require(request.symbol(), tenant);
+    Quote quote = market.quote(instrument, tenant);
+    BigDecimal referencePrice = switch (request.type()) {
+        case MARKET -&gt; request.side() == Side.BUY ? quote.ask() : quote.bid();
+        case LIMIT -&gt; request.limitPrice().setScale(instrument.decimals(), RoundingMode.HALF_UP);
+    };
+    checkHoldings(tenant, userId, instrument, request.side(), request.quantity(), referencePrice);
+    // … insert; MARKET orders are FILLED at once and publish OrderFilled
+}</code></pre>
+<p class="file">backend/src/main/java/com/tradechameleon/trading/OrderRepository.java</p>
+<pre><code class="language-java">/**
+ * Compare-and-set status change: only succeeds while the order is still OPEN, so a cancel and a
+ * fill racing each other can never both win.
+ */
+boolean transitionFromOpen(UUID id, Order.OrderStatus status, java.math.BigDecimal fillPrice, String reason) {
+    return jdbc.sql("""
+                    update trade_order set status = ?, fill_price = ?, reject_reason = ?, updated_at = ?
+                    where id = ? and status = 'OPEN'
+                    """)
+            .params(status.name(), fillPrice, reason, java.sql.Timestamp.from(Instant.now()), id)
+            .update() == 1;
+}</code></pre>
+<p class="file">POST /api/orders {"symbol":"AAPL","side":"BUY","type":"MARKET","quantity":2} → 201 (<span class="pl">prawdziwa odpowiedź</span><span class="en">real response</span>)</p>
+<pre><code class="language-json">{
+  "id": "0408a967-0572-4078-b10b-892bf4ef292e",
+  "tenantId": "aurora",
+  "userId": "00000001-0000-4000-8000-000000000001",
+  "symbol": "AAPL",
+  "side": "BUY",
+  "type": "MARKET",
+  "quantity": 2,
+  "limitPrice": null,
+  "status": "FILLED",
+  "fillPrice": 228.51,
+  "rejectReason": null,
+  "createdAt": "2026-11-26T15:40:10.855222400Z",
+  "updatedAt": "2026-11-26T15:40:10.855222400Z"
+}</code></pre>
+<div class="pl"><p>Portfel wycenia pozycje w walucie brokera przy użyciu stałej tabeli kursów <code>FxRates</code> (deterministyczne testy). Pozycja w USD u brokera z GBP jest przeliczana przez USD.</p></div>
+<div class="en"><p>The portfolio values positions in the broker currency using the fixed <code>FxRates</code> table (deterministic tests). A USD position at a GBP broker is converted through USD.</p></div>
+</section>
+
+<section class="chapter" id="simulator">
+<h2><span class="pl">Symulator opóźnień i awarii</span><span class="en">Latency and failure simulator</span></h2>
+<div class="pl"><p>Prawdziwe sieci są wolne i zawodne. Panel deweloperski w obu klientach steruje symulatorem (<code>PUT /api/simulator</code>): stałe opóźnienie, losowy jitter, odsetek awarii, mnożnik zmienności i pauza silnika cen. <code>HandlerInterceptor</code> stosuje je do wywołań biznesowych:</p></div>
+<div class="en"><p>Real networks are slow and unreliable. The developer panel in both clients drives the simulator (<code>PUT /api/simulator</code>): fixed latency, random jitter, failure rate, volatility multiplier and pausing the price engine. A <code>HandlerInterceptor</code> applies them to business calls:</p></div>
+<p class="file">backend/src/main/java/com/tradechameleon/simulator/ChaosInterceptor.java</p>
+<pre><code class="language-java">@Override
+public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+        throws InterruptedException {
+    var s = simulator.settings();
+    long delay = s.latencyMs() + (s.jitterMs() &gt; 0 ? ThreadLocalRandom.current().nextInt(s.jitterMs() + 1) : 0);
+    if (delay &gt; 0) {
+        Thread.sleep(delay);
+    }
+    if (s.failureRate() &gt; 0 &amp;&amp; ThreadLocalRandom.current().nextDouble() &lt; s.failureRate()) {
+        throw new DomainException(HttpStatus.SERVICE_UNAVAILABLE, "simulated-failure", "Simulated failure",
+                "The simulator injected a failure (failureRate=" + s.failureRate() + "). Try again.",
+                Map.of("retryable", true));
+    }
+    return true;
+}</code></pre>
+<div class="pl"><h3>Ćwiczenia w przeglądarce</h3>
+<ul>
+<li>Ustaw 1500 ms opóźnienia i obserwuj szkielety ładowania (<code>skeleton</code>) i stan przycisku „Sending…”.</li>
+<li>Ustaw 50% awarii: GET-y są po cichu ponawiane (interceptor / TanStack Query), a POST zlecenia pokazuje błąd 503 bez ponawiania.</li>
+<li>Ustaw zmienność ×8 i złóż zlecenie z limitem blisko ceny: zobaczysz jego realizację w portfelu.</li>
+<li>Wstrzymaj silnik: SSE dalej jest połączone, ale ticki przestają przychodzić.</li>
+</ul></div>
+<div class="en"><h3>Exercises in the browser</h3>
+<ul>
+<li>Set 1500 ms latency and watch the loading skeletons and the "Sending…" button state.</li>
+<li>Set a 50% failure rate: GETs are retried silently (interceptor / TanStack Query) while an order POST shows the 503 without retrying.</li>
+<li>Set volatility ×8 and place a limit order close to the price: you will see it fill in the portfolio.</li>
+<li>Pause the engine: SSE stays connected but ticks stop arriving.</li>
+</ul></div>
+<pre><code class="language-json">GET /api/simulator → 200
+{
+  "latencyMs": 0,
+  "jitterMs": 0,
+  "failureRate": 0,
+  "volatilityMultiplier": 1,
+  "paused": false
+}</code></pre>
+</section>
+
+<div class="part-title"><span class="pl">Część V · Bezpieczeństwo i SSO</span><span class="en">Part V · Security and SSO</span></div>
+
+<section class="chapter" id="security">
+<h2><span class="pl">OAuth2 resource server i JWT RS256</span><span class="en">OAuth2 resource server and RS256 JWT</span></h2>
+<div class="pl"><p>API jest bezstanowym <strong>serwerem zasobów OAuth2</strong>: nie ma sesji ani ciasteczek, każde chronione wywołanie niesie <code>Authorization: Bearer &lt;JWT&gt;</code>. Token jest podpisany algorytmem <strong>RS256</strong> (RSA + SHA-256): klucz prywatny podpisuje, a każdy, kto zna klucz publiczny (z JWKS), może sprawdzić podpis. To asymetria pozwala oddzielić wydawcę tokenów od API.</p>
+<p>W trybie <code>dev</code> backend sam jest małym dostawcą tożsamości: przy starcie generuje parę kluczy RSA 2048, sprawdza hasło (BCrypt) w tabeli <code>app_user</code> i wydaje token przez <code>NimbusJwtEncoder</code>. Publikuje też dokument odkrywania OIDC i JWKS.</p></div>
+<div class="en"><p>The API is a stateless <strong>OAuth2 resource server</strong>: no session, no cookies; every protected call carries <code>Authorization: Bearer &lt;JWT&gt;</code>. The token is signed with <strong>RS256</strong> (RSA + SHA-256): the private key signs and anyone with the public key (from the JWKS) can verify. This asymmetry is what lets us separate the token issuer from the API.</p>
+<p>In <code>dev</code> mode the backend itself is a tiny identity provider: at startup it generates an RSA 2048 key pair, checks the password (BCrypt) in the <code>app_user</code> table and issues the token through <code>NimbusJwtEncoder</code>. It also publishes an OIDC discovery document and a JWKS.</p></div>
+<pre class="mermaid">
+sequenceDiagram
+  actor U as User
+  participant SPA as Angular / React
+  participant IdP as Dev IdP (/api/auth/token)
+  participant RS as Resource server (/api/**)
+  U->>SPA: e-mail + password
+  SPA->>IdP: POST /api/auth/token (X-Tenant-Id: aurora)
+  IdP->>IdP: BCrypt check in app_user (tenant, email)
+  IdP-->>SPA: 200 { accessToken: RS256 JWT, user }
+  SPA->>RS: GET /api/portfolio + Bearer JWT
+  RS->>RS: verify signature (public key), iss, exp
+  RS->>RS: roles → ROLE_*, tenant claim == request tenant?
+  RS-->>SPA: 200 PortfolioView
+</pre>
+<p class="file">backend/src/main/java/com/tradechameleon/identity/SecurityConfig.java</p>
+<pre><code class="language-java">@Bean
+SecurityFilterChain api(HttpSecurity http, SecurityProperties props, ProblemSecurityHandlers problems)
+        throws Exception {
+    http
+            .csrf(csrf -&gt; csrf.disable())                 // no cookies, no CSRF: bearer tokens only
+            .cors(cors -&gt; {})
+            .sessionManagement(s -&gt; s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -&gt; auth
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                    .requestMatchers(PUBLIC).permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/orders/**").hasRole("TRADER")
+                    .requestMatchers(HttpMethod.DELETE, "/api/orders/**").hasRole("TRADER")
+                    .anyRequest().authenticated())
+            .oauth2ResourceServer(rs -&gt; rs
+                    .jwt(jwt -&gt; jwt.jwtAuthenticationConverter(jwtAuthenticationConverter(props)))
+                    .authenticationEntryPoint(problems)
+                    .accessDeniedHandler(problems))
+            .addFilterAfter(new TenantMatchFilter(props, problems), BearerTokenAuthenticationFilter.class);
+    return http.build();
+}</code></pre>
+<p class="file">backend/src/main/java/com/tradechameleon/identity/DevIdentityController.java</p>
+<pre><code class="language-java">var claims = JwtClaimsSet.builder()
+        .issuer(props.issuer())
+        .subject(u.id().toString())
+        .audience(List.of("tradechameleon-api"))
+        .issuedAt(now)
+        .expiresAt(now.plus(props.tokenTtl()))
+        .claim("name", u.displayName())
+        .claim("email", u.email())
+        .claim(props.tenantClaim(), tenant.id())
+        .claim(props.rolesClaim(), u.roles())
+        .claim("scope", u.roles().contains("TRADER") ? "portfolio:read orders:write" : "portfolio:read")
+        .build();
+var header = JwsHeader.with(SignatureAlgorithm.RS256).keyId(key.rsaKey().getKeyID()).type("JWT").build();
+String token = encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();</code></pre>
+<p class="pl">Zdekodowany token z działającego serwera (nagłówek i ładunek):</p>
+<p class="en">A decoded token from the running server (header and payload):</p>
+<pre><code class="language-json">{"kid":"tc-dev-973c1b2f","typ":"JWT","alg":"RS256"}
+{"sub":"00000001-0000-4000-8000-000000000001","aud":"tradechameleon-api","roles":["TRADER"],
+ "scope":"portfolio:read orders:write","iss":"http://localhost:8080","name":"Ada Trader",
+ "exp":1795736410,"iat":1795707610,"email":"trader@aurora.test","tenant":"aurora"}</code></pre>
+<p class="file">GET /oauth2/jwks → 200</p>
+<pre><code class="language-json">{
+  "keys": [
+    {
+      "kty": "RSA",
+      "e": "AQAB",
+      "use": "sig",
+      "kid": "tc-dev-973c1b2f",
+      "alg": "RS256",
+      "n": "oZuXw2II7Jk1R92DV32MIJdxsaXJ5pfi6G2UjQB0iTBy10qv5L_bUyrH8G_cucOf9O8I1e0-MhPElOuNKyIDRfVpPrdVrPgO9R2…"
+    }
+  ]
+}</code></pre>
+<div class="pl"><h3>Warstwy obrony</h3>
+<ul>
+<li><strong>Uwierzytelnienie:</strong> podpis, <code>iss</code> i <code>exp</code> sprawdzane przy każdym żądaniu (401 jako Problem Details).</li>
+<li><strong>Autoryzacja ról:</strong> <code>roles</code> → <code>ROLE_TRADER</code>/<code>ROLE_VIEWER</code>; tylko TRADER składa i anuluje zlecenia (403).</li>
+<li><strong>Izolacja brokerów:</strong> <code>TenantMatchFilter</code> odrzuca token innego brokera (403 <code>tenant-mismatch</code>).</li>
+<li><strong>Reguły biznesowe:</strong> flagi brokera (handel, limity) i klasy aktywów sprawdza serwis, nie UI.</li>
+<li><strong>Stały czas odpowiedzi logowania:</strong> dla nieznanego użytkownika porównujemy hasło z atrapą hasha, żeby czas nie zdradzał, czy konto istnieje.</li>
+<li><strong>Brak tokenu w URL:</strong> SSE z cenami jest publiczne, więc token nigdy nie trafia do adresu ani logów proxy.</li>
+</ul></div>
+<div class="en"><h3>Layers of defence</h3>
+<ul>
+<li><strong>Authentication:</strong> signature, <code>iss</code> and <code>exp</code> checked on every request (401 as Problem Details).</li>
+<li><strong>Role authorization:</strong> <code>roles</code> → <code>ROLE_TRADER</code>/<code>ROLE_VIEWER</code>; only TRADER places and cancels orders (403).</li>
+<li><strong>Broker isolation:</strong> <code>TenantMatchFilter</code> rejects another broker's token (403 <code>tenant-mismatch</code>).</li>
+<li><strong>Business rules:</strong> broker flags (trading, limits) and asset classes are enforced by the service, not the UI.</li>
+<li><strong>Constant-time login:</strong> for an unknown user we still compare against a dummy hash so timing does not reveal whether an account exists.</li>
+<li><strong>No token in URLs:</strong> the price SSE is public, so a token never ends up in an address or proxy logs.</li>
+</ul></div>
+<div class="warn"><span class="pl"><strong>Przechowywanie tokenu w SPA.</strong> Klienci trzymają token w pamięci i <code>sessionStorage</code> (znika po zamknięciu karty). To kompromis szkoleniowy; w produkcji rozważ wzorzec BFF (token po stronie serwera, ciasteczko <code>HttpOnly</code>) i ścisłe CSP.</span><span class="en"><strong>Token storage in SPAs.</strong> The clients keep the token in memory and <code>sessionStorage</code> (gone when the tab closes). It is a training compromise; in production consider the BFF pattern (token on the server, <code>HttpOnly</code> cookie) and a strict CSP.</span></div>
+</section>
+
+<section class="chapter" id="sso">
+<h2><span class="pl">Wymiana na firmowe SSO przez OIDC</span><span class="en">Swapping in corporate SSO via OIDC</span></h2>
+<div class="pl"><p>Serwer zasobów nie wie, kto wydał token: wie tylko, jak go zweryfikować. Dlatego przejście z wbudowanego IdP na Keycloak, Microsoft Entra ID, Okta czy Auth0 to zmiana konfiguracji. W trybie <code>oidc</code> znika kontroler dev IdP, a dekoder pobiera dokument <code>/.well-known/openid-configuration</code> i klucze JWKS wydawcy:</p></div>
+<div class="en"><p>A resource server does not care who issued a token: it only knows how to verify it. Switching from the built-in IdP to Keycloak, Microsoft Entra ID, Okta or Auth0 is therefore configuration. In <code>oidc</code> mode the dev IdP controller disappears and the decoder fetches the issuer's <code>/.well-known/openid-configuration</code> and JWKS:</p></div>
+<p class="file">backend/src/main/java/com/tradechameleon/identity/SecurityConfig.java</p>
+<pre><code class="language-java">@Configuration(proxyBeanMethods = false)
+@ConditionalOnProperty(name = "tc.security.mode", havingValue = "dev", matchIfMissing = true)
+static class DevMode {
+    @Bean
+    JwtDecoder jwtDecoder(DevSigningKey key, SecurityProperties props) {
+        NimbusJwtDecoder decoder = NimbusJwtDecoder.withPublicKey(key.publicKey()).build();
+        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator&lt;&gt;(JwtValidators.createDefaultWithIssuer(props.issuer())));
+        return decoder;
+    }
+}
+
+@Configuration(proxyBeanMethods = false)
+@ConditionalOnProperty(name = "tc.security.mode", havingValue = "oidc")
+static class OidcMode {
+    /** Discovers the corporate IdP (/.well-known/openid-configuration) and validates iss + exp + signature. */
+    @Bean
+    JwtDecoder jwtDecoder(SecurityProperties props) {
+        return JwtDecoders.fromIssuerLocation(props.issuerUri());
+    }
+}</code></pre>
+<p class="pl">Przykład dla Keycloaka (realm <code>trade</code>) i Entra ID:</p>
+<p class="en">Example for Keycloak (realm <code>trade</code>) and Entra ID:</p>
+<pre><code class="language-yaml"># Keycloak
+tc:
+  security:
+    mode: oidc
+    issuer-uri: https://sso.example.com/realms/trade
+    tenant-claim: tenant          # map a user attribute to this claim with a protocol mapper
+    roles-claim: roles            # e.g. realm roles mapped to a flat "roles" claim
+
+# Microsoft Entra ID
+tc:
+  security:
+    mode: oidc
+    issuer-uri: https://login.microsoftonline.com/&lt;tenant-guid&gt;/v2.0
+    roles-claim: roles            # App roles defined in the app registration</code></pre>
+<pre class="mermaid">
+flowchart LR
+  subgraph dev["mode = dev"]
+    A[SPA] -- password --> B[Dev IdP in backend]
+    B -- RS256 JWT --> A
+  end
+  subgraph prod["mode = oidc"]
+    C[SPA] -- "Authorization Code + PKCE" --> D[Corporate IdP]
+    D -- "access token (RS256)" --> C
+  end
+  A -- Bearer --> API[Resource server /api/**]
+  C -- Bearer --> API
+  API -. "JWKS" .-> B
+  API -. "discovery + JWKS" .-> D
+</pre>
+<div class="pl"><p>Po stronie klientów trzeba wtedy zastąpić formularz hasła przepływem <strong>Authorization Code + PKCE</strong> (np. <code>angular-auth-oidc-client</code> lub <code>oidc-client-ts</code>). Reszta kodu bez zmian: interceptor dalej dokleja <code>Bearer</code>. Tokeny bez claimu brokera są akceptowane dla brokera z żądania, a konto portfela zakłada się automatycznie przy pierwszym wejściu użytkownika z SSO (<code>Portfolios.account()</code>).</p></div>
+<div class="en"><p>On the client side the password form is then replaced by the <strong>Authorization Code + PKCE</strong> flow (e.g. <code>angular-auth-oidc-client</code> or <code>oidc-client-ts</code>). The rest of the code stays: the interceptor still adds <code>Bearer</code>. Tokens without a tenant claim are accepted for the request's broker, and a portfolio account is created automatically on an SSO user's first visit (<code>Portfolios.account()</code>).</p></div>
+</section>
+
+<div class="part-title"><span class="pl">Część VI · API, dane i testy</span><span class="en">Part VI · API, data and tests</span></div>
+
+<section class="chapter" id="api">
+<h2><span class="pl">API: REST, OpenAPI, Swagger UI, Scalar</span><span class="en">API: REST, OpenAPI, Swagger UI, Scalar</span></h2>
+<table>
+<thead><tr><th><span class="pl">Metoda i ścieżka</span><span class="en">Method and path</span></th><th><span class="pl">Dostęp</span><span class="en">Access</span></th><th><span class="pl">Opis</span><span class="en">Description</span></th></tr></thead>
+<tbody>
+<tr><td class="api"><b>GET</b> /api/tenants</td><td>public</td><td><span class="pl">lista brokerów</span><span class="en">list of brokers</span></td></tr>
+<tr><td class="api"><b>GET</b> /api/tenants/current</td><td>public</td><td><span class="pl">broker żądania</span><span class="en">broker of the request</span></td></tr>
+<tr><td class="api"><b>GET</b> /api/tenants/{id}/logo.svg</td><td>public</td><td><span class="pl">wygenerowane logo</span><span class="en">generated logo</span></td></tr>
+<tr><td class="api"><b>POST</b> /api/auth/token</td><td>public</td><td><span class="pl">logowanie, token RS256</span><span class="en">login, RS256 token</span></td></tr>
+<tr><td class="api"><b>GET</b> /api/me</td><td>JWT</td><td><span class="pl">profil z tokenu</span><span class="en">profile from the token</span></td></tr>
+<tr><td class="api"><b>GET</b> /api/market/instruments[/{symbol}]</td><td>public</td><td><span class="pl">instrumenty z notowaniami</span><span class="en">instruments with quotes</span></td></tr>
+<tr><td class="api"><b>GET</b> /api/market/instruments/{symbol}/history</td><td>public</td><td><span class="pl">historia cen</span><span class="en">price history</span></td></tr>
+<tr><td class="api"><b>GET</b> /api/market/sparklines</td><td>public</td><td><span class="pl">wszystkie sparkline'y naraz</span><span class="en">all sparklines at once</span></td></tr>
+<tr><td class="api"><b>GET</b> /api/market/stream</td><td>public</td><td>SSE <code>quotes</code></td></tr>
+<tr><td class="api"><b>GET</b> /api/portfolio</td><td>JWT</td><td><span class="pl">gotówka, pozycje, wycena</span><span class="en">cash, positions, valuation</span></td></tr>
+<tr><td class="api"><b>GET/POST</b> /api/orders, <b>GET/DELETE</b> /api/orders/{id}</td><td>JWT (POST/DELETE: TRADER)</td><td><span class="pl">zlecenia</span><span class="en">orders</span></td></tr>
+<tr><td class="api"><b>GET/PUT</b> /api/simulator, <b>POST</b> /api/simulator/reset</td><td>JWT</td><td><span class="pl">symulator</span><span class="en">simulator</span></td></tr>
+</tbody>
+</table>
+<div class="pl"><p>Dokument OpenAPI 3.1 generuje <strong>springdoc</strong> z kontrolerów, rekordów i adnotacji <code>@Operation</code>/<code>@Tag</code>. Ten sam dokument renderują dwa interfejsy: klasyczny <strong>Swagger UI</strong> (<code>/swagger-ui.html</code>, z przyciskiem „Authorize” dla tokenu Bearer) oraz nowoczesny <strong>Scalar</strong> (<code>/scalar</code>) z przykładami klientów w wielu językach. Globalny <code>OperationCustomizer</code> dokumentuje nagłówek <code>X-Tenant-Id</code> przy każdej operacji.</p></div>
+<div class="en"><p>The OpenAPI 3.1 document is generated by <strong>springdoc</strong> from controllers, records and <code>@Operation</code>/<code>@Tag</code> annotations. Two UIs render it: the classic <strong>Swagger UI</strong> (<code>/swagger-ui.html</code>, with an "Authorize" button for the Bearer token) and the modern <strong>Scalar</strong> (<code>/scalar</code>) with client snippets in many languages. A global <code>OperationCustomizer</code> documents the <code>X-Tenant-Id</code> header on every operation.</p></div>
+<pre><code class="language-xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.springdoc&lt;/groupId&gt;
+    &lt;artifactId&gt;springdoc-openapi-starter-webmvc-ui&lt;/artifactId&gt;
+    &lt;version&gt;${springdoc.version}&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.springdoc&lt;/groupId&gt;
+    &lt;artifactId&gt;springdoc-openapi-starter-webmvc-scalar&lt;/artifactId&gt;
+    &lt;version&gt;${springdoc.version}&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+<p class="file">GET /api/market/instruments/AAPL (X-Tenant-Id: aurora) → 200</p>
+<pre><code class="language-json">{
+  "symbol": "AAPL",
+  "name": "Apple Inc.",
+  "assetClass": "STOCK",
+  "exchange": "NASDAQ",
+  "currency": "USD",
+  "decimals": 2,
+  "quote": {
+    "symbol": "AAPL",
+    "bid": 228.29,
+    "ask": 228.51,
+    "mid": 228.4,
+    "change": -0.24,
+    "changePct": -0.1,
+    "timestamp": "2026-11-26T15:40:10.035481900Z"
+  }
+}</code></pre>
+<p class="file">GET /api/portfolio (trader@aurora.test) → 200</p>
+<pre><code class="language-json">{
+  "currency": "GBP",
+  "cash": 99640.57,
+  "positionsValue": 48723.59,
+  "totalValue": 148364.15,
+  "unrealizedPnl": 7585.54,
+  "unrealizedPnlPct": 18.44,
+  "positions": [
+    { "symbol": "BTCUSD", "name": "Bitcoin", "assetClass": "CRYPTO", "currency": "USD", "quantity": 0.5,
+      "avgPrice": 82000, "lastPrice": 99596.88, "marketValue": 39165.11, "pnl": 6919.73, "pnlPct": 21.46 },
+    { "symbol": "AAPL", "name": "Apple Inc.", "assetClass": "STOCK", "currency": "USD", "quantity": 27,
+      "avgPrice": 211.37, "lastPrice": 228.4, "marketValue": 4850.02, "pnl": 361.6, "pnlPct": 8.06 },
+    { "symbol": "SPY", "name": "SPDR S&amp;P 500 ETF", "assetClass": "ETF", "currency": "USD", "quantity": 10,
+      "avgPrice": 560, "lastPrice": 598.68, "marketValue": 4708.45, "pnl": 304.21, "pnlPct": 6.91 }
+  ]
+}</code></pre>
+</section>
+
+<section class="chapter" id="problem-details">
+<h2><span class="pl">Błędy jako Problem Details (RFC 9457)</span><span class="en">Errors as Problem Details (RFC 9457)</span></h2>
+<div class="pl"><p>Każdy błąd, czy to walidacja, brak uprawnień, czy reguła biznesowa, ma ten sam kształt <code>application/problem+json</code>: <code>type</code> (stabilny identyfikator, po którym klient rozpoznaje błąd), <code>title</code>, <code>status</code>, <code>detail</code> oraz dowolne rozszerzenia. Klienci nigdy nie parsują tekstu komunikatu: decydują na podstawie <code>type</code>.</p></div>
+<div class="en"><p>Every error, whether validation, permissions or a business rule, has the same <code>application/problem+json</code> shape: <code>type</code> (a stable identifier clients branch on), <code>title</code>, <code>status</code>, <code>detail</code> and any extensions. Clients never parse the message text: they decide on <code>type</code>.</p></div>
+<p class="file">backend/src/main/java/com/tradechameleon/shared/ProblemDetailsAdvice.java</p>
+<pre><code class="language-java">@ExceptionHandler(DomainException.class)
+ProblemDetail domain(DomainException ex) {
+    ProblemDetail pd = ProblemDetail.forStatusAndDetail(ex.status(), ex.getMessage());
+    pd.setType(ex.type());
+    pd.setTitle(ex.title());
+    ex.properties().forEach(pd::setProperty);
+    pd.setProperty("timestamp", Instant.now());
+    return pd;
+}</code></pre>
+<div class="grid2">
+<div>
+<p class="file">POST /api/orders (BTCUSD × 1000) → 422</p>
+<pre><code class="language-json">{
+  "detail": "Buying 1000 BTCUSD costs 78408556.82 GBP but only 99640.57 is available.",
+  "status": 422,
+  "title": "Insufficient funds",
+  "type": "https://tradechameleon.dev/problems/insufficient-funds",
+  "required": 78408556.82,
+  "currency": "GBP",
+  "available": 99640.57,
+  "timestamp": "2026-11-26T15:40:10.874359Z"
+}</code></pre>
+</div>
+<div>
+<p class="file">POST /api/orders (quantity: -1) → 400</p>
+<pre><code class="language-json">{
+  "detail": "The request contains invalid fields.",
+  "status": 400,
+  "title": "Validation failed",
+  "type": "https://tradechameleon.dev/problems/validation",
+  "errors": {
+    "quantity": "must be greater than 0"
+  },
+  "timestamp": "2026-11-26T15:40:10.962827300Z"
+}</code></pre>
+</div>
+<div>
+<p class="file">GET /api/portfolio (no token) → 401</p>
+<pre><code class="language-json">{
+  "detail": "A valid bearer token is required. Obtain one from POST /api/auth/token.",
+  "instance": "/api/portfolio",
+  "status": 401,
+  "title": "Authentication required",
+  "type": "https://tradechameleon.dev/problems/unauthorized",
+  "timestamp": "2026-11-26T15:40:10.977196900Z"
+}</code></pre>
+</div>
+<div>
+<p class="file">GET /api/portfolio (aurora token at kestrel) → 403</p>
+<pre><code class="language-json">{
+  "detail": "The token was issued for tenant 'aurora' but the request targets 'kestrel'.",
+  "instance": "/api/portfolio",
+  "status": 403,
+  "title": "Tenant mismatch",
+  "type": "https://tradechameleon.dev/problems/tenant-mismatch",
+  "timestamp": "2026-11-26T15:40:10.983873Z"
+}</code></pre>
+</div>
+</div>
+<table>
+<thead><tr><th>type</th><th>status</th><th><span class="pl">Kiedy</span><span class="en">When</span></th></tr></thead>
+<tbody>
+<tr><td>validation</td><td>400</td><td><span class="pl">niepoprawne pola (mapa <code>errors</code>)</span><span class="en">invalid fields (<code>errors</code> map)</span></td></tr>
+<tr><td>unknown-tenant</td><td>400</td><td><span class="pl">jawnie podany nieznany broker</span><span class="en">explicit unknown broker</span></td></tr>
+<tr><td>unauthorized / invalid-credentials</td><td>401</td><td><span class="pl">brak/zły token, złe hasło</span><span class="en">missing/bad token, wrong password</span></td></tr>
+<tr><td>forbidden / tenant-mismatch</td><td>403</td><td><span class="pl">rola lub broker się nie zgadza</span><span class="en">wrong role or broker</span></td></tr>
+<tr><td>trading-disabled / limit-orders-disabled</td><td>403</td><td><span class="pl">flaga brokera</span><span class="en">broker flag</span></td></tr>
+<tr><td>not-found</td><td>404</td><td><span class="pl">instrument, zlecenie, broker</span><span class="en">instrument, order, broker</span></td></tr>
+<tr><td>order-not-open</td><td>409</td><td><span class="pl">anulowanie zrealizowanego zlecenia</span><span class="en">cancelling a filled order</span></td></tr>
+<tr><td>insufficient-funds / insufficient-position</td><td>422</td><td><span class="pl">za mało gotówki / brak short sellingu</span><span class="en">not enough cash / no short selling</span></td></tr>
+<tr><td>simulated-failure</td><td>503</td><td><span class="pl">symulator (<code>retryable: true</code>)</span><span class="en">simulator (<code>retryable: true</code>)</span></td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="chapter" id="database">
+<h2><span class="pl">Baza danych: PostgreSQL, Flyway, JdbcClient</span><span class="en">Database: PostgreSQL, Flyway, JdbcClient</span></h2>
+<div class="pl"><p>PostgreSQL 18 działa w Docker Compose. Schemat i dane startowe tworzą migracje Flyway (<code>V1__schema.sql</code>, <code>V2__seed_tenants_and_instruments.sql</code>, <code>V3__seed_users_and_portfolios.sql</code>); każda zmiana schematu to nowy plik <code>V4__…</code>, nigdy edycja starego. Dane startowe są <strong>deterministyczne</strong>: stałe UUID, stały hash BCrypt, stałe kwoty.</p></div>
+<div class="en"><p>PostgreSQL 18 runs in Docker Compose. Flyway migrations create the schema and seed data (<code>V1__schema.sql</code>, <code>V2__seed_tenants_and_instruments.sql</code>, <code>V3__seed_users_and_portfolios.sql</code>); every schema change is a new <code>V4__…</code> file, never an edit of an old one. Seed data is <strong>deterministic</strong>: fixed UUIDs, a fixed BCrypt hash, fixed amounts.</p></div>
+<pre class="mermaid">
+erDiagram
+  TENANT ||--o{ APP_USER : has
+  TENANT ||--o{ ACCOUNT : has
+  ACCOUNT ||--o{ POSITION : holds
+  INSTRUMENT ||--o{ POSITION : "is held in"
+  TENANT ||--o{ TRADE_ORDER : receives
+  INSTRUMENT ||--o{ TRADE_ORDER : "is traded in"
+  TENANT {
+    varchar id PK
+    char currency
+    text_array allowed_asset_classes
+    int spread_markup_bps
+    boolean feature_trading
+  }
+  APP_USER {
+    uuid id PK
+    varchar tenant_id FK
+    varchar email
+    varchar password_hash
+    text_array roles
+  }
+  ACCOUNT {
+    uuid id PK
+    varchar tenant_id FK
+    varchar user_id "JWT subject"
+    numeric cash
+  }
+  POSITION {
+    uuid account_id PK
+    varchar symbol PK
+    numeric quantity
+    numeric avg_price
+  }
+  TRADE_ORDER {
+    uuid id PK
+    varchar status
+    numeric limit_price
+    numeric fill_price
+  }
+  INSTRUMENT {
+    varchar symbol PK
+    varchar asset_class
+    numeric base_price
+  }
+</pre>
+<p class="file">backend/src/main/resources/db/migration/V1__schema.sql</p>
+<pre><code class="language-sql">create table trade_order (
+    id             uuid primary key,
+    tenant_id      varchar(32)    not null references tenant (id),
+    user_id        varchar(64)    not null,
+    symbol         varchar(16)    not null references instrument (symbol),
+    side           varchar(4)     not null check (side in ('BUY', 'SELL')),
+    type           varchar(8)     not null check (type in ('MARKET', 'LIMIT')),
+    quantity       numeric(20, 8) not null check (quantity &gt; 0),
+    limit_price    numeric(20, 8),
+    status         varchar(12)    not null check (status in ('OPEN', 'FILLED', 'CANCELLED', 'REJECTED')),
+    fill_price     numeric(20, 8),
+    reject_reason  varchar(200),
+    created_at     timestamptz    not null,
+    updated_at     timestamptz    not null
+);
+
+create index trade_order_user_idx on trade_order (tenant_id, user_id, created_at desc);
+create index trade_order_open_idx on trade_order (symbol) where status = 'OPEN';</code></pre>
+<div class="pl"><p>Dostęp do danych to <strong><code>JdbcClient</code></strong>: płynne API nad JDBC, czyste SQL, jawne mapowanie, bez ORM i bez niespodzianek „N+1”. Rekordy mapują się automatycznie (<code>snake_case</code> → <code>camelCase</code>), a gdzie trzeba (tablice Postgresa, enumy) piszemy mapper ręcznie. Indeks częściowy <code>where status = 'OPEN'</code> sprawia, że dopasowywanie zleceń z limitem przy każdym ticku czyta tylko otwarte zlecenia.</p></div>
+<div class="en"><p>Data access uses <strong><code>JdbcClient</code></strong>: a fluent API over JDBC, plain SQL, explicit mapping, no ORM and no N+1 surprises. Records map automatically (<code>snake_case</code> → <code>camelCase</code>), and where needed (Postgres arrays, enums) we write the mapper by hand. The partial index <code>where status = 'OPEN'</code> means limit-order matching on every tick reads only open orders.</p></div>
+<p class="file">backend/src/main/java/com/tradechameleon/portfolio/PortfolioRepository.java</p>
+<pre><code class="language-java">/** Locks the account row for the rest of the transaction (serialises fills per account). */
+Optional&lt;AccountRow&gt; lockAccount(String tenantId, String userId) {
+    return jdbc.sql("select id, tenant_id, user_id, currency, cash from account "
+                    + "where tenant_id = ? and user_id = ? for update")
+            .params(tenantId, userId)
+            .query(AccountRow.class)
+            .optional();
+}
+
+void upsertPosition(UUID accountId, String symbol, BigDecimal quantity, BigDecimal avgPrice) {
+    jdbc.sql("""
+                    insert into position (account_id, symbol, quantity, avg_price) values (?, ?, ?, ?)
+                    on conflict (account_id, symbol) do update
+                    set quantity = excluded.quantity, avg_price = excluded.avg_price
+                    """)
+            .params(accountId, symbol, quantity, avgPrice)
+            .update();
+}</code></pre>
+<div class="pl"><p>Pieniądze to zawsze <code>numeric</code> w bazie i <code>BigDecimal</code> w Javie, nigdy <code>double</code>. <code>select … for update</code> blokuje wiersz konta, więc dwie realizacje tego samego użytkownika nie nadpiszą sobie salda.</p></div>
+<div class="en"><p>Money is always <code>numeric</code> in the database and <code>BigDecimal</code> in Java, never <code>double</code>. <code>select … for update</code> locks the account row, so two fills for the same user cannot overwrite each other's balance.</p></div>
+</section>
+
+<section class="chapter" id="backend-tests">
+<h2><span class="pl">Testy backendu: JUnit, Testcontainers, Modulith</span><span class="en">Backend tests: JUnit, Testcontainers, Modulith</span></h2>
+<div class="pl"><p>Trzy poziomy testów:</p>
+<ol>
+<li><strong>Testy jednostkowe</strong> bez Springa: <code>PriceEngineTest</code> (determinizm ziarna), <code>TenantResolverTest</code> (kolejność rozpoznawania brokera na <code>MockHttpServletRequest</code>), <code>FxRatesTest</code>.</li>
+<li><strong>Test architektury</strong>: <code>ModularityTests</code> weryfikuje granice modułów i generuje diagramy PlantUML/C4 do <code>target/spring-modulith-docs</code>.</li>
+<li><strong>Testy integracyjne</strong> po prawdziwym HTTP na losowym porcie, z PostgreSQL w <strong>Testcontainers</strong>: te same migracje Flyway, te same dane startowe.</li>
+</ol></div>
+<div class="en"><p>Three levels of tests:</p>
+<ol>
+<li><strong>Unit tests</strong> without Spring: <code>PriceEngineTest</code> (seed determinism), <code>TenantResolverTest</code> (broker resolution order on a <code>MockHttpServletRequest</code>), <code>FxRatesTest</code>.</li>
+<li><strong>Architecture test</strong>: <code>ModularityTests</code> verifies module boundaries and writes PlantUML/C4 diagrams to <code>target/spring-modulith-docs</code>.</li>
+<li><strong>Integration tests</strong> over real HTTP on a random port, with PostgreSQL in <strong>Testcontainers</strong>: same Flyway migrations, same seed data.</li>
+</ol></div>
+<p class="file">backend/src/test/java/com/tradechameleon/TestcontainersConfiguration.java</p>
+<pre><code class="language-java">@TestConfiguration(proxyBeanMethods = false)
+@ConditionalOnProperty(name = "tc.test.external-db", havingValue = "false", matchIfMissing = true)
+public class TestcontainersConfiguration {
+
+    @Bean
+    @ServiceConnection
+    PostgreSQLContainer postgresContainer() {
+        return new PostgreSQLContainer(DockerImageName.parse("postgres:18-alpine"));
+    }
+}</code></pre>
+<div class="pl"><p><code>@ServiceConnection</code> sam podłącza URL, użytkownika i hasło kontenera do <code>DataSource</code>. Ten sam plik służy też do uruchomienia aplikacji bez Compose: <code>./mvnw spring-boot:test-run</code>. Asynchroniczną aktualizację portfela sprawdzamy przez Awaitility:</p></div>
+<div class="en"><p><code>@ServiceConnection</code> wires the container's URL, user and password into the <code>DataSource</code>. The same file also runs the app without Compose: <code>./mvnw spring-boot:test-run</code>. The asynchronous portfolio update is checked with Awaitility:</p></div>
+<p class="file">backend/src/test/java/com/tradechameleon/TradingApiIntegrationTests.java</p>
+<pre><code class="language-java">@Test
+void marketBuyFillsAndUpdatesPortfolio() {
+    String token = api.login("aurora", "trader");
+    BigDecimal qtyBefore = quantity(api.get("/api/portfolio", "aurora", token).body(), "MSFT");
+    BigDecimal cashBefore = api.get("/api/portfolio", "aurora", token).body().get("cash").decimalValue();
+
+    var r = api.post("/api/orders", "aurora", token, marketOrder("MSFT", "BUY", "3"));
+    assertThat(r.status()).isEqualTo(201);
+    assertThat(r.body().get("status").asString()).isEqualTo("FILLED");
+
+    // the portfolio is updated asynchronously by an @ApplicationModuleListener
+    await().atMost(Duration.ofSeconds(10)).untilAsserted(() -&gt; {
+        var p = api.get("/api/portfolio", "aurora", token).body();
+        assertThat(quantity(p, "MSFT")).isEqualByComparingTo(qtyBefore.add(new BigDecimal("3")));
+        assertThat(p.get("cash").decimalValue()).isLessThan(cashBefore);
+    });
+}
+
+@Test
+void tokenOfOneTenantCannotBeUsedAtAnother() {
+    String auroraToken = api.login("aurora", "trader");
+    var r = api.get("/api/portfolio", "kestrel", auroraToken);
+    assertThat(r.status()).isEqualTo(403);
+    assertThat(r.body().get("type").asString()).endsWith("/tenant-mismatch");
+}</code></pre>
+<div class="pl"><p>Pokryte scenariusze: rozpoznawanie brokera, 400 dla nieznanego, logo SVG, filtrowanie klas aktywów, różne spready, RS256 + JWKS bez klucza prywatnego, 401/403, rola VIEWER, broker bez handlu, broker bez limitów, realizacja rynkowa i z limitem, anulowanie (i 409 przy drugiej próbie), 422 z rozszerzeniami, 400 z mapą pól, 503 z symulatora, strumień SSE oraz dokument OpenAPI.</p></div>
+<div class="en"><p>Covered scenarios: broker resolution, 400 for unknown brokers, SVG logo, asset class filtering, different spreads, RS256 + JWKS without the private key, 401/403, the VIEWER role, the portfolio-only broker, the broker without limit orders, market and limit fills, cancelling (and 409 on the second try), 422 with extensions, 400 with a field map, 503 from the simulator, the SSE stream and the OpenAPI document.</p></div>
+<pre><code class="language-text">[INFO] Tests run: 23, Failures: 0, Errors: 0, Skipped: 0 -- in com.tradechameleon.TradingApiIntegrationTests
+[INFO] Tests run: 2,  Failures: 0, Errors: 0, Skipped: 0 -- in com.tradechameleon.ModularityTests
+[INFO] Tests run: 5,  Failures: 0, Errors: 0, Skipped: 0 -- in com.tradechameleon.market.PriceEngineTest
+[INFO] Tests run: 6,  Failures: 0, Errors: 0, Skipped: 0 -- in com.tradechameleon.tenant.TenantResolverTest
+[INFO] Tests run: 3,  Failures: 0, Errors: 0, Skipped: 0 -- in com.tradechameleon.shared.FxRatesTest</code></pre>
+<pre><code class="language-powershell">cd backend
+.\mvnw test                                   # needs Docker (Testcontainers)
+.\mvnw test "-Dtc.test.external-db=true" "-Dspring.datasource.url=jdbc:postgresql://localhost:5432/tradechameleon_test"</code></pre>
+</section>
+
+<section class="chapter" id="next-steps">
+<h2><span class="pl">Ćwiczenia i dalsze kroki</span><span class="en">Exercises and next steps</span></h2>
+<div class="pl"><ol>
+<li><strong>Piąty broker.</strong> Dodaj migrację <code>V4__…</code> z nowym brokerem (np. tylko kryptowaluty, ciemny motyw, kształt <code>monogram</code>). Bez zmiany kodu powinien pojawić się w przełączniku marek.</li>
+<li><strong>Rezerwacja środków.</strong> Usuń wyścig opisany w rozdziale o Modulith: rezerwuj gotówkę przy składaniu zlecenia z limitem i zwalniaj przy anulowaniu.</li>
+<li><strong>Zlecenia stop.</strong> Dodaj typ <code>STOP</code> (nowa wartość w <code>check</code>, logika w <code>LimitOrderMatcher</code>, test integracyjny, regeneracja typów TS: kompilator pokaże miejsca do zmiany w obu klientach).</li>
+<li><strong>Prawdziwe SSO.</strong> Uruchom Keycloak w <code>compose.yaml</code>, przełącz <code>tc.security.mode=oidc</code> i dodaj Authorization Code + PKCE w jednym z klientów.</li>
+<li><strong>Historia wartości portfela.</strong> Zapisuj migawki wyceny w tabeli i narysuj je istniejącym komponentem wykresu.</li>
+<li><strong>Signal Forms.</strong> Przepisz bilet zlecenia w Angularze na eksperymentalne Signal Forms i porównaj z Reactive Forms.</li>
+<li><strong>Odporność.</strong> Ustaw w symulatorze 30% awarii i 800 ms opóźnienia; zmierz, jak oba klienty zachowują się przy przełączaniu ekranów.</li>
+</ol></div>
+<div class="en"><ol>
+<li><strong>A fifth broker.</strong> Add a <code>V4__…</code> migration with a new broker (e.g. crypto only, dark theme, <code>monogram</code> shape). Without any code change it should appear in the brand switcher.</li>
+<li><strong>Funds reservation.</strong> Remove the race described in the Modulith chapter: reserve cash when a limit order is placed and release it on cancel.</li>
+<li><strong>Stop orders.</strong> Add a <code>STOP</code> type (new value in the <code>check</code>, logic in <code>LimitOrderMatcher</code>, an integration test, regenerated TS types: the compiler will show what to change in both clients).</li>
+<li><strong>Real SSO.</strong> Run Keycloak in <code>compose.yaml</code>, switch <code>tc.security.mode=oidc</code> and add Authorization Code + PKCE to one of the clients.</li>
+<li><strong>Portfolio value history.</strong> Store valuation snapshots in a table and draw them with the existing chart component.</li>
+<li><strong>Signal Forms.</strong> Rewrite the Angular order ticket with the experimental Signal Forms and compare with Reactive Forms.</li>
+<li><strong>Resilience.</strong> Set 30% failures and 800 ms latency in the simulator; observe how both clients behave while switching screens.</li>
+</ol></div>
+</section>
+
+
+<footer>
+  <span class="pl">TradeChameleon to projekt szkoleniowy. Brokerzy, ceny i użytkownicy są fikcyjni. Kod: MIT.</span>
+  <span class="en">TradeChameleon is a training project. Brokers, prices and users are fictional. Code: MIT.</span>
+</footer>
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/powershell.min.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs';
+
+  // ---- language toggle (remembered per browser) ----
+  const root = document.documentElement;
+  const saved = (() => { try { return localStorage.getItem('tc.guide.lang'); } catch { return null; } })();
+  const setLang = (lang) => {
+    root.dataset.lang = lang;
+    root.lang = lang;
+    document.querySelectorAll('[data-set-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.setLang === lang)));
+    try { localStorage.setItem('tc.guide.lang', lang); } catch {}
+  };
+  setLang(saved ?? (navigator.language.startsWith('pl') ? 'pl' : 'en'));
+  document.querySelectorAll('[data-set-lang]').forEach((b) => b.addEventListener('click', () => setLang(b.dataset.setLang)));
+
+  // ---- table of contents built from the chapters ----
+  const toc = document.getElementById('toc');
+  let n = 0;
+  document.querySelectorAll('section.chapter, .part-title').forEach((el) => {
+    if (el.classList.contains('part-title')) {
+      const li = document.createElement('li');
+      li.className = 'part';
+      li.innerHTML = el.innerHTML;
+      toc.append(li);
+      return;
+    }
+    n++;
+    const h2 = el.querySelector('h2');
+    h2.insertAdjacentHTML('afterbegin', `<span class="num">${n}.</span>`);
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = '#' + el.id;
+    a.innerHTML = h2.innerHTML.replace(/<span class="num">.*?<\/span>/, '');
+    li.append(a);
+    toc.append(li);
+  });
+  const links = [...toc.querySelectorAll('a')];
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) if (e.isIntersecting) links.forEach((a) => a.classList.toggle('active', a.hash === '#' + e.target.id));
+  }, { rootMargin: '0px 0px -70% 0px' });
+  document.querySelectorAll('section.chapter').forEach((s) => io.observe(s));
+
+  // ---- syntax highlighting + diagrams ----
+  window.hljs?.highlightAll();
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  mermaid.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'default', securityLevel: 'strict' });
+  await mermaid.run({ querySelector: '.mermaid' });
+</script>
+</body>
+</html>
