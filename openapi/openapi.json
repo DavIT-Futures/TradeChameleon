@@ -1,0 +1,1313 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "TradeChameleon API",
+    "description": "Multi-tenant, white-label training trading platform.\n\n**Tenant** is resolved from the `*.localhost` subdomain, `?tenant=`, the `X-Tenant-Id` header or the default (aurora).\n\n**Auth**: `POST /api/auth/token` with `trader@aurora.test` / `demo`, then use the `accessToken` as a Bearer token. Errors are RFC 9457 Problem Details.",
+    "license": {
+      "name": "MIT"
+    },
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Market",
+      "description": "Instruments, quotes, history and live prices (SSE)"
+    },
+    {
+      "name": "Portfolio",
+      "description": "Cash, positions and valuation"
+    },
+    {
+      "name": "Auth",
+      "description": "Built-in development identity provider (RS256 JWT)"
+    },
+    {
+      "name": "Tenants",
+      "description": "White-label brokers and their branding"
+    },
+    {
+      "name": "Simulator",
+      "description": "Latency, failure and volatility simulator for the dev panel"
+    },
+    {
+      "name": "Orders",
+      "description": "Market and limit orders"
+    }
+  ],
+  "paths": {
+    "/api/simulator": {
+      "get": {
+        "tags": [
+          "Simulator"
+        ],
+        "summary": "Current simulator settings",
+        "operationId": "get",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulatorSettings"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Simulator"
+        ],
+        "summary": "Replace simulator settings",
+        "operationId": "put",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulatorSettings"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulatorSettings"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/simulator/reset": {
+      "post": {
+        "tags": [
+          "Simulator"
+        ],
+        "summary": "Back to defaults: no latency, no failures, normal volatility",
+        "operationId": "reset",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulatorSettings"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/orders": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Orders of the caller, newest first",
+        "operationId": "list",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "OPEN",
+                "FILLED",
+                "CANCELLED",
+                "REJECTED"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50,
+              "maximum": 500,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Order"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Place a market or limit order (role TRADER, tenant feature 'trading')",
+        "operationId": "place",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlaceOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/auth/token": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Exchange demo credentials for an RS256 access token",
+        "description": "Users: trader@<tenant>.test / viewer@<tenant>.test, password 'demo'. The tenant comes from the subdomain, ?tenant= or X-Tenant-Id.",
+        "operationId": "token",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oauth2/jwks": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "JSON Web Key Set with the public RS256 signing key",
+        "operationId": "jwks",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenants": {
+      "get": {
+        "tags": [
+          "Tenants"
+        ],
+        "summary": "List all brokers (for the brand switcher)",
+        "operationId": "list_1",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TenantDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenants/{id}": {
+      "get": {
+        "tags": [
+          "Tenants"
+        ],
+        "summary": "One broker by id",
+        "operationId": "get_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenants/{id}/logo.svg": {
+      "get": {
+        "tags": [
+          "Tenants"
+        ],
+        "summary": "Generated SVG logo of a broker",
+        "operationId": "logo",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "image/svg+xml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenants/current": {
+      "get": {
+        "tags": [
+          "Tenants"
+        ],
+        "summary": "Broker resolved for this request (subdomain, ?tenant=, X-Tenant-Id or default)",
+        "operationId": "current",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/portfolio": {
+      "get": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Portfolio of the caller, valued in the broker currency",
+        "operationId": "portfolio",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioView"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/orders/{id}": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "One order",
+        "operationId": "get_2",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Cancel an open limit order",
+        "operationId": "cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/me": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Profile of the caller, taken from the validated JWT",
+        "operationId": "me",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfile"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/market/stream": {
+      "get": {
+        "tags": [
+          "Market"
+        ],
+        "summary": "Live quotes as Server-Sent Events",
+        "description": "Emits an event named 'quotes' with an array of Quote objects on every tick (1/s).",
+        "operationId": "stream",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "array",
+                  "$ref": "#/components/schemas/Quote"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/market/instruments": {
+      "get": {
+        "tags": [
+          "Market"
+        ],
+        "summary": "Instruments the current broker offers, with live quotes",
+        "operationId": "instruments",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InstrumentView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/market/instruments/{symbol}": {
+      "get": {
+        "tags": [
+          "Market"
+        ],
+        "summary": "One instrument with its quote",
+        "operationId": "instrument",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstrumentView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/market/instruments/{symbol}/history": {
+      "get": {
+        "tags": [
+          "Market"
+        ],
+        "summary": "Recent mid prices (one point per engine tick) for sparklines and charts",
+        "operationId": "history",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "points",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 120,
+              "maximum": 1000,
+              "minimum": 2
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PricePointView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/.well-known/openid-configuration": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Minimal OpenID Connect discovery document",
+        "operationId": "discovery",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SimulatorSettings": {
+        "type": "object",
+        "properties": {
+          "latencyMs": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 10000,
+            "minimum": 0
+          },
+          "jitterMs": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 10000,
+            "minimum": 0
+          },
+          "failureRate": {
+            "type": "number",
+            "format": "double",
+            "maximum": 1,
+            "minimum": 0
+          },
+          "volatilityMultiplier": {
+            "type": "number",
+            "format": "double",
+            "maximum": 20,
+            "minimum": 0
+          },
+          "paused": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PlaceOrderRequest": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "minLength": 1
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "BUY",
+              "SELL"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "MARKET",
+              "LIMIT"
+            ]
+          },
+          "quantity": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "limitPrice": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": [
+          "quantity",
+          "side",
+          "symbol",
+          "type"
+        ]
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tenantId": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "BUY",
+              "SELL"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "MARKET",
+              "LIMIT"
+            ]
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "limitPrice": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "FILLED",
+              "CANCELLED",
+              "REJECTED"
+            ]
+          },
+          "fillPrice": {
+            "type": "number"
+          },
+          "rejectReason": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 1
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "password",
+          "username"
+        ]
+      },
+      "TokenResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "tokenType": {
+            "type": "string"
+          },
+          "expiresIn": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserProfile"
+          }
+        }
+      },
+      "UserProfile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tenant": {
+            "type": "string"
+          }
+        }
+      },
+      "Features": {
+        "type": "object",
+        "properties": {
+          "trading": {
+            "type": "boolean"
+          },
+          "limitOrders": {
+            "type": "boolean"
+          },
+          "simulatorPanel": {
+            "type": "boolean"
+          },
+          "livePrices": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TenantDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "tagline": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "allowedAssetClasses": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "STOCK",
+                "ETF",
+                "FX",
+                "CRYPTO",
+                "BOND"
+              ]
+            }
+          },
+          "spreadMarkupBps": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "logoUrl": {
+            "type": "string"
+          },
+          "theme": {
+            "$ref": "#/components/schemas/Theme"
+          },
+          "features": {
+            "$ref": "#/components/schemas/Features"
+          }
+        }
+      },
+      "Theme": {
+        "type": "object",
+        "properties": {
+          "primary": {
+            "type": "string"
+          },
+          "onPrimary": {
+            "type": "string"
+          },
+          "accent": {
+            "type": "string"
+          },
+          "background": {
+            "type": "string"
+          },
+          "surface": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "muted": {
+            "type": "string"
+          },
+          "positive": {
+            "type": "string"
+          },
+          "negative": {
+            "type": "string"
+          },
+          "radius": {
+            "type": "string"
+          },
+          "colorScheme": {
+            "type": "string"
+          },
+          "fontBody": {
+            "type": "string"
+          },
+          "fontHeading": {
+            "type": "string"
+          }
+        }
+      },
+      "PortfolioView": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "cash": {
+            "type": "number"
+          },
+          "positionsValue": {
+            "type": "number"
+          },
+          "totalValue": {
+            "type": "number"
+          },
+          "unrealizedPnl": {
+            "type": "number"
+          },
+          "unrealizedPnlPct": {
+            "type": "number"
+          },
+          "positions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PositionView"
+            }
+          }
+        }
+      },
+      "PositionView": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "assetClass": {
+            "type": "string",
+            "enum": [
+              "STOCK",
+              "ETF",
+              "FX",
+              "CRYPTO",
+              "BOND"
+            ]
+          },
+          "currency": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "avgPrice": {
+            "type": "number"
+          },
+          "lastPrice": {
+            "type": "number"
+          },
+          "marketValue": {
+            "type": "number"
+          },
+          "pnl": {
+            "type": "number"
+          },
+          "pnlPct": {
+            "type": "number"
+          }
+        }
+      },
+      "Quote": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "bid": {
+            "type": "number"
+          },
+          "ask": {
+            "type": "number"
+          },
+          "mid": {
+            "type": "number"
+          },
+          "change": {
+            "type": "number"
+          },
+          "changePct": {
+            "type": "number"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "InstrumentView": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "assetClass": {
+            "type": "string",
+            "enum": [
+              "STOCK",
+              "ETF",
+              "FX",
+              "CRYPTO",
+              "BOND"
+            ]
+          },
+          "exchange": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "decimals": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "quote": {
+            "$ref": "#/components/schemas/Quote"
+          }
+        }
+      },
+      "PricePointView": {
+        "type": "object",
+        "properties": {
+          "t": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "price": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "description": "RS256 JWT from POST /api/auth/token (dev) or from your corporate SSO (oidc)",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

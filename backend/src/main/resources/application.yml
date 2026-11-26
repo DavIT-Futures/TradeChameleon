@@ -1,0 +1,67 @@
+spring:
+  application:
+    name: tradechameleon
+  threads:
+    virtual:
+      enabled: true            # every request, scheduler and listener runs on virtual threads
+  datasource:
+    url: jdbc:postgresql://localhost:5432/tradechameleon
+    username: tradechameleon
+    password: tradechameleon
+  flyway:
+    locations: classpath:db/migration
+  docker:
+    compose:
+      file: ../compose.yaml
+      lifecycle-management: start-only
+      skip:
+        in-tests: true
+  mvc:
+    problemdetails:
+      enabled: true            # framework errors (400/404/405/415...) are rendered as RFC 9457 problem details
+  modulith:
+    events:
+      jdbc:
+        schema-initialization:
+          enabled: true        # creates the EVENT_PUBLICATION table used by the event publication registry
+      republish-outstanding-events-on-restart: true
+
+server:
+  port: 8080
+  forward-headers-strategy: framework
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,modulith
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    persist-authorization: true
+  scalar:
+    path: /scalar
+
+tc:
+  tenants:
+    default-tenant: aurora
+  security:
+    # dev  = built-in identity provider signs RS256 JWTs (POST /api/auth/token)
+    # oidc = tokens are issued by a corporate SSO; set issuer-uri to its OIDC issuer
+    mode: dev
+    issuer: http://localhost:8080
+    issuer-uri: ""
+    token-ttl: 8h
+    tenant-claim: tenant
+    roles-claim: roles
+  market:
+    seed: 20261126           # deterministic price paths
+    tick-interval: 1s
+    history-size: 240
+
+logging:
+  level:
+    com.tradechameleon: INFO

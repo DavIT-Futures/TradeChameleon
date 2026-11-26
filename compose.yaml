@@ -1,0 +1,23 @@
+# Local infrastructure for TradeChameleon.
+# Start with:  docker compose up -d
+# The backend also starts this file automatically (spring-boot-docker-compose) when run from ./backend.
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: tradechameleon-postgres
+    environment:
+      POSTGRES_DB: tradechameleon
+      POSTGRES_USER: tradechameleon
+      POSTGRES_PASSWORD: tradechameleon
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tradechameleon -d tradechameleon"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
