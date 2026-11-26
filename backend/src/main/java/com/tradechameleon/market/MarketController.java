@@ -33,10 +33,12 @@ class MarketController {
 
     private final MarketData market;
     private final PriceStream stream;
+    private final MarketAnalytics analytics;
 
-    MarketController(MarketData market, PriceStream stream) {
+    MarketController(MarketData market, PriceStream stream, MarketAnalytics analytics) {
         this.market = market;
         this.stream = stream;
+        this.analytics = analytics;
     }
 
     /** Instrument plus its current tenant-specific quote. */
@@ -70,6 +72,29 @@ class MarketController {
         return market.history(instrument.symbol(), points).stream()
                 .map(p -> new PricePointView(p.at(), p.price()))
                 .toList();
+    }
+
+    @GetMapping("/instruments/{symbol}/candles")
+    @Operation(summary = "OHLC candles aggregated from engine ticks",
+            description = "interval: 5s, 15s, 1m or 5m. The engine keeps the last 2 hours of ticks.")
+    List<Candle> candles(@PathVariable String symbol,
+                         @RequestParam(defaultValue = "15s") String interval,
+                         @RequestParam(defaultValue = "120") @Min(1) @Max(500) int limit) {
+        var instrument = market.require(symbol, TenantContext.current());
+        var duration = MarketAnalytics.INTERVALS.get(interval);
+        if (duration == null) {
+            throw new com.tradechameleon.shared.DomainException(org.springframework.http.HttpStatus.BAD_REQUEST,
+                    "validation", "Validation failed", "interval must be one of 5s, 15s, 1m, 5m.",
+                    Map.of("errors", Map.of("interval", "one of 5s, 15s, 1m, 5m")));
+        }
+        return analytics.candles(instrument.symbol(), duration, limit);
+    }
+
+    @GetMapping("/instruments/{symbol}/depth")
+    @Operation(summary = "Simulated market depth (order book) around the broker's bid/ask")
+    OrderBook depth(@PathVariable String symbol, @RequestParam(defaultValue = "10") @Min(1) @Max(25) int levels) {
+        Tenant tenant = TenantContext.current();
+        return analytics.depth(market.require(symbol, tenant), tenant, levels);
     }
 
     @GetMapping("/sparklines")

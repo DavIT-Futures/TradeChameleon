@@ -16,12 +16,20 @@
   ],
   "tags": [
     {
+      "name": "Watchlist",
+      "description": "Instruments the user follows"
+    },
+    {
       "name": "Market",
       "description": "Instruments, quotes, history and live prices (SSE)"
     },
     {
       "name": "Portfolio",
-      "description": "Cash, positions and valuation"
+      "description": "Cash, positions, protection, account statement and realised P&L"
+    },
+    {
+      "name": "Alerts",
+      "description": "Price alerts and in-app notifications"
     },
     {
       "name": "Auth",
@@ -41,6 +49,80 @@
     }
   ],
   "paths": {
+    "/api/watchlist/{symbol}": {
+      "put": {
+        "tags": [
+          "Watchlist"
+        ],
+        "summary": "Add a symbol (idempotent)",
+        "operationId": "add",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Watchlist"
+        ],
+        "summary": "Remove a symbol (idempotent)",
+        "operationId": "remove",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/simulator": {
       "get": {
         "tags": [
@@ -123,6 +205,61 @@
         ]
       }
     },
+    "/api/portfolio/positions/{symbol}/protection": {
+      "put": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Set or remove stop-loss / take-profit on an open position (role TRADER)",
+        "operationId": "protect",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProtectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioView"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/simulator/reset": {
       "post": {
         "tags": [
@@ -148,6 +285,100 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/SimulatorSettings"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio/withdrawals": {
+      "post": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Withdraw cash (role TRADER)",
+        "operationId": "withdraw",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AmountRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CashTransaction"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio/deposits": {
+      "post": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Deposit demo cash (role TRADER)",
+        "operationId": "deposit",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AmountRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CashTransaction"
                 }
               }
             }
@@ -314,6 +545,143 @@
         }
       }
     },
+    "/api/alerts": {
+      "get": {
+        "tags": [
+          "Alerts"
+        ],
+        "summary": "Alerts of the caller, newest first",
+        "operationId": "list_1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "TRIGGERED",
+                "CANCELLED"
+              ]
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PriceAlert"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Alerts"
+        ],
+        "summary": "Create a price alert (ABOVE / BELOW the mid price)",
+        "operationId": "create",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAlertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceAlert"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/alerts/{id}/ack": {
+      "post": {
+        "tags": [
+          "Alerts"
+        ],
+        "summary": "Mark a triggered alert as shown",
+        "operationId": "acknowledge",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/oauth2/jwks": {
       "get": {
         "tags": [
@@ -347,13 +715,53 @@
         }
       }
     },
+    "/api/watchlist": {
+      "get": {
+        "tags": [
+          "Watchlist"
+        ],
+        "summary": "Symbols on the caller's watchlist (only those the broker still offers)",
+        "operationId": "list_2",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/tenants": {
       "get": {
         "tags": [
           "Tenants"
         ],
         "summary": "List all brokers (for the brand switcher)",
-        "operationId": "list_1",
+        "operationId": "list_3",
         "parameters": [
           {
             "name": "X-Tenant-Id",
@@ -519,6 +927,110 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/PortfolioView"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio/transactions": {
+      "get": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Account statement: deposits, withdrawals and trade cash flows, newest first",
+        "operationId": "transactions",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50,
+              "maximum": 500,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CashTransaction"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio/closed-trades": {
+      "get": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Closed trades with realised P&L, newest first",
+        "operationId": "closedTrades",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50,
+              "maximum": 500,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClosedTrade"
+                  }
                 }
               }
             }
@@ -872,6 +1384,163 @@
         }
       }
     },
+    "/api/market/instruments/{symbol}/depth": {
+      "get": {
+        "tags": [
+          "Market"
+        ],
+        "summary": "Simulated market depth (order book) around the broker's bid/ask",
+        "operationId": "depth",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "levels",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10,
+              "maximum": 25,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderBook"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/market/instruments/{symbol}/candles": {
+      "get": {
+        "tags": [
+          "Market"
+        ],
+        "summary": "OHLC candles aggregated from engine ticks",
+        "description": "interval: 5s, 15s, 1m or 5m. The engine keeps the last 2 hours of ticks.",
+        "operationId": "candles",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "interval",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "15s"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 120,
+              "maximum": 500,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Candle"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alerts/notifications": {
+      "get": {
+        "tags": [
+          "Alerts"
+        ],
+        "summary": "Triggered alerts the client has not shown yet (polled by the clients)",
+        "operationId": "notifications",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PriceAlert"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/.well-known/openid-configuration": {
       "get": {
         "tags": [
@@ -903,6 +1572,52 @@
             }
           }
         }
+      }
+    },
+    "/api/alerts/{id}": {
+      "delete": {
+        "tags": [
+          "Alerts"
+        ],
+        "summary": "Cancel an active alert",
+        "operationId": "cancel_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceAlert"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
       }
     }
   },
@@ -947,6 +1662,200 @@
           "volatilityMultiplier"
         ]
       },
+      "ProtectionRequest": {
+        "type": "object",
+        "properties": {
+          "stopLoss": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0
+          },
+          "takeProfit": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0
+          }
+        }
+      },
+      "PortfolioView": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "cash": {
+            "type": "number"
+          },
+          "positionsValue": {
+            "type": "number"
+          },
+          "totalValue": {
+            "type": "number"
+          },
+          "unrealizedPnl": {
+            "type": "number"
+          },
+          "unrealizedPnlPct": {
+            "type": "number"
+          },
+          "realizedPnl": {
+            "type": "number"
+          },
+          "positions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PositionView"
+            }
+          }
+        },
+        "required": [
+          "cash",
+          "currency",
+          "positions",
+          "positionsValue",
+          "realizedPnl",
+          "totalValue",
+          "unrealizedPnl",
+          "unrealizedPnlPct"
+        ]
+      },
+      "PositionView": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "assetClass": {
+            "type": "string",
+            "enum": [
+              "STOCK",
+              "ETF",
+              "FX",
+              "CRYPTO",
+              "BOND"
+            ]
+          },
+          "currency": {
+            "type": "string"
+          },
+          "decimals": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "avgPrice": {
+            "type": "number"
+          },
+          "lastPrice": {
+            "type": "number"
+          },
+          "marketValue": {
+            "type": "number"
+          },
+          "pnl": {
+            "type": "number"
+          },
+          "pnlPct": {
+            "type": "number"
+          },
+          "stopLoss": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "takeProfit": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "assetClass",
+          "avgPrice",
+          "currency",
+          "decimals",
+          "lastPrice",
+          "marketValue",
+          "name",
+          "pnl",
+          "pnlPct",
+          "quantity",
+          "stopLoss",
+          "symbol",
+          "takeProfit"
+        ]
+      },
+      "AmountRequest": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 100000000
+          }
+        },
+        "required": [
+          "amount"
+        ]
+      },
+      "CashTransaction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "DEPOSIT",
+              "WITHDRAWAL",
+              "BUY",
+              "SELL"
+            ]
+          },
+          "amount": {
+            "type": "number"
+          },
+          "balanceAfter": {
+            "type": "number"
+          },
+          "reference": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "amount",
+          "balanceAfter",
+          "createdAt",
+          "description",
+          "id",
+          "reference",
+          "type"
+        ]
+      },
       "PlaceOrderRequest": {
         "type": "object",
         "properties": {
@@ -965,7 +1874,9 @@
             "type": "string",
             "enum": [
               "MARKET",
-              "LIMIT"
+              "LIMIT",
+              "STOP",
+              "STOP_LIMIT"
             ]
           },
           "quantity": {
@@ -973,6 +1884,27 @@
             "exclusiveMinimum": 0
           },
           "limitPrice": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0
+          },
+          "stopPrice": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0
+          },
+          "stopLoss": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0
+          },
+          "takeProfit": {
             "type": [
               "number",
               "null"
@@ -1014,13 +1946,33 @@
             "type": "string",
             "enum": [
               "MARKET",
-              "LIMIT"
+              "LIMIT",
+              "STOP",
+              "STOP_LIMIT"
             ]
           },
           "quantity": {
             "type": "number"
           },
           "limitPrice": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "stopPrice": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "stopLoss": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "takeProfit": {
             "type": [
               "number",
               "null"
@@ -1033,6 +1985,17 @@
               "FILLED",
               "CANCELLED",
               "REJECTED"
+            ]
+          },
+          "triggered": {
+            "type": "boolean"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "CLIENT",
+              "STOP_LOSS",
+              "TAKE_PROFIT"
             ]
           },
           "fillPrice": {
@@ -1061,12 +2024,17 @@
           "fillPrice",
           "id",
           "limitPrice",
+          "origin",
           "quantity",
           "rejectReason",
           "side",
           "status",
+          "stopLoss",
+          "stopPrice",
           "symbol",
+          "takeProfit",
           "tenantId",
+          "triggered",
           "type",
           "updatedAt",
           "userId"
@@ -1144,6 +2112,107 @@
           "name",
           "roles",
           "tenant"
+        ]
+      },
+      "CreateAlertRequest": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "minLength": 1
+          },
+          "condition": {
+            "type": "string",
+            "enum": [
+              "ABOVE",
+              "BELOW"
+            ]
+          },
+          "price": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 120,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "condition",
+          "price",
+          "symbol"
+        ]
+      },
+      "PriceAlert": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "condition": {
+            "type": "string",
+            "enum": [
+              "ABOVE",
+              "BELOW"
+            ]
+          },
+          "price": {
+            "type": "number"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "TRIGGERED",
+              "CANCELLED"
+            ]
+          },
+          "acknowledged": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "triggeredAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "triggeredPrice": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "acknowledged",
+          "condition",
+          "createdAt",
+          "id",
+          "note",
+          "price",
+          "status",
+          "symbol",
+          "triggeredAt",
+          "triggeredPrice"
         ]
       },
       "Features": {
@@ -1286,95 +2355,49 @@
           "text"
         ]
       },
-      "PortfolioView": {
+      "ClosedTrade": {
         "type": "object",
         "properties": {
-          "currency": {
-            "type": "string"
-          },
-          "cash": {
-            "type": "number"
-          },
-          "positionsValue": {
-            "type": "number"
-          },
-          "totalValue": {
-            "type": "number"
-          },
-          "unrealizedPnl": {
-            "type": "number"
-          },
-          "unrealizedPnlPct": {
-            "type": "number"
-          },
-          "positions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PositionView"
-            }
-          }
-        },
-        "required": [
-          "cash",
-          "currency",
-          "positions",
-          "positionsValue",
-          "totalValue",
-          "unrealizedPnl",
-          "unrealizedPnlPct"
-        ]
-      },
-      "PositionView": {
-        "type": "object",
-        "properties": {
-          "symbol": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "assetClass": {
+          "id": {
             "type": "string",
-            "enum": [
-              "STOCK",
-              "ETF",
-              "FX",
-              "CRYPTO",
-              "BOND"
-            ]
+            "format": "uuid"
           },
-          "currency": {
+          "orderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "symbol": {
             "type": "string"
           },
           "quantity": {
             "type": "number"
           },
-          "avgPrice": {
+          "openPrice": {
             "type": "number"
           },
-          "lastPrice": {
+          "closePrice": {
             "type": "number"
           },
-          "marketValue": {
+          "currency": {
+            "type": "string"
+          },
+          "realizedPnl": {
             "type": "number"
           },
-          "pnl": {
-            "type": "number"
-          },
-          "pnlPct": {
-            "type": "number"
+          "closedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
-          "assetClass",
-          "avgPrice",
+          "closePrice",
+          "closedAt",
           "currency",
-          "lastPrice",
-          "marketValue",
-          "name",
-          "pnl",
-          "pnlPct",
+          "id",
+          "openPrice",
+          "orderId",
           "quantity",
+          "realizedPnl",
           "symbol"
         ]
       },
@@ -1471,6 +2494,84 @@
         "required": [
           "price",
           "t"
+        ]
+      },
+      "Level": {
+        "type": "object",
+        "properties": {
+          "price": {
+            "type": "number"
+          },
+          "size": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "price",
+          "size"
+        ]
+      },
+      "OrderBook": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "bids": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Level"
+            }
+          },
+          "asks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Level"
+            }
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "asks",
+          "bids",
+          "symbol",
+          "timestamp"
+        ]
+      },
+      "Candle": {
+        "type": "object",
+        "properties": {
+          "t": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "open": {
+            "type": "number"
+          },
+          "high": {
+            "type": "number"
+          },
+          "low": {
+            "type": "number"
+          },
+          "close": {
+            "type": "number"
+          },
+          "ticks": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "close",
+          "high",
+          "low",
+          "open",
+          "t",
+          "ticks"
         ]
       }
     },

@@ -4,7 +4,11 @@ import com.tradechameleon.shared.AssetClass;
 import java.math.BigDecimal;
 import java.util.List;
 
-/** Portfolio valued at current mid prices, converted to the account currency. */
+/**
+ * Portfolio valued at current mid prices, converted to the account currency.
+ *
+ * @param realizedPnl sum of all closed trades, account currency
+ */
 public record PortfolioView(
         String currency,
         BigDecimal cash,
@@ -12,6 +16,7 @@ public record PortfolioView(
         BigDecimal totalValue,
         BigDecimal unrealizedPnl,
         BigDecimal unrealizedPnlPct,
+        BigDecimal realizedPnl,
         List<PositionView> positions) {
 
     /**
@@ -19,17 +24,22 @@ public record PortfolioView(
      * @param lastPrice   current mid in the instrument currency
      * @param marketValue value in the account currency
      * @param pnl         unrealised profit/loss in the account currency
+     * @param stopLoss    protection (instrument currency), null when not set
+     * @param takeProfit  protection (instrument currency), null when not set
      */
     public record PositionView(
             String symbol,
             String name,
             AssetClass assetClass,
             String currency,
+            int decimals,
             BigDecimal quantity,
             BigDecimal avgPrice,
             BigDecimal lastPrice,
             BigDecimal marketValue,
             BigDecimal pnl,
-            BigDecimal pnlPct) {
+            BigDecimal pnlPct,
+            BigDecimal stopLoss,
+            BigDecimal takeProfit) {
     }
 }

@@ -1,8 +1,10 @@
 package com.tradechameleon.trading;
 
 import com.tradechameleon.shared.Side;
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
@@ -23,9 +25,11 @@ class OrderRepository {
     void insert(Order o) {
         jdbc.sql("""
                         insert into trade_order (id, tenant_id, user_id, symbol, side, type, quantity, limit_price,
-                                                 status, fill_price, reject_reason, created_at, updated_at)
+                                                 stop_price, stop_loss, take_profit, status, triggered, origin,
+                                                 fill_price, reject_reason, created_at, updated_at)
                         values (:id, :tenantId, :userId, :symbol, :side, :type, :quantity, :limitPrice,
-                                :status, :fillPrice, :rejectReason, :createdAt, :updatedAt)
+                                :stopPrice, :stopLoss, :takeProfit, :status, :triggered, :origin,
+                                :fillPrice, :rejectReason, :createdAt, :updatedAt)
                         """)
                 .param("id", o.id())
                 .param("tenantId", o.tenantId())
@@ -35,11 +39,16 @@ class OrderRepository {
                 .param("type", o.type().name())
                 .param("quantity", o.quantity())
                 .param("limitPrice", o.limitPrice())
+                .param("stopPrice", o.stopPrice())
+                .param("stopLoss", o.stopLoss())
+                .param("takeProfit", o.takeProfit())
                 .param("status", o.status().name())
+                .param("triggered", o.triggered())
+                .param("origin", o.origin().name())
                 .param("fillPrice", o.fillPrice())
                 .param("rejectReason", o.rejectReason())
-                .param("createdAt", java.sql.Timestamp.from(o.createdAt()))
-                .param("updatedAt", java.sql.Timestamp.from(o.updatedAt()))
+                .param("createdAt", Timestamp.from(o.createdAt()))
+                .param("updatedAt", Timestamp.from(o.updatedAt()))
                 .update();
     }
 
@@ -47,12 +56,19 @@ class OrderRepository {
      * Compare-and-set status change: only succeeds while the order is still OPEN, so a cancel and a
      * fill racing each other can never both win.
      */
-    boolean transitionFromOpen(UUID id, Order.OrderStatus status, java.math.BigDecimal fillPrice, String reason) {
+    boolean transitionFromOpen(UUID id, Order.OrderStatus status, BigDecimal fillPrice, String reason) {
         return jdbc.sql("""
                         update trade_order set status = ?, fill_price = ?, reject_reason = ?, updated_at = ?
                         where id = ? and status = 'OPEN'
                         """)
-                .params(status.name(), fillPrice, reason, java.sql.Timestamp.from(Instant.now()), id)
+                .params(status.name(), fillPrice, reason, Timestamp.from(Instant.now()), id)
+                .update() == 1;
+    }
+
+    /** A STOP_LIMIT whose stop was hit becomes a resting limit order. */
+    boolean markTriggered(UUID id) {
+        return jdbc.sql("update trade_order set triggered = true, updated_at = ? where id = ? and status = 'OPEN' and not triggered")
+                .params(Timestamp.from(Instant.now()), id)
                 .update() == 1;
     }
 
@@ -98,7 +114,12 @@ class OrderRepository {
                 Order.OrderType.valueOf(rs.getString("type")),
                 rs.getBigDecimal("quantity").stripTrailingZeros(),
                 rs.getBigDecimal("limit_price"),
+                rs.getBigDecimal("stop_price"),
+                rs.getBigDecimal("stop_loss"),
+                rs.getBigDecimal("take_profit"),
                 Order.OrderStatus.valueOf(rs.getString("status")),
+                rs.getBoolean("triggered"),
+                Order.Origin.valueOf(rs.getString("origin")),
                 rs.getBigDecimal("fill_price"),
                 rs.getString("reject_reason"),
                 rs.getTimestamp("created_at").toInstant(),

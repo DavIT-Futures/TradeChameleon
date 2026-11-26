@@ -4,6 +4,24 @@
  */
 
 export interface paths {
+    "/api/watchlist/{symbol}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Add a symbol (idempotent) */
+        put: operations["add"];
+        post?: never;
+        /** Remove a symbol (idempotent) */
+        delete: operations["remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/simulator": {
         parameters: {
             query?: never;
@@ -22,6 +40,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portfolio/positions/{symbol}/protection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set or remove stop-loss / take-profit on an open position (role TRADER) */
+        put: operations["protect"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/simulator/reset": {
         parameters: {
             query?: never;
@@ -33,6 +68,40 @@ export interface paths {
         put?: never;
         /** Back to defaults: no latency, no failures, normal volatility */
         post: operations["reset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portfolio/withdrawals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Withdraw cash (role TRADER) */
+        post: operations["withdraw"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portfolio/deposits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deposit demo cash (role TRADER) */
+        post: operations["deposit"];
         delete?: never;
         options?: never;
         head?: never;
@@ -77,6 +146,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Alerts of the caller, newest first */
+        get: operations["list_1"];
+        put?: never;
+        /** Create a price alert (ABOVE / BELOW the mid price) */
+        post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/alerts/{id}/ack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark a triggered alert as shown */
+        post: operations["acknowledge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/oauth2/jwks": {
         parameters: {
             query?: never;
@@ -94,6 +198,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/watchlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Symbols on the caller's watchlist (only those the broker still offers) */
+        get: operations["list_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tenants": {
         parameters: {
             query?: never;
@@ -102,7 +223,7 @@ export interface paths {
             cookie?: never;
         };
         /** List all brokers (for the brand switcher) */
-        get: operations["list_1"];
+        get: operations["list_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -171,6 +292,40 @@ export interface paths {
         };
         /** Portfolio of the caller, valued in the broker currency */
         get: operations["portfolio"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portfolio/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Account statement: deposits, withdrawals and trade cash flows, newest first */
+        get: operations["transactions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portfolio/closed-trades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Closed trades with realised P&L, newest first */
+        get: operations["closedTrades"];
         put?: never;
         post?: never;
         delete?: never;
@@ -302,6 +457,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/market/instruments/{symbol}/depth": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Simulated market depth (order book) around the broker's bid/ask */
+        get: operations["depth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/market/instruments/{symbol}/candles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * OHLC candles aggregated from engine ticks
+         * @description interval: 5s, 15s, 1m or 5m. The engine keeps the last 2 hours of ticks.
+         */
+        get: operations["candles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/alerts/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Triggered alerts the client has not shown yet (polled by the clients) */
+        get: operations["notifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/.well-known/openid-configuration": {
         parameters: {
             query?: never;
@@ -314,6 +523,23 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/alerts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Cancel an active alert */
+        delete: operations["cancel_1"];
         options?: never;
         head?: never;
         patch?: never;
@@ -334,14 +560,64 @@ export interface components {
             volatilityMultiplier: number;
             paused: boolean;
         };
+        ProtectionRequest: {
+            stopLoss?: number | null;
+            takeProfit?: number | null;
+        };
+        PortfolioView: {
+            currency: string;
+            cash: number;
+            positionsValue: number;
+            totalValue: number;
+            unrealizedPnl: number;
+            unrealizedPnlPct: number;
+            realizedPnl: number;
+            positions: components["schemas"]["PositionView"][];
+        };
+        PositionView: {
+            symbol: string;
+            name: string;
+            /** @enum {string} */
+            assetClass: "STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND";
+            currency: string;
+            /** Format: int32 */
+            decimals: number;
+            quantity: number;
+            avgPrice: number;
+            lastPrice: number;
+            marketValue: number;
+            pnl: number;
+            pnlPct: number;
+            stopLoss: number | null;
+            takeProfit: number | null;
+        };
+        AmountRequest: {
+            amount: number;
+        };
+        CashTransaction: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            type: "DEPOSIT" | "WITHDRAWAL" | "BUY" | "SELL";
+            amount: number;
+            balanceAfter: number;
+            /** Format: uuid */
+            reference: string | null;
+            description: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
         PlaceOrderRequest: {
             symbol: string;
             /** @enum {string} */
             side: "BUY" | "SELL";
             /** @enum {string} */
-            type: "MARKET" | "LIMIT";
+            type: "MARKET" | "LIMIT" | "STOP" | "STOP_LIMIT";
             quantity: number;
             limitPrice?: number | null;
+            stopPrice?: number | null;
+            stopLoss?: number | null;
+            takeProfit?: number | null;
         };
         Order: {
             /** Format: uuid */
@@ -352,11 +628,17 @@ export interface components {
             /** @enum {string} */
             side: "BUY" | "SELL";
             /** @enum {string} */
-            type: "MARKET" | "LIMIT";
+            type: "MARKET" | "LIMIT" | "STOP" | "STOP_LIMIT";
             quantity: number;
             limitPrice: number | null;
+            stopPrice: number | null;
+            stopLoss: number | null;
+            takeProfit: number | null;
             /** @enum {string} */
             status: "OPEN" | "FILLED" | "CANCELLED" | "REJECTED";
+            triggered: boolean;
+            /** @enum {string} */
+            origin: "CLIENT" | "STOP_LOSS" | "TAKE_PROFIT";
             fillPrice: number | null;
             rejectReason: string | null;
             /** Format: date-time */
@@ -381,6 +663,30 @@ export interface components {
             email: string | null;
             roles: string[];
             tenant: string;
+        };
+        CreateAlertRequest: {
+            symbol: string;
+            /** @enum {string} */
+            condition: "ABOVE" | "BELOW";
+            price: number;
+            note?: string | null;
+        };
+        PriceAlert: {
+            /** Format: uuid */
+            id: string;
+            symbol: string;
+            /** @enum {string} */
+            condition: "ABOVE" | "BELOW";
+            price: number;
+            note: string | null;
+            /** @enum {string} */
+            status: "ACTIVE" | "TRIGGERED" | "CANCELLED";
+            acknowledged: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            triggeredAt: string | null;
+            triggeredPrice: number | null;
         };
         Features: {
             trading: boolean;
@@ -416,27 +722,19 @@ export interface components {
             fontBody: string;
             fontHeading: string;
         };
-        PortfolioView: {
-            currency: string;
-            cash: number;
-            positionsValue: number;
-            totalValue: number;
-            unrealizedPnl: number;
-            unrealizedPnlPct: number;
-            positions: components["schemas"]["PositionView"][];
-        };
-        PositionView: {
+        ClosedTrade: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string;
             symbol: string;
-            name: string;
-            /** @enum {string} */
-            assetClass: "STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND";
-            currency: string;
             quantity: number;
-            avgPrice: number;
-            lastPrice: number;
-            marketValue: number;
-            pnl: number;
-            pnlPct: number;
+            openPrice: number;
+            closePrice: number;
+            currency: string;
+            realizedPnl: number;
+            /** Format: date-time */
+            closedAt: string;
         };
         Quote: {
             symbol: string;
@@ -464,6 +762,27 @@ export interface components {
             t: string;
             price: number;
         };
+        Level: {
+            price: number;
+            size: number;
+        };
+        OrderBook: {
+            symbol: string;
+            bids: components["schemas"]["Level"][];
+            asks: components["schemas"]["Level"][];
+            /** Format: date-time */
+            timestamp: string;
+        };
+        Candle: {
+            /** Format: date-time */
+            t: string;
+            open: number;
+            high: number;
+            low: number;
+            close: number;
+            /** Format: int32 */
+            ticks: number;
+        };
     };
     responses: never;
     parameters: never;
@@ -473,6 +792,52 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    add: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path: {
+                symbol: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    remove: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path: {
+                symbol: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     get: {
         parameters: {
             query?: never;
@@ -523,6 +888,35 @@ export interface operations {
             };
         };
     };
+    protect: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path: {
+                symbol: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProtectionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PortfolioView"];
+                };
+            };
+        };
+    };
     reset: {
         parameters: {
             query?: never;
@@ -542,6 +936,60 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["SimulatorSettings"];
+                };
+            };
+        };
+    };
+    withdraw: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AmountRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CashTransaction"];
+                };
+            };
+        };
+    };
+    deposit: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AmountRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CashTransaction"];
                 };
             };
         };
@@ -626,6 +1074,81 @@ export interface operations {
             };
         };
     };
+    list_1: {
+        parameters: {
+            query?: {
+                status?: "ACTIVE" | "TRIGGERED" | "CANCELLED";
+            };
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PriceAlert"][];
+                };
+            };
+        };
+    };
+    create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAlertRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PriceAlert"];
+                };
+            };
+        };
+    };
+    acknowledge: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     jwks: {
         parameters: {
             query?: never;
@@ -651,7 +1174,30 @@ export interface operations {
             };
         };
     };
-    list_1: {
+    list_2: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string[];
+                };
+            };
+        };
+    };
+    list_3: {
         parameters: {
             query?: never;
             header?: {
@@ -766,6 +1312,56 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["PortfolioView"];
+                };
+            };
+        };
+    };
+    transactions: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CashTransaction"][];
+                };
+            };
+        };
+    };
+    closedTrades: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ClosedTrade"][];
                 };
             };
         };
@@ -968,6 +1564,84 @@ export interface operations {
             };
         };
     };
+    depth: {
+        parameters: {
+            query?: {
+                levels?: number;
+            };
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path: {
+                symbol: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OrderBook"];
+                };
+            };
+        };
+    };
+    candles: {
+        parameters: {
+            query?: {
+                interval?: string;
+                limit?: number;
+            };
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path: {
+                symbol: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Candle"][];
+                };
+            };
+        };
+    };
+    notifications: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PriceAlert"][];
+                };
+            };
+        };
+    };
     discovery: {
         parameters: {
             query?: never;
@@ -989,6 +1663,31 @@ export interface operations {
                     "*/*": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    cancel_1: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PriceAlert"];
                 };
             };
         };

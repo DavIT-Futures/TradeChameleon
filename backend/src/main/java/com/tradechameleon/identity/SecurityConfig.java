@@ -67,6 +67,8 @@ class SecurityConfig {
                         .requestMatchers(PUBLIC).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/orders/**").hasRole("TRADER")
                         .requestMatchers(HttpMethod.DELETE, "/api/orders/**").hasRole("TRADER")
+                        .requestMatchers(HttpMethod.POST, "/api/portfolio/**").hasRole("TRADER")
+                        .requestMatchers(HttpMethod.PUT, "/api/portfolio/**").hasRole("TRADER")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(rs -> rs
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter(props)))

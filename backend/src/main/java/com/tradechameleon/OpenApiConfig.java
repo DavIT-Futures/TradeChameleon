@@ -54,8 +54,19 @@ class OpenApiConfig {
      * as {@code T | null} (OpenAPI 3.1 type arrays).
      */
     private static final Set<String> NULLABLE = Set.of(
-            "Order.limitPrice", "Order.fillPrice", "Order.rejectReason",
-            "PlaceOrderRequest.limitPrice", "UserProfile.email");
+            "Order.limitPrice", "Order.stopPrice", "Order.stopLoss", "Order.takeProfit", "Order.fillPrice",
+            "Order.rejectReason",
+            "PlaceOrderRequest.limitPrice", "PlaceOrderRequest.stopPrice", "PlaceOrderRequest.stopLoss",
+            "PlaceOrderRequest.takeProfit",
+            "PositionView.stopLoss", "PositionView.takeProfit",
+            "ProtectionRequest.stopLoss", "ProtectionRequest.takeProfit",
+            "CashTransaction.reference",
+            "PriceAlert.note", "PriceAlert.triggeredAt", "PriceAlert.triggeredPrice",
+            "CreateAlertRequest.note",
+            "UserProfile.email");
+
+    /** Request bodies: their nullable fields may also be omitted. */
+    private static final Set<String> REQUESTS = Set.of("PlaceOrderRequest", "ProtectionRequest", "CreateAlertRequest");
 
     @Bean
     OpenApiCustomizer requiredRecordProperties() {
@@ -73,7 +84,7 @@ class OpenApiConfig {
                     var withNull = new LinkedHashSet<>(types);
                     withNull.add("null");
                     propSchema.setTypes(withNull);
-                    if (!name.equals("PlaceOrderRequest")) {
+                    if (!REQUESTS.contains(name)) {
                         required.add(prop);
                     }
                 } else {

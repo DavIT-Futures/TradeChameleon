@@ -60,7 +60,7 @@ tc:
   market:
     seed: 20261126           # deterministic price paths
     tick-interval: 1s
-    history-size: 240
+    history-size: 7200       # 2 hours of 1-second ticks (candles up to 5m)
 
 logging:
   level:
