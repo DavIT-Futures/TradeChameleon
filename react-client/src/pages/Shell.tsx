@@ -1,7 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router'
+import { useAlertNotifications } from '../core/alerts'
 import { logout, useAuth } from '../core/auth'
+import { loadWatchlist } from '../core/watchlist'
 import { connectStream, useStream } from '../core/priceStream'
 import { useTenant } from '../core/TenantProvider'
 
@@ -14,6 +16,8 @@ export default function Shell() {
   const queryClient = useQueryClient()
 
   useEffect(() => connectStream(), [])
+  useEffect(() => void loadWatchlist().catch(() => undefined), [])
+  useAlertNotifications()
 
   const signOut = () => {
     logout()
@@ -42,6 +46,8 @@ export default function Shell() {
         <NavLink to="/dashboard">▦ Dashboard</NavLink>
         <NavLink to="/markets" end={false}>↗ Markets</NavLink>
         <NavLink to="/portfolio">◔ Portfolio</NavLink>
+        <NavLink to="/account">≡ Account</NavLink>
+        <NavLink to="/alerts">🔔 Alerts</NavLink>
         {tenant.features.simulatorPanel && <NavLink to="/dev">⚙ Developer</NavLink>}
       </nav>
       <main className="shell__main">

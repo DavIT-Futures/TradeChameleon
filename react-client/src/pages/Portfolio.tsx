@@ -29,6 +29,18 @@ export default function Portfolio() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: queries.orders().queryKey.slice(0, 2) }),
   })
 
+  const [editing, setEditing] = useState<string | null>(null)
+  const protect = useMutation({
+    mutationFn: ({ symbol, ...body }: { symbol: string; stopLoss: number | null; takeProfit: number | null }) =>
+      unwrap(api.PUT('/api/portfolio/positions/{symbol}/protection', { params: { path: { symbol } }, body })),
+    onSuccess: (updated, vars) => {
+      queryClient.setQueryData(queries.portfolio().queryKey, updated)
+      setEditing(null)
+      showToast('success', 'Protection saved', vars.symbol)
+    },
+    onError: (e) => showToast('error', e instanceof ApiError ? e.problem.title ?? 'Error' : 'Error', e.message),
+  })
+
   const p = portfolio.data
   // Revalue with streamed mids: value_now = value_at_load * mid_now / mid_at_load.
   const positions = (p?.positions ?? []).map((pos) => {
@@ -52,6 +64,8 @@ export default function Portfolio() {
             <div className="card kpi"><div className="kpi__label">Cash</div><div className="kpi__value">{fmt.money(p.cash, p.currency)}</div></div>
             <div className="card kpi"><div className="kpi__label">Unrealised P&amp;L</div>
               <div className={`kpi__value ${p.unrealizedPnl >= 0 ? 'up' : 'down'}`}>{fmt.money(p.unrealizedPnl, p.currency)}</div></div>
+            <div className="card kpi"><div className="kpi__label">Realised P&amp;L</div>
+              <div className={`kpi__value ${p.realizedPnl >= 0 ? 'up' : 'down'}`}>{fmt.money(p.realizedPnl, p.currency)}</div></div>
           </section>
           <section className="card">
             <h2>Positions</h2>
@@ -59,20 +73,40 @@ export default function Portfolio() {
               <table className="table">
                 <thead><tr>
                   <th>Instrument</th><th className="num">Quantity</th><th className="num">Avg price</th><th className="num">Last</th>
-                  <th className="num">Value ({p.currency})</th><th className="num">P&amp;L</th>
+                  <th className="num">Value ({p.currency})</th><th className="num">P&amp;L</th><th>SL / TP</th>
                 </tr></thead>
                 <tbody>
                   {positions.map((pos) => (
                     <tr key={pos.symbol}>
                       <td><Link to={`/markets/${pos.symbol}`}>{pos.symbol}</Link><span className="muted">{pos.name}</span></td>
                       <td className="num">{fmt.qty(pos.quantity)}</td>
-                      <td className="num">{fmt.price(pos.avgPrice)} <span className="muted">{pos.currency}</span></td>
-                      <td className="num">{fmt.price(pos.live)}</td>
+                      <td className="num">{fmt.price(pos.avgPrice, pos.decimals)} <span className="muted">{pos.currency}</span></td>
+                      <td className="num">{fmt.price(pos.live, pos.decimals)}</td>
                       <td className="num">{fmt.money(pos.liveValue, p.currency)}</td>
                       <td className={`num ${pos.pnl >= 0 ? 'up' : 'down'}`}>{fmt.pct(pos.pnlPct)}</td>
+                      <td>
+                        {editing === pos.symbol ? (
+                          <form className="inline-edit" onSubmit={(e) => {
+                            e.preventDefault()
+                            const data = new FormData(e.currentTarget)
+                            const num = (v: FormDataEntryValue | null) => (v === null || v === '' ? null : Number(v))
+                            protect.mutate({ symbol: pos.symbol, stopLoss: num(data.get('sl')), takeProfit: num(data.get('tp')) })
+                          }}>
+                            <input name="sl" type="number" step="any" placeholder="SL" defaultValue={pos.stopLoss ?? ''} aria-label="Stop loss" />
+                            <input name="tp" type="number" step="any" placeholder="TP" defaultValue={pos.takeProfit ?? ''} aria-label="Take profit" />
+                            <button className="btn btn--small" type="submit" disabled={protect.isPending}>Save</button>
+                            <button className="btn btn--ghost btn--small" type="button" onClick={() => setEditing(null)}>×</button>
+                          </form>
+                        ) : (
+                          <>
+                            <span className="muted">{pos.stopLoss ?? '–'} / {pos.takeProfit ?? '–'}</span>{' '}
+                            {isTrader && <button className="btn btn--ghost btn--small" onClick={() => setEditing(pos.symbol)}>Edit</button>}
+                          </>
+                        )}
+                      </td>
                     </tr>
                   ))}
-                  {positions.length === 0 && <tr><td colSpan={6} className="muted">No positions.</td></tr>}
+                  {positions.length === 0 && <tr><td colSpan={7} className="muted">No positions.</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -89,14 +123,17 @@ export default function Portfolio() {
         </div>
         <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>Created</th><th>Order</th><th className="num">Qty</th><th className="num">Limit</th><th className="num">Fill</th><th>Status</th><th /></tr></thead>
+            <thead><tr><th>Created</th><th>Order</th><th className="num">Qty</th><th className="num">Stop / limit</th><th className="num">Fill</th><th>Status</th><th /></tr></thead>
             <tbody>
               {orders.data?.map((o) => (
                 <tr key={o.id}>
                   <td>{o.createdAt.slice(11, 19)}</td>
-                  <td>{o.side} {o.symbol} <span className="muted">{o.type}</span></td>
+                  <td>
+                    {o.side} {o.symbol} <span className="muted">{o.type}{o.triggered ? ' (triggered)' : ''}</span>
+                    {o.origin !== 'CLIENT' && <> <span className="badge badge--accent">{o.origin}</span></>}
+                  </td>
                   <td className="num">{fmt.qty(o.quantity)}</td>
-                  <td className="num">{fmt.price(o.limitPrice)}</td>
+                  <td className="num">{o.stopPrice != null && `stop ${fmt.price(o.stopPrice)} `}{o.limitPrice != null && fmt.price(o.limitPrice)}</td>
                   <td className="num">{fmt.price(o.fillPrice)}</td>
                   <td><span className="badge" title={o.rejectReason ?? ''}>{o.status}</span></td>
                   <td>{o.status === 'OPEN' && isTrader && (

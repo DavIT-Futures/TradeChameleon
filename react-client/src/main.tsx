@@ -49,6 +49,8 @@ const router = createBrowserRouter([
       { path: 'markets', lazy: page(() => import('./pages/Markets')) },
       { path: 'markets/:symbol', lazy: page(() => import('./pages/Instrument')) },
       { path: 'portfolio', lazy: page(() => import('./pages/Portfolio')) },
+      { path: 'account', lazy: page(() => import('./pages/Account')) },
+      { path: 'alerts', lazy: page(() => import('./pages/Alerts')) },
       { path: 'dev', element: <RequireFeature flag="simulatorPanel"><DevRoute /></RequireFeature> },
     ],
   },

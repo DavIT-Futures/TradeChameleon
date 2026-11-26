@@ -10,6 +10,9 @@ import { showToast } from '../core/toast'
 type Side = PlaceOrderRequest['side']
 type OrderType = PlaceOrderRequest['type']
 
+const TYPES: OrderType[] = ['MARKET', 'LIMIT', 'STOP', 'STOP_LIMIT']
+const LABELS: Record<OrderType, string> = { MARKET: 'Market', LIMIT: 'Limit', STOP: 'Stop', STOP_LIMIT: 'Stop limit' }
+
 export default function OrderTicket({ instrument, quote }: { instrument: InstrumentView; quote: Quote }) {
   const { tenant } = useTenant()
   const { isTrader } = useAuth()
@@ -17,30 +20,40 @@ export default function OrderTicket({ instrument, quote }: { instrument: Instrum
   const queryClient = useQueryClient()
   const [side, setSide] = useState<Side>('BUY')
   const [type, setType] = useState<OrderType>('MARKET')
-  const [quantity, setQuantity] = useState('1')
-  const [limitPrice, setLimitPrice] = useState('')
+  const [form, setForm] = useState({ quantity: '1', limitPrice: '', stopPrice: '', stopLoss: '', takeProfit: '' })
+  const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [key]: e.target.value })
 
   /** useMutation: POST with pending/error state; on success invalidate what the order changed. */
   const place = useMutation({
     mutationFn: (body: PlaceOrderRequest) => unwrap(api.POST('/api/orders', { body })),
     onSuccess: (order) => {
       const what = `${order.side} ${order.quantity} ${order.symbol}`
-      showToast('success', order.status === 'FILLED' ? 'Order filled' : 'Order placed',
-        order.status === 'FILLED' ? `${what} @ ${order.fillPrice}` : `${what}, limit ${order.limitPrice}`)
+      showToast('success', order.status === 'FILLED' ? 'Order filled' : `${LABELS[order.type]} order placed`,
+        order.status === 'FILLED' ? `${what} @ ${order.fillPrice}` : what)
       // the portfolio is updated asynchronously by the backend: refetch shortly after
-      setTimeout(() => void queryClient.invalidateQueries({ predicate: (q) => ['portfolio', 'orders'].includes(String(q.queryKey[1])) }), 300)
+      setTimeout(() => void queryClient.invalidateQueries({
+        predicate: (q) => ['portfolio', 'orders', 'transactions'].includes(String(q.queryKey[1])) }), 300)
     },
   })
 
-  const qty = Number(quantity)
-  const price = type === 'LIMIT' ? Number(limitPrice) : side === 'BUY' ? quote.ask : quote.bid
-  const valid = qty > 0 && (type === 'MARKET' || Number(limitPrice) > 0)
+  const needsLimit = type === 'LIMIT' || type === 'STOP_LIMIT'
+  const needsStop = type === 'STOP' || type === 'STOP_LIMIT'
+  const qty = Number(form.quantity)
+  const price = needsLimit ? Number(form.limitPrice) : type === 'STOP' ? Number(form.stopPrice) : side === 'BUY' ? quote.ask : quote.bid
+  const valid = qty > 0 && (!needsLimit || Number(form.limitPrice) > 0) && (!needsStop || Number(form.stopPrice) > 0)
   const problem = place.error instanceof ApiError ? place.error.problem : null
+  const num = (v: string) => (v === '' ? null : Number(v))
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!valid) return
-    place.mutate({ symbol: instrument.symbol, side, type, quantity: qty, limitPrice: type === 'LIMIT' ? Number(limitPrice) : null })
+    place.mutate({
+      symbol: instrument.symbol, side, type, quantity: qty,
+      limitPrice: needsLimit ? num(form.limitPrice) : null,
+      stopPrice: needsStop ? num(form.stopPrice) : null,
+      stopLoss: side === 'BUY' ? num(form.stopLoss) : null,
+      takeProfit: side === 'BUY' ? num(form.takeProfit) : null,
+    })
   }
 
   return (
@@ -62,19 +75,42 @@ export default function OrderTicket({ instrument, quote }: { instrument: Instrum
             <button type="button" className="btn btn--sell" aria-pressed={side === 'SELL'} onClick={() => setSide('SELL')}>Sell</button>
           </div>
           <div className="segmented" role="group" aria-label="Order type">
-            <button type="button" aria-pressed={type === 'MARKET'} onClick={() => setType('MARKET')}>Market</button>
-            <button type="button" aria-pressed={type === 'LIMIT'} onClick={() => setType('LIMIT')}
-              disabled={!tenant.features.limitOrders} title={tenant.features.limitOrders ? '' : 'Not offered by this broker'}>Limit</button>
+            {TYPES.map((t) => (
+              <button key={t} type="button" aria-pressed={type === t} onClick={() => setType(t)}
+                disabled={t !== 'MARKET' && !tenant.features.limitOrders}
+                title={t === 'MARKET' || tenant.features.limitOrders ? '' : 'Not offered by this broker'}>{LABELS[t]}</button>
+            ))}
           </div>
           <div className="field">
             <label htmlFor="qty">Quantity</label>
-            <input id="qty" type="number" min="0" step="any" required value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+            <input id="qty" type="number" min="0" step="any" required value={form.quantity} onChange={set('quantity')} />
           </div>
-          {type === 'LIMIT' && (
+          {needsStop && (
+            <div className="field">
+              <label htmlFor="stop">Stop price ({instrument.currency}) · {side === 'BUY' ? 'above ask' : 'below bid'}</label>
+              <input id="stop" type="number" min="0" step="any" required value={form.stopPrice} onChange={set('stopPrice')} />
+            </div>
+          )}
+          {needsLimit && (
             <div className="field">
               <label htmlFor="limit">Limit price ({instrument.currency})</label>
-              <input id="limit" type="number" min="0" step="any" required value={limitPrice} onChange={(e) => setLimitPrice(e.target.value)} />
+              <input id="limit" type="number" min="0" step="any" required value={form.limitPrice} onChange={set('limitPrice')} />
             </div>
+          )}
+          {side === 'BUY' && (
+            <details className="protection">
+              <summary>Stop loss / Take profit</summary>
+              <div className="form-row">
+                <div className="field">
+                  <label htmlFor="sl">Stop loss</label>
+                  <input id="sl" type="number" min="0" step="any" placeholder="optional" value={form.stopLoss} onChange={set('stopLoss')} />
+                </div>
+                <div className="field">
+                  <label htmlFor="tp">Take profit</label>
+                  <input id="tp" type="number" min="0" step="any" placeholder="optional" value={form.takeProfit} onChange={set('takeProfit')} />
+                </div>
+              </div>
+            </details>
           )}
           <div className="row spread">
             <span className="muted">Estimated {side === 'BUY' ? 'cost' : 'proceeds'}</span>
@@ -82,7 +118,7 @@ export default function OrderTicket({ instrument, quote }: { instrument: Instrum
           </div>
           {problem && <div className="alert alert--error" role="alert"><strong>{problem.title}</strong>{problem.detail}</div>}
           <button className={`btn ${side === 'BUY' ? 'btn--buy' : 'btn--sell'}`} type="submit" disabled={!valid || place.isPending}>
-            {place.isPending ? 'Sending…' : `${side === 'BUY' ? 'Buy' : 'Sell'} ${instrument.symbol}`}
+            {place.isPending ? 'Sending…' : `${side === 'BUY' ? 'Buy' : 'Sell'} ${instrument.symbol}${type === 'MARKET' ? '' : ' · ' + LABELS[type]}`}
           </button>
         </form>
       )}

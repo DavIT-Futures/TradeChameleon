@@ -32,5 +32,29 @@ export const queries = {
       queryKey: [t(), 'orders', status ?? 'ALL', limit],
       queryFn: () => unwrap(api.GET('/api/orders', { params: { query: { status, limit } } })),
     }),
+  candles: (symbol: string, interval: '5s' | '15s' | '1m' | '5m', limit = 90) =>
+    queryOptions({
+      queryKey: [t(), 'candles', symbol, interval, limit],
+      queryFn: () =>
+        unwrap(api.GET('/api/market/instruments/{symbol}/candles', { params: { path: { symbol }, query: { interval, limit } } })),
+      refetchInterval: 5_000,
+    }),
+  depth: (symbol: string, levels = 10) =>
+    queryOptions({
+      queryKey: [t(), 'depth', symbol, levels],
+      queryFn: () => unwrap(api.GET('/api/market/instruments/{symbol}/depth', { params: { path: { symbol }, query: { levels } } })),
+      refetchInterval: 1_000,
+    }),
+  alerts: () => queryOptions({ queryKey: [t(), 'alerts'], queryFn: () => unwrap(api.GET('/api/alerts')) }),
+  transactions: (limit = 100) =>
+    queryOptions({
+      queryKey: [t(), 'transactions', limit],
+      queryFn: () => unwrap(api.GET('/api/portfolio/transactions', { params: { query: { limit } } })),
+    }),
+  closedTrades: (limit = 100) =>
+    queryOptions({
+      queryKey: [t(), 'closed-trades', limit],
+      queryFn: () => unwrap(api.GET('/api/portfolio/closed-trades', { params: { query: { limit } } })),
+    }),
   simulator: () => queryOptions({ queryKey: ['simulator'], queryFn: () => unwrap(api.GET('/api/simulator')) }),
 }

@@ -6,6 +6,7 @@ import { useAuth } from '../core/auth'
 import { useFormat } from '../core/format'
 import { useStream } from '../core/priceStream'
 import { useTenant } from '../core/TenantProvider'
+import { useWatchlist } from '../core/watchlist'
 
 /** React.lazy + Suspense: the allocation card is a separate chunk, the React counterpart of @defer. */
 const Allocation = lazy(() => import('./Allocation'))
@@ -18,6 +19,7 @@ export default function Dashboard() {
   const orders = useQuery(queries.orders(undefined, 5))
   const instruments = useQuery(queries.instruments())
   const { quotes } = useStream()
+  const watchlist = useWatchlist()
 
   const p = portfolio.data
   const kpis = [
@@ -38,6 +40,12 @@ export default function Dashboard() {
       .sort((a, b) => Math.abs(b.changePct) - Math.abs(a.changePct))
       .slice(0, 6)
   }, [quotes, instruments.data])
+
+  const watched = [...watchlist].flatMap((s) => {
+    const meta = instruments.data?.find((i) => i.symbol === s)
+    const q = quotes.get(s) ?? meta?.quote
+    return q ? [{ ...q, decimals: meta?.decimals ?? 2 }] : []
+  })
 
   return (
     <div className="page">
@@ -97,6 +105,26 @@ export default function Dashboard() {
           </div>
         </section>
       </div>
+
+      <section className="card">
+        <h2>★ Watchlist</h2>
+        <div className="table-wrap">
+          <table className="table">
+            <thead><tr><th>Symbol</th><th className="num">Bid</th><th className="num">Ask</th><th className="num">Change</th></tr></thead>
+            <tbody>
+              {watched.map((w) => (
+                <tr key={w.symbol}>
+                  <td><Link to={`/markets/${w.symbol}`}>{w.symbol}</Link></td>
+                  <td className="num">{fmt.price(w.bid, w.decimals)}</td>
+                  <td className="num">{fmt.price(w.ask, w.decimals)}</td>
+                  <td className="num"><span className={`badge ${w.changePct >= 0 ? 'badge--up' : 'badge--down'}`}>{fmt.pct(w.changePct)}</span></td>
+                </tr>
+              ))}
+              {watched.length === 0 && <tr><td colSpan={4} className="muted">Star instruments on the Markets page to follow them here.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <Suspense fallback={<div className="card"><div className="skeleton" style={{ blockSize: '6rem' }} /></div>}>
         {p && <Allocation portfolio={p} />}
