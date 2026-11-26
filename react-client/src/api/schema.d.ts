@@ -317,6 +317,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portfolio/risk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Exposure, CFD margin requirement, margin level and concentration warnings */
+        get: operations["risk"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portfolio/closed-trades": {
         parameters: {
             query?: never;
@@ -389,6 +406,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/market/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Screener data: change, 1-hour volatility, RSI(14) on 1-minute candles, range position, spread, sentiment */
+        get: operations["stats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/market/sparklines": {
         parameters: {
             query?: never;
@@ -415,6 +449,23 @@ export interface paths {
         };
         /** Market overview per asset class the broker offers (counts, breadth, best and worst) */
         get: operations["overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/market/news": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Latest headlines of the last 24 hours, optionally for one symbol or asset class */
+        get: operations["news"];
         put?: never;
         post?: never;
         delete?: never;
@@ -523,6 +574,26 @@ export interface paths {
          * @description interval: 5s, 15s, 1m or 5m. The engine keeps the last 2 hours of ticks.
          */
         get: operations["candles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/market/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Economic calendar (default: 2 days back to 5 days ahead)
+         * @description symbols lists only instruments the current broker offers.
+         */
+        get: operations["calendar"];
         put?: never;
         post?: never;
         delete?: never;
@@ -759,6 +830,36 @@ export interface components {
             fontBody: string;
             fontHeading: string;
         };
+        ClassRisk: {
+            /** @enum {string} */
+            assetClass: "STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND" | "COMMODITY" | "INDEX" | "OPTION";
+            exposure: number;
+            sharePct: number;
+            margin: number;
+        };
+        PortfolioRisk: {
+            currency: string;
+            equity: number;
+            exposure: number;
+            marginRequired: number;
+            freeMargin: number;
+            marginLevelPct: number | null;
+            leverage: number;
+            byClass: components["schemas"]["ClassRisk"][];
+            positions: components["schemas"]["PositionRisk"][];
+            warnings: string[];
+        };
+        PositionRisk: {
+            symbol: string;
+            /** @enum {string} */
+            assetClass: "STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND" | "COMMODITY" | "INDEX" | "OPTION";
+            exposure: number;
+            sharePct: number;
+            marginRate: number;
+            /** Format: int32 */
+            leverage: number;
+            margin: number;
+        };
         ClosedTrade: {
             /** Format: uuid */
             id: string;
@@ -783,6 +884,25 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
+        InstrumentStats: {
+            symbol: string;
+            name: string;
+            /** @enum {string} */
+            assetClass: "STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND" | "COMMODITY" | "INDEX" | "OPTION";
+            category: string;
+            /** Format: int32 */
+            decimals: number;
+            mid: number;
+            changePct: number;
+            volatilityPct: number;
+            rsi14: number | null;
+            high: number;
+            low: number;
+            rangePct: number;
+            spreadBps: number;
+            /** Format: int32 */
+            longPct: number;
+        };
         ClassOverview: {
             /** @enum {string} */
             assetClass: "STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND" | "COMMODITY" | "INDEX" | "OPTION";
@@ -801,6 +921,19 @@ export interface components {
             name: string;
             changePct: number;
         };
+        NewsItem: {
+            id: string;
+            /** Format: date-time */
+            time: string;
+            symbol: string;
+            /** @enum {string} */
+            assetClass: "STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND" | "COMMODITY" | "INDEX" | "OPTION";
+            headline: string;
+            summary: string;
+            /** @enum {string} */
+            sentiment: "POSITIVE" | "NEUTRAL" | "NEGATIVE";
+            source: string;
+        };
         InstrumentView: {
             symbol: string;
             name: string;
@@ -816,6 +949,9 @@ export interface components {
             pipSize: number | null;
             optionChain: boolean;
             description: string;
+            marginRate: number;
+            /** Format: int32 */
+            leverage: number;
             quote: components["schemas"]["Quote"];
         };
         OptionChain: {
@@ -873,6 +1009,22 @@ export interface components {
             close: number;
             /** Format: int32 */
             ticks: number;
+        };
+        EconomicEvent: {
+            id: string;
+            /** Format: date-time */
+            time: string;
+            country: string;
+            currency: string;
+            title: string;
+            /** Format: int32 */
+            importance: number;
+            unit: string;
+            forecast: number;
+            previous: number;
+            actual: number | null;
+            surprise: string | null;
+            symbols: string[];
         };
     };
     responses: never;
@@ -1432,6 +1584,29 @@ export interface operations {
             };
         };
     };
+    risk: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PortfolioRisk"];
+                };
+            };
+        };
+    };
     closedTrades: {
         parameters: {
             query?: {
@@ -1553,6 +1728,29 @@ export interface operations {
             };
         };
     };
+    stats: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InstrumentStats"][];
+                };
+            };
+        };
+    };
     sparklines: {
         parameters: {
             query?: {
@@ -1599,6 +1797,33 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ClassOverview"][];
+                };
+            };
+        };
+    };
+    news: {
+        parameters: {
+            query?: {
+                symbol?: string;
+                assetClass?: "STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND" | "COMMODITY" | "INDEX" | "OPTION";
+                limit?: number;
+            };
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NewsItem"][];
                 };
             };
         };
@@ -1756,6 +1981,33 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["Candle"][];
+                };
+            };
+        };
+    };
+    calendar: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                minImportance?: number;
+            };
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EconomicEvent"][];
                 };
             };
         };

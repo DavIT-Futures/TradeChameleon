@@ -110,6 +110,48 @@ public class Portfolios {
                 money(repository.realizedTotal(account.id())), List.copyOf(positions));
     }
 
+    /** Exposure, margin and concentration of the portfolio under the broker's CFD margin rules. */
+    @Transactional
+    public PortfolioRisk risk(Tenant tenant, String userId) {
+        var view = view(tenant, userId);
+        BigDecimal exposure = view.positionsValue();
+        BigDecimal equity = view.totalValue();
+        var positions = new ArrayList<PortfolioRisk.PositionRisk>();
+        var byClass = new java.util.TreeMap<com.tradechameleon.shared.AssetClass, BigDecimal[]>();
+        BigDecimal margin = BigDecimal.ZERO;
+        for (var p : view.positions()) {
+            Instrument instrument = market.find(p.symbol()).orElseThrow();
+            BigDecimal rate = com.tradechameleon.market.MarginRules.marginRate(instrument);
+            BigDecimal m = p.marketValue().multiply(rate);
+            margin = margin.add(m);
+            positions.add(new PortfolioRisk.PositionRisk(p.symbol(), p.assetClass(), p.marketValue(),
+                    percent(p.marketValue(), exposure), rate, com.tradechameleon.market.MarginRules.leverage(instrument),
+                    money(m)));
+            var acc = byClass.computeIfAbsent(p.assetClass(), k -> new BigDecimal[] {BigDecimal.ZERO, BigDecimal.ZERO});
+            acc[0] = acc[0].add(p.marketValue());
+            acc[1] = acc[1].add(m);
+        }
+        var classes = byClass.entrySet().stream()
+                .map(e -> new PortfolioRisk.ClassRisk(e.getKey(), money(e.getValue()[0]), percent(e.getValue()[0], exposure),
+                        money(e.getValue()[1])))
+                .toList();
+        BigDecimal marginLevel = margin.signum() == 0 ? null : percent(equity, margin);
+        BigDecimal leverage = equity.signum() == 0 ? BigDecimal.ZERO : exposure.divide(equity, 2, RoundingMode.HALF_UP);
+
+        var warnings = new ArrayList<String>();
+        positions.stream().filter(p -> p.sharePct().compareTo(BigDecimal.valueOf(40)) > 0)
+                .forEach(p -> warnings.add(p.symbol() + " is " + p.sharePct() + "% of your exposure: concentration risk."));
+        classes.stream().filter(c -> c.assetClass() == com.tradechameleon.shared.AssetClass.CRYPTO
+                        && c.sharePct().compareTo(BigDecimal.valueOf(25)) > 0)
+                .forEach(c -> warnings.add("Crypto is " + c.sharePct() + "% of your exposure: high volatility asset class."));
+        if (marginLevel != null && marginLevel.compareTo(BigDecimal.valueOf(150)) < 0) {
+            warnings.add("Margin level " + marginLevel + "% is close to the 100% margin call threshold.");
+        }
+        positions.sort((a, b) -> b.exposure().compareTo(a.exposure()));
+        return new PortfolioRisk(view.currency(), equity, exposure, money(margin), money(equity.subtract(margin)),
+                marginLevel, leverage, classes, List.copyOf(positions), List.copyOf(warnings));
+    }
+
     // ---- account operations ------------------------------------------------------------------
 
     @Transactional

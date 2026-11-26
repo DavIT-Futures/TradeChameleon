@@ -32,6 +32,10 @@
       "description": "Price alerts and in-app notifications"
     },
     {
+      "name": "Insights",
+      "description": "Economic calendar and market news"
+    },
+    {
       "name": "Auth",
       "description": "Built-in development identity provider (RS256 JWT)"
     },
@@ -991,6 +995,43 @@
         ]
       }
     },
+    "/api/portfolio/risk": {
+      "get": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Exposure, CFD margin requirement, margin level and concentration warnings",
+        "operationId": "risk",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioRisk"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/portfolio/closed-trades": {
       "get": {
         "tags": [
@@ -1204,6 +1245,41 @@
         }
       }
     },
+    "/api/market/stats": {
+      "get": {
+        "tags": [
+          "Market"
+        ],
+        "summary": "Screener data: change, 1-hour volatility, RSI(14) on 1-minute candles, range position, spread, sentiment",
+        "operationId": "stats",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InstrumentStats"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/market/sparklines": {
       "get": {
         "tags": [
@@ -1281,6 +1357,79 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/ClassOverview"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/market/news": {
+      "get": {
+        "tags": [
+          "Insights"
+        ],
+        "summary": "Latest headlines of the last 24 hours, optionally for one symbol or asset class",
+        "operationId": "news",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assetClass",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "STOCK",
+                "ETF",
+                "FX",
+                "CRYPTO",
+                "BOND",
+                "COMMODITY",
+                "INDEX",
+                "OPTION"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 30,
+              "maximum": 200,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NewsItem"
                   }
                 }
               }
@@ -1578,6 +1727,72 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/Candle"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/market/calendar": {
+      "get": {
+        "tags": [
+          "Insights"
+        ],
+        "summary": "Economic calendar (default: 2 days back to 5 days ahead)",
+        "description": "symbols lists only instruments the current broker offers.",
+        "operationId": "calendar",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "minImportance",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1,
+              "maximum": 3,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EconomicEvent"
                   }
                 }
               }
@@ -2446,6 +2661,144 @@
           "text"
         ]
       },
+      "ClassRisk": {
+        "type": "object",
+        "properties": {
+          "assetClass": {
+            "type": "string",
+            "enum": [
+              "STOCK",
+              "ETF",
+              "FX",
+              "CRYPTO",
+              "BOND",
+              "COMMODITY",
+              "INDEX",
+              "OPTION"
+            ]
+          },
+          "exposure": {
+            "type": "number"
+          },
+          "sharePct": {
+            "type": "number"
+          },
+          "margin": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "assetClass",
+          "exposure",
+          "margin",
+          "sharePct"
+        ]
+      },
+      "PortfolioRisk": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "equity": {
+            "type": "number"
+          },
+          "exposure": {
+            "type": "number"
+          },
+          "marginRequired": {
+            "type": "number"
+          },
+          "freeMargin": {
+            "type": "number"
+          },
+          "marginLevelPct": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "leverage": {
+            "type": "number"
+          },
+          "byClass": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClassRisk"
+            }
+          },
+          "positions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PositionRisk"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "byClass",
+          "currency",
+          "equity",
+          "exposure",
+          "freeMargin",
+          "leverage",
+          "marginLevelPct",
+          "marginRequired",
+          "positions",
+          "warnings"
+        ]
+      },
+      "PositionRisk": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "assetClass": {
+            "type": "string",
+            "enum": [
+              "STOCK",
+              "ETF",
+              "FX",
+              "CRYPTO",
+              "BOND",
+              "COMMODITY",
+              "INDEX",
+              "OPTION"
+            ]
+          },
+          "exposure": {
+            "type": "number"
+          },
+          "sharePct": {
+            "type": "number"
+          },
+          "marginRate": {
+            "type": "number"
+          },
+          "leverage": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "margin": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "assetClass",
+          "exposure",
+          "leverage",
+          "margin",
+          "marginRate",
+          "sharePct",
+          "symbol"
+        ]
+      },
       "ClosedTrade": {
         "type": "object",
         "properties": {
@@ -2528,6 +2881,84 @@
           "timestamp"
         ]
       },
+      "InstrumentStats": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "assetClass": {
+            "type": "string",
+            "enum": [
+              "STOCK",
+              "ETF",
+              "FX",
+              "CRYPTO",
+              "BOND",
+              "COMMODITY",
+              "INDEX",
+              "OPTION"
+            ]
+          },
+          "category": {
+            "type": "string"
+          },
+          "decimals": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mid": {
+            "type": "number"
+          },
+          "changePct": {
+            "type": "number"
+          },
+          "volatilityPct": {
+            "type": "number"
+          },
+          "rsi14": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "high": {
+            "type": "number"
+          },
+          "low": {
+            "type": "number"
+          },
+          "rangePct": {
+            "type": "number"
+          },
+          "spreadBps": {
+            "type": "number"
+          },
+          "longPct": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "assetClass",
+          "category",
+          "changePct",
+          "decimals",
+          "high",
+          "longPct",
+          "low",
+          "mid",
+          "name",
+          "rangePct",
+          "rsi14",
+          "spreadBps",
+          "symbol",
+          "volatilityPct"
+        ]
+      },
       "ClassOverview": {
         "type": "object",
         "properties": {
@@ -2593,6 +3024,61 @@
           "symbol"
         ]
       },
+      "NewsItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "assetClass": {
+            "type": "string",
+            "enum": [
+              "STOCK",
+              "ETF",
+              "FX",
+              "CRYPTO",
+              "BOND",
+              "COMMODITY",
+              "INDEX",
+              "OPTION"
+            ]
+          },
+          "headline": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "sentiment": {
+            "type": "string",
+            "enum": [
+              "POSITIVE",
+              "NEUTRAL",
+              "NEGATIVE"
+            ]
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "assetClass",
+          "headline",
+          "id",
+          "sentiment",
+          "source",
+          "summary",
+          "symbol",
+          "time"
+        ]
+      },
       "InstrumentView": {
         "type": "object",
         "properties": {
@@ -2646,6 +3132,13 @@
           "description": {
             "type": "string"
           },
+          "marginRate": {
+            "type": "number"
+          },
+          "leverage": {
+            "type": "integer",
+            "format": "int32"
+          },
           "quote": {
             "$ref": "#/components/schemas/Quote"
           }
@@ -2658,6 +3151,8 @@
           "decimals",
           "description",
           "exchange",
+          "leverage",
+          "marginRate",
           "name",
           "optionChain",
           "pipSize",
@@ -2873,6 +3368,72 @@
           "open",
           "t",
           "ticks"
+        ]
+      },
+      "EconomicEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "country": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "importance": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "forecast": {
+            "type": "number"
+          },
+          "previous": {
+            "type": "number"
+          },
+          "actual": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "surprise": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "symbols": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "actual",
+          "country",
+          "currency",
+          "forecast",
+          "id",
+          "importance",
+          "previous",
+          "surprise",
+          "symbols",
+          "time",
+          "title",
+          "unit"
         ]
       }
     },

@@ -54,6 +54,12 @@ class PortfolioController {
         return portfolios.view(TenantContext.current(), CurrentUser.get().userId());
     }
 
+    @GetMapping("/risk")
+    @Operation(summary = "Exposure, CFD margin requirement, margin level and concentration warnings")
+    PortfolioRisk risk() {
+        return portfolios.risk(TenantContext.current(), CurrentUser.get().userId());
+    }
+
     @PutMapping("/positions/{symbol}/protection")
     @Operation(summary = "Set or remove stop-loss / take-profit on an open position (role TRADER)")
     PortfolioView protect(@PathVariable String symbol, @Valid @RequestBody ProtectionRequest request) {

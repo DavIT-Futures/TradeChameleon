@@ -88,6 +88,81 @@ class MarketAnalytics {
         return BigDecimal.valueOf(value).setScale((int) range[2], RoundingMode.HALF_UP);
     }
 
+    // ---- statistics for the screener --------------------------------------------------------
+
+    /** Realised volatility over the last {@code window} ticks, scaled to one hour, in percent. */
+    static double hourlyVolatilityPct(List<PriceEngine.PricePoint> points, int window) {
+        int from = Math.max(1, points.size() - window);
+        int n = points.size() - from;
+        if (n < 2) {
+            return 0;
+        }
+        double sum = 0, sumSq = 0;
+        for (int i = from; i < points.size(); i++) {
+            double r = Math.log(points.get(i).price().doubleValue() / points.get(i - 1).price().doubleValue());
+            sum += r;
+            sumSq += r * r;
+        }
+        double mean = sum / n;
+        double variance = Math.max(0, sumSq / n - mean * mean);
+        long secondsPerTick = Math.max(1, java.time.Duration.between(points.get(from - 1).at(), points.getLast().at()).toSeconds() / n);
+        return Math.sqrt(variance * 3600.0 / secondsPerTick) * 100;
+    }
+
+    /** Wilder RSI over closing prices; null when there are not enough values. */
+    static Double rsi(List<BigDecimal> closes, int period) {
+        if (closes.size() <= period) {
+            return null;
+        }
+        double gain = 0, loss = 0;
+        for (int i = 1; i <= period; i++) {
+            double c = closes.get(i).doubleValue() - closes.get(i - 1).doubleValue();
+            if (c >= 0) gain += c; else loss -= c;
+        }
+        gain /= period;
+        loss /= period;
+        for (int i = period + 1; i < closes.size(); i++) {
+            double c = closes.get(i).doubleValue() - closes.get(i - 1).doubleValue();
+            gain = (gain * (period - 1) + Math.max(c, 0)) / period;
+            loss = (loss * (period - 1) + Math.max(-c, 0)) / period;
+        }
+        return loss == 0 ? 100.0 : 100 - 100 / (1 + gain / loss);
+    }
+
+    /**
+     * Simulated client sentiment: retail crowds tend to be contrarian (they buy dips), so the long share
+     * rises when the price falls. A small hourly, seeded wiggle keeps it from looking mechanical.
+     */
+    static int longPct(String symbol, double changePct, Instant now) {
+        var random = new Random(symbol.hashCode() * 17L + now.getEpochSecond() / 3600);
+        double value = 50 - changePct * 6 + (random.nextDouble() - 0.5) * 16;
+        return (int) Math.round(Math.max(10, Math.min(90, value)));
+    }
+
+    List<InstrumentStats> stats(Tenant tenant) {
+        List<InstrumentStats> result = new ArrayList<>();
+        for (Instrument i : market.instruments(tenant)) {
+            var history = market.history(i.symbol(), Integer.MAX_VALUE);
+            Quote q = market.quote(i, tenant);
+            var closes = candles(history, Duration.ofMinutes(1), 120).stream().map(Candle::close).toList();
+            BigDecimal high = history.stream().map(PriceEngine.PricePoint::price).max(BigDecimal::compareTo).orElse(q.mid());
+            BigDecimal low = history.stream().map(PriceEngine.PricePoint::price).min(BigDecimal::compareTo).orElse(q.mid());
+            double range = high.subtract(low).doubleValue();
+            double position = range == 0 ? 50 : q.mid().subtract(low).doubleValue() / range * 100;
+            Double rsi = rsi(closes, 14);
+            result.add(new InstrumentStats(i.symbol(), i.name(), i.assetClass(), i.category(), i.decimals(), q.mid(),
+                    q.changePct(),
+                    BigDecimal.valueOf(hourlyVolatilityPct(history, 600)).setScale(2, RoundingMode.HALF_UP),
+                    rsi == null ? null : BigDecimal.valueOf(rsi).setScale(1, RoundingMode.HALF_UP),
+                    high, low,
+                    BigDecimal.valueOf(position).setScale(1, RoundingMode.HALF_UP),
+                    q.ask().subtract(q.bid()).multiply(BigDecimal.valueOf(10_000))
+                            .divide(q.mid(), 1, RoundingMode.HALF_UP),
+                    longPct(i.symbol(), q.changePct().doubleValue(), q.timestamp())));
+        }
+        return result;
+    }
+
     // ---- bean API used by the controller ----------------------------------------------------
 
     private final MarketData market;

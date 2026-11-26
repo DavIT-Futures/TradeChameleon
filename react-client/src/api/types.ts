@@ -32,6 +32,10 @@ export type ProtectionRequest = Schemas['ProtectionRequest'];
 export type ClassOverview = Schemas['ClassOverview'];
 export type OptionChain = Schemas['OptionChain'];
 export type OptionQuote = Schemas['OptionQuote'];
+export type InstrumentStats = Schemas['InstrumentStats'];
+export type EconomicEvent = Schemas['EconomicEvent'];
+export type NewsItem = Schemas['NewsItem'];
+export type PortfolioRisk = Schemas['PortfolioRisk'];
 
 /** RFC 9457 Problem Details as returned by every error response of the API. */
 export interface Problem {

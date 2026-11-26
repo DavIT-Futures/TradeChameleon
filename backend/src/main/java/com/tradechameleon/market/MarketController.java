@@ -51,7 +51,7 @@ class MarketController {
     record InstrumentView(
             String symbol, String name, AssetClass assetClass, String exchange, String currency, int decimals,
             String category, String unit, BigDecimal contractSize, BigDecimal pipSize, boolean optionChain,
-            String description, Quote quote) {
+            String description, BigDecimal marginRate, int leverage, Quote quote) {
     }
 
     /** Per asset class summary for the market overview cards. */
@@ -90,6 +90,12 @@ class MarketController {
             }
         }
         return result;
+    }
+
+    @GetMapping("/stats")
+    @Operation(summary = "Screener data: change, 1-hour volatility, RSI(14) on 1-minute candles, range position, spread, sentiment")
+    List<InstrumentStats> stats() {
+        return analytics.stats(TenantContext.current());
     }
 
     @GetMapping("/instruments/{symbol}/options")
@@ -173,6 +179,6 @@ class MarketController {
     private InstrumentView view(Instrument i, Tenant tenant) {
         return new InstrumentView(i.symbol(), i.name(), i.assetClass(), i.exchange(), i.currency(), i.decimals(),
                 i.category(), i.unit(), i.contractSize(), i.pipSize(), i.optionable() && tenant.allows(AssetClass.OPTION),
-                i.description(), market.quote(i, tenant));
+                i.description(), MarginRules.marginRate(i), MarginRules.leverage(i), market.quote(i, tenant));
     }
 }

@@ -64,6 +64,7 @@ class OpenApiConfig {
             "PriceAlert.note", "PriceAlert.triggeredAt", "PriceAlert.triggeredPrice",
             "CreateAlertRequest.note",
             "InstrumentView.pipSize", "ClassOverview.best", "ClassOverview.worst",
+            "InstrumentStats.rsi14", "EconomicEvent.actual", "EconomicEvent.surprise", "PortfolioRisk.marginLevelPct",
             "UserProfile.email");
 
     /** Request bodies: their nullable fields may also be omitted. */
