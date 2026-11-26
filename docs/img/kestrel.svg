@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Kestrel Trade logo">
+  <title>Kestrel Trade</title>
+  <polygon points="32,2 58,17 58,47 32,62 6,47 6,17" fill="#141b2d" stroke="#818cf8" stroke-width="3"/>
+<path d="M14 24 L32 40 L50 24" stroke="#818cf8" stroke-width="5" fill="none" stroke-linejoin="round"/>
+<path d="M22 22 L32 31 L42 22" stroke="#22d3ee" stroke-width="4" fill="none" stroke-linejoin="round"/>
+
+</svg>

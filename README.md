@@ -14,7 +14,9 @@ markup and feature flags. One broker is portfolio-only (no trading).
 | React client | React 19, Vite, React Router, TanStack Query, `useSyncExternalStore`, Vitest + Testing Library |
 | Styling | Plain modern CSS shared by both clients, themed with custom properties |
 
-📘 **The full technical guide (36 chapters, Polish/English, Mermaid diagrams, real code and real API responses) is in [`docs/guide.html`](docs/guide.html).**
+📘 **Technical guide (36 chapters, Polish/English, Mermaid diagrams, real code and real API responses):
+[davit-futures.github.io/TradeChameleon](https://davit-futures.github.io/TradeChameleon/)**. The source is
+[`docs/guide.html`](docs/guide.html); the [Publish guide](.github/workflows/pages.yml) workflow deploys it to GitHub Pages on every push to `main`.
 
 ## Trading features
 
