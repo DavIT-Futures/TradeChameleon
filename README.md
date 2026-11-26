@@ -1,5 +1,16 @@
 ﻿# 🦎 TradeChameleon
 
+[![Release](https://img.shields.io/github/v/release/DavIT-Futures/TradeChameleon?color=brightgreen&label=Release)](https://github.com/DavIT-Futures/TradeChameleon/releases/latest)
+[![CI](https://github.com/DavIT-Futures/TradeChameleon/actions/workflows/ci.yml/badge.svg)](https://github.com/DavIT-Futures/TradeChameleon/actions/workflows/ci.yml)
+[![Guide](https://github.com/DavIT-Futures/TradeChameleon/actions/workflows/pages.yml/badge.svg)](https://davit-futures.github.io/TradeChameleon/)
+[![Java 25](https://img.shields.io/badge/Java-25-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/25/)
+[![Spring Boot 4](https://img.shields.io/badge/Spring%20Boot-4.2-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Angular 21](https://img.shields.io/badge/Angular-21-DD0031?logo=angular&logoColor=white)](https://angular.dev/)
+[![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![PostgreSQL 18](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Author](https://img.shields.io/badge/Author-Dawid%20Domaga%C5%82a%20(DavIT--Futures)-orange.svg)](https://github.com/DavIT-Futures)
+
 A multi-tenant, white-label **training** trading platform. Four fictional brokers share one code base;
 each has its own generated SVG logo, colors, fonts, locale, currency, allowed asset classes, spread
 markup and feature flags. One broker is portfolio-only (no trading).
