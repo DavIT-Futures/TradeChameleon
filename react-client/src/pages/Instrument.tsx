@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react'
+import { Link, useLocation, useParams } from 'react-router'
 import { queries } from '../api/queries'
 import { CandleChart } from '../components/CandleChart'
 import type { IndicatorFlags, OhlcCandle } from '../components/candleGeometry'
@@ -10,6 +10,10 @@ import { useFormat } from '../core/format'
 import { useQuote } from '../core/priceStream'
 import { toggleWatch, useWatchlist } from '../core/watchlist'
 import AlertCard from './AlertCard'
+import ContractCard from './ContractCard'
+
+/** The option chain is a separate chunk, loaded only for optionable instruments. */
+const OptionChainCard = lazy(() => import('./OptionChainCard'))
 import DepthCard from './DepthCard'
 import OrderTicket from './OrderTicket'
 
@@ -58,6 +62,16 @@ export default function Instrument() {
     const t = Date.parse(liveQuote.timestamp)
     setPoints((prev) => (prev.length && prev[prev.length - 1].t >= t ? prev : [...prev.slice(-179), { t, price: liveQuote.mid }]))
   }, [liveQuote])
+
+  // Deep link /markets/AAPL#options: scroll the option chain into view once the page has data.
+  const { hash } = useLocation()
+  const hasChain = instrument.data?.optionChain ?? false
+  useEffect(() => {
+    if (hasChain && hash === '#options') {
+      const id = setTimeout(() => document.getElementById('options')?.scrollIntoView({ block: 'start' }), 50)
+      return () => clearTimeout(id)
+    }
+  }, [hasChain, hash])
 
   const flip = (key: keyof IndicatorFlags) => setIndicators((f) => ({ ...f, [key]: !f[key] }))
   const i = instrument.data
@@ -117,9 +131,15 @@ export default function Instrument() {
             </div>
             <div className="stack">
               {quote && <OrderTicket instrument={i} quote={quote} />}
+              {quote && <ContractCard instrument={i} quote={quote} />}
               {quote && <AlertCard instrument={i} mid={quote.mid} />}
             </div>
           </div>
+          {i.optionChain && (
+            <Suspense fallback={<div className="card" id="options"><div className="skeleton" style={{ blockSize: '12rem' }} /></div>}>
+              <OptionChainCard symbol={i.symbol} />
+            </Suspense>
+          )}
         </>
       )}
     </div>

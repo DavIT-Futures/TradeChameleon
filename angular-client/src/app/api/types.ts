@@ -29,6 +29,9 @@ export type CreateAlertRequest = Schemas['CreateAlertRequest'];
 export type CashTransaction = Schemas['CashTransaction'];
 export type ClosedTrade = Schemas['ClosedTrade'];
 export type ProtectionRequest = Schemas['ProtectionRequest'];
+export type ClassOverview = Schemas['ClassOverview'];
+export type OptionChain = Schemas['OptionChain'];
+export type OptionQuote = Schemas['OptionQuote'];
 
 /** RFC 9457 Problem Details as returned by every error response of the API. */
 export interface Problem {

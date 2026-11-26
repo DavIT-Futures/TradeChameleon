@@ -11,6 +11,8 @@ import { ChartPoint } from '../../shared/chart-geometry';
 import { every } from '../../shared/polling';
 import { PriceChart } from '../../shared/price-chart';
 import { AlertCard } from './alert-card';
+import { ContractCard } from './contract-card';
+import { OptionChainCard } from './option-chain-card';
 import { DepthCard } from './depth-card';
 import { OrderTicket } from './order-ticket';
 
@@ -19,7 +21,7 @@ const INTERVAL_MS: Record<Interval, number> = { '5s': 5_000, '15s': 15_000, '1m'
 
 @Component({
   selector: 'tc-instrument',
-  imports: [RouterLink, PriceChart, CandleChart, PricePipe, PercentPipe, OrderTicket, DepthCard, AlertCard],
+  imports: [RouterLink, PriceChart, CandleChart, PricePipe, PercentPipe, OrderTicket, DepthCard, AlertCard, ContractCard, OptionChainCard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -81,10 +83,19 @@ const INTERVAL_MS: Record<Interval, number> = { '5s': 5_000, '15s': 15_000, '1m'
           <div class="stack">
             @if (quote(); as q) {
               <tc-order-ticket [instrument]="i" [quote]="q" />
+              <tc-contract-card [instrument]="i" [quote]="q" />
               <tc-alert-card [instrument]="i" [mid]="q.mid" />
             }
           </div>
         </div>
+        @if (i.optionChain) {
+          <!-- the chain's code is only downloaded when it scrolls into view -->
+          @defer (on viewport) {
+            <tc-option-chain-card [symbol]="i.symbol" />
+          } @placeholder {
+            <div class="card" id="options"><div class="skeleton" style="block-size: 12rem"></div></div>
+          }
+        }
       }
     </div>
   `,
@@ -148,6 +159,13 @@ export class Instrument {
       );
     });
     every(5_000, () => this.candles.reload());
+    // Deep link /markets/AAPL#options: once the page has data, scroll the option chain into view
+    // (the router's anchor scrolling runs before the content exists).
+    effect(() => {
+      if (this.instrument.value()?.optionChain && location.hash === '#options') {
+        setTimeout(() => document.getElementById('options')?.scrollIntoView({ block: 'start' }));
+      }
+    });
   }
 
   protected flip(key: keyof IndicatorFlags): void {

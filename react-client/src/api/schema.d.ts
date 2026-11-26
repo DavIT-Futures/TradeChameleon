@@ -406,6 +406,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/market/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Market overview per asset class the broker offers (counts, breadth, best and worst) */
+        get: operations["overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/market/instruments": {
         parameters: {
             query?: never;
@@ -432,6 +449,26 @@ export interface paths {
         };
         /** One instrument with its quote */
         get: operations["instrument"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/market/instruments/{symbol}/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Option chain (Black-Scholes prices and greeks) for an optionable underlying
+         * @description Read-only. expiry is one of the returned expiries (ISO date); default = the second one.
+         */
+        get: operations["optionChain"];
         put?: never;
         post?: never;
         delete?: never;
@@ -578,7 +615,7 @@ export interface components {
             symbol: string;
             name: string;
             /** @enum {string} */
-            assetClass: "STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND";
+            assetClass: "STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND" | "COMMODITY" | "INDEX" | "OPTION";
             currency: string;
             /** Format: int32 */
             decimals: number;
@@ -700,7 +737,7 @@ export interface components {
             tagline: string;
             locale: string;
             currency: string;
-            allowedAssetClasses: ("STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND")[];
+            allowedAssetClasses: ("STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND" | "COMMODITY" | "INDEX" | "OPTION")[];
             /** Format: int32 */
             spreadMarkupBps: number;
             logoUrl: string;
@@ -746,16 +783,70 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
+        ClassOverview: {
+            /** @enum {string} */
+            assetClass: "STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND" | "COMMODITY" | "INDEX" | "OPTION";
+            /** Format: int32 */
+            instruments: number;
+            avgChangePct: number;
+            /** Format: int32 */
+            gainers: number;
+            /** Format: int32 */
+            losers: number;
+            best?: components["schemas"]["Mover"];
+            worst?: components["schemas"]["Mover"];
+        };
+        Mover: {
+            symbol: string;
+            name: string;
+            changePct: number;
+        };
         InstrumentView: {
             symbol: string;
             name: string;
             /** @enum {string} */
-            assetClass: "STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND";
+            assetClass: "STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND" | "COMMODITY" | "INDEX" | "OPTION";
             exchange: string;
             currency: string;
             /** Format: int32 */
             decimals: number;
+            category: string;
+            unit: string;
+            contractSize: number;
+            pipSize: number | null;
+            optionChain: boolean;
+            description: string;
             quote: components["schemas"]["Quote"];
+        };
+        OptionChain: {
+            underlying: string;
+            currency: string;
+            spot: number;
+            rate: number;
+            /** Format: int32 */
+            contractSize: number;
+            expiries: string[];
+            /** Format: date */
+            expiry: string;
+            /** Format: int32 */
+            daysToExpiry: number;
+            rows: components["schemas"]["Row"][];
+        };
+        OptionQuote: {
+            bid: number;
+            ask: number;
+            mid: number;
+            iv: number;
+            delta: number;
+            gamma: number;
+            theta: number;
+            vega: number;
+            inTheMoney: boolean;
+        };
+        Row: {
+            strike: number;
+            call: components["schemas"]["OptionQuote"];
+            put: components["schemas"]["OptionQuote"];
         };
         PricePointView: {
             /** Format: date-time */
@@ -1489,6 +1580,29 @@ export interface operations {
             };
         };
     };
+    overview: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ClassOverview"][];
+                };
+            };
+        };
+    };
     instruments: {
         parameters: {
             query?: never;
@@ -1533,6 +1647,33 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["InstrumentView"];
+                };
+            };
+        };
+    };
+    optionChain: {
+        parameters: {
+            query?: {
+                expiry?: string;
+            };
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path: {
+                symbol: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OptionChain"];
                 };
             };
         };

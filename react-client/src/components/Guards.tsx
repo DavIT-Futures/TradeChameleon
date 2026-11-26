@@ -11,7 +11,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   const location = useLocation()
   // A session of another broker is useless here: the API would answer 403 tenant-mismatch.
   if (!session || session.user.tenant !== tenant.id) {
-    return <Navigate to={`/login?returnUrl=${encodeURIComponent(location.pathname)}`} replace />
+    return <Navigate to={`/login?returnUrl=${encodeURIComponent(location.pathname + location.search + location.hash)}`} replace />
   }
   return children
 }

@@ -9,6 +9,8 @@ const COLORS: Record<string, string> = {
   FX: 'color-mix(in oklab, var(--tc-primary) 50%, var(--tc-accent))',
   CRYPTO: 'color-mix(in oklab, var(--tc-negative) 70%, var(--tc-accent))',
   BOND: 'color-mix(in oklab, var(--tc-positive) 70%, var(--tc-primary))',
+  COMMODITY: 'color-mix(in oklab, var(--tc-accent) 60%, var(--tc-text))',
+  INDEX: 'color-mix(in oklab, var(--tc-primary) 55%, var(--tc-text))',
 };
 
 /** Allocation by asset class. Loaded lazily by @defer in the dashboard. */

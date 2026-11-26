@@ -45,6 +45,17 @@ export const queries = {
       queryFn: () => unwrap(api.GET('/api/market/instruments/{symbol}/depth', { params: { path: { symbol }, query: { levels } } })),
       refetchInterval: 1_000,
     }),
+  overview: () =>
+    queryOptions({ queryKey: [t(), 'overview'], queryFn: () => unwrap(api.GET('/api/market/overview')), refetchInterval: 10_000 }),
+  options: (symbol: string, expiry?: string) =>
+    queryOptions({
+      queryKey: [t(), 'options', symbol, expiry ?? 'default'],
+      queryFn: () =>
+        unwrap(api.GET('/api/market/instruments/{symbol}/options', { params: { path: { symbol }, query: { expiry } } })),
+      refetchInterval: 3_000,
+      placeholderData: (previous) => previous, // keep the old chain on screen while switching expiries
+      retry: false,
+    }),
   alerts: () => queryOptions({ queryKey: [t(), 'alerts'], queryFn: () => unwrap(api.GET('/api/alerts')) }),
   transactions: (limit = 100) =>
     queryOptions({
