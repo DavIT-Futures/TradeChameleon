@@ -25,7 +25,7 @@ markup and feature flags. One broker is portfolio-only (no trading).
 | React client | React 19, Vite, React Router, TanStack Query, `useSyncExternalStore`, Vitest + Testing Library |
 | Styling | Plain modern CSS shared by both clients, themed with custom properties |
 
-📘 **Technical guide (38 chapters, Polish/English, Mermaid diagrams, real code and real API responses):
+📘 **Technical guide (41 chapters, Polish/English, Mermaid diagrams, real code and real API responses):
 [davit-futures.github.io/TradeChameleon](https://davit-futures.github.io/TradeChameleon/)**. The source is
 [`docs/guide.html`](docs/guide.html); the [Publish guide](.github/workflows/pages.yml) workflow deploys it to GitHub Pages on every push to `main`.
 
@@ -39,6 +39,10 @@ markup and feature flags. One broker is portfolio-only (no trading).
 - Market, limit, **stop** and **stop-limit** orders; **stop-loss / take-profit** on positions, closed automatically
 - **Candlestick chart** (5s / 15s / 1m / 5m) with **SMA 20, EMA 9 and RSI 14**, plus a line chart
 - **Market depth** (10 bid/ask levels), **watchlist** and **price alerts** with in-app notifications
+- **Screener** (presets and custom filters on change, RSI, volatility, spread), **compare** up to 4 instruments
+- **Economic calendar**, **news** with sentiment and simulated **client long/short sentiment**
+- **Risk & margin** view (ESMA-style CFD margin rates, margin level, leverage, concentration warnings)
+- **Light/dark override** on top of each broker's theme
 - Portfolio valued live in the broker currency, **account statement** (deposits, withdrawals, trade cash flows)
   and **closed trades with realised P&L**
 - Developer panel: latency, jitter, failure rate, volatility and pause for the simulated market

@@ -2168,6 +2168,184 @@ static double cdf(double x) {
 <div class="warn"><span class="pl"><strong>Uproszczenia:</strong> opcje europejskie, bez dywidend, stała stopa procentowa, model zmienności zamiast prawdziwych kwotowań i brak handlu opcjami. Ćwiczenie: dodaj zlecenia na opcje z depozytem zabezpieczającym dla wystawców.</span><span class="en"><strong>Simplifications:</strong> European options, no dividends, a flat rate, a volatility model instead of real quotes, and no option trading. Exercise: add option orders with margin for writers.</span></div>
 </section>
 
+<section class="chapter" id="calendar-news">
+<h2><span class="pl">Kalendarz ekonomiczny, newsy i sentyment</span><span class="en">Economic calendar, news and sentiment</span></h2>
+<div class="pl"><p>Nowy moduł Modulith <code>insights</code> (zależy tylko od <code>market</code> i <code>tenant</code>) dostarcza dwa publiczne strumienie informacji. Oba są <strong>symulowane i deterministyczne</strong>: generator liczb losowych jest zasiewany datą (kalendarz) albo symbolem i godziną (newsy), więc ten sam dzień zawsze wygląda tak samo, a testy mogą sprawdzać konkretne wartości.</p>
+<ul>
+<li><strong>Kalendarz</strong> (<code>GET /api/market/calendar?from&amp;to&amp;minImportance</code>): katalog 19 typowych publikacji (NFP, CPI, decyzje FED/EBC/BoE/NBP/BoJ, PMI, zapasy ropy…), od 4 do 7 wydarzeń na dzień roboczy, weekendy bez publikacji. Wydarzenia z przeszłości mają wartość <code>actual</code> i ocenę <code>surprise</code> (ABOVE/BELOW/IN_LINE względem prognozy). Pole <code>symbols</code> zawiera tylko instrumenty oferowane przez brokera, więc Sakura nie zobaczy powiązania NFP z EURUSD.</li>
+<li><strong>Newsy</strong> (<code>GET /api/market/news?symbol&amp;assetClass&amp;limit</code>): dla każdego instrumentu i każdej godziny z ostatniej doby generator decyduje, czy pojawił się nagłówek, i wypełnia szablon dla klasy aktywów i sentymentu (pozytywny, neutralny, negatywny).</li>
+<li><strong>Sentyment klientów</strong> (pole <code>longPct</code> w <code>/api/market/stats</code>): udział klientów brokera z długą pozycją. Model jest kontrariański, jak typowy tłum detaliczny: gdy cena spada, klienci dokupują, więc udział „long” rośnie.</li>
+</ul></div>
+<div class="en"><p>A new Modulith module, <code>insights</code> (depending only on <code>market</code> and <code>tenant</code>), provides two public information feeds. Both are <strong>simulated and deterministic</strong>: the random generator is seeded with the date (calendar) or with the symbol and the hour (news), so the same day always looks the same and tests can assert concrete values.</p>
+<ul>
+<li><strong>Calendar</strong> (<code>GET /api/market/calendar?from&amp;to&amp;minImportance</code>): a catalogue of 19 typical releases (NFP, CPI, Fed/ECB/BoE/NBP/BoJ decisions, PMIs, oil inventories…), 4 to 7 events per working day, quiet weekends. Past events carry an <code>actual</code> value and a <code>surprise</code> (ABOVE/BELOW/IN_LINE versus the forecast). <code>symbols</code> only lists instruments the broker offers, so Sakura never sees NFP linked to EURUSD.</li>
+<li><strong>News</strong> (<code>GET /api/market/news?symbol&amp;assetClass&amp;limit</code>): for every instrument and every hour of the last day the generator decides whether a headline was published and fills a template for the asset class and sentiment (positive, neutral, negative).</li>
+<li><strong>Client sentiment</strong> (<code>longPct</code> in <code>/api/market/stats</code>): the share of the broker's clients holding a long position. The model is contrarian, like a typical retail crowd: when the price falls, clients buy the dip and the long share rises.</li>
+</ul></div>
+<p class="file">backend/src/main/java/com/tradechameleon/insights/EconomicCalendar.java</p>
+<pre><code class="language-java">/** All events of one day, deterministic for the date; weekends are quiet. */
+static List&lt;EconomicEvent&gt; day(LocalDate day, Instant now) {
+    if (day.getDayOfWeek().getValue() &gt;= 6) {
+        return List.of();
+    }
+    var random = new Random(day.toEpochDay() * 7919L);
+    int count = 4 + random.nextInt(4);
+    // … pick distinct templates, draw forecast / previous around the typical value,
+    //   and publish "actual" only when the release time is in the past
+}</code></pre>
+<div class="grid2">
+<div>
+<p class="file">GET /api/market/calendar?minImportance=3 (aurora)</p>
+<pre><code class="language-json">{
+  "id": "2026-11-24-US-Non-Farm-Payrolls",
+  "time": "2026-11-24T13:30:00Z",
+  "country": "US",
+  "currency": "USD",
+  "title": "Non-Farm Payrolls",
+  "importance": 3,
+  "unit": "K",
+  "forecast": 181,
+  "previous": 127,
+  "actual": 200,
+  "surprise": "ABOVE",
+  "symbols": ["EURUSD", "GBPUSD", "NDX100",
+              "SPX500", "USDJPY", "XAUUSD"]
+}</code></pre>
+</div>
+<div>
+<p class="file">GET /api/market/news?symbol=BTCUSD&amp;limit=1</p>
+<pre><code class="language-json">[
+  {
+    "id": "BTCUSD-1795719600",
+    "time": "2026-11-26T19:32:02Z",
+    "symbol": "BTCUSD",
+    "assetClass": "CRYPTO",
+    "headline": "Bitcoin steady; traders weigh regulatory headlines",
+    "summary": "Volumes in BTCUSD were light; …",
+    "sentiment": "NEUTRAL",
+    "source": "Ticker Daily"
+  }
+]</code></pre>
+</div>
+</div>
+<div class="pl"><p>W klientach: ekran <strong>Calendar</strong> grupuje wydarzenia po dniach (w strefie czasowej i języku brokera, np. „Dienstag, 24. November” u Kestrel), filtruje ważność po stronie serwera, a kraj po stronie klienta, i linkuje powiązane instrumenty. Ekran <strong>News</strong> to kanał z filtrem klas. Na stronie instrumentu karta „Sentiment &amp; news” pokazuje pasek long/short i 5 ostatnich nagłówków. W React karta czyta sentyment z tego samego zapytania co screener przez opcję <code>select</code> TanStack Query, więc cache jest jeden, a komponent renderuje się tylko przy zmianie swojego wiersza.</p></div>
+<div class="en"><p>In the clients: the <strong>Calendar</strong> screen groups events by day (in the broker's language and the user's time zone, e.g. "Dienstag, 24. November" at Kestrel), filters importance on the server and country on the client, and links the affected instruments. The <strong>News</strong> screen is a feed with a class filter. On the instrument page the "Sentiment &amp; news" card shows the long/short bar and the 5 latest headlines. In React the card reads sentiment from the screener's query through TanStack Query's <code>select</code>, so there is one cache and the component re-renders only when its own row changes.</p></div>
+<p class="file">react-client/src/pages/NewsCard.tsx</p>
+<pre><code class="language-typescript">const { data: news = [] } = useQuery(queries.news({ symbol, limit: 5 }))
+// select: derive one row from the cached stats list; re-renders only when that row changes
+const { data: sentiment } = useQuery({ ...queries.stats(), select: (stats) =&gt; stats.find((s) =&gt; s.symbol === symbol) })</code></pre>
+</section>
+
+<section class="chapter" id="screener-compare">
+<h2><span class="pl">Screener i porównanie instrumentów</span><span class="en">Screener and instrument comparison</span></h2>
+<div class="pl"><p><code>GET /api/market/stats</code> zwraca dla każdego instrumentu brokera migawkę techniczną liczoną z historii silnika (2 godziny ticków):</p>
+<ul>
+<li><strong>zmiana dnia</strong> i <strong>spread</strong> w punktach bazowych,</li>
+<li><strong>zmienność 1h</strong>: odchylenie standardowe logarytmicznych zwrotów sekundowych przeskalowane do godziny (√3600),</li>
+<li><strong>RSI(14)</strong> na świecach 1-minutowych (te same świece co na wykresie),</li>
+<li><strong>pozycja w zakresie</strong>: gdzie cena leży między minimum a maksimum okna (0 = minimum, 100 = maksimum),</li>
+<li><strong>sentyment</strong> (udział długich pozycji).</li>
+</ul>
+<p>Filtrowanie dzieje się w kliencie, w czystej funkcji <code>screen()</code>. Gotowe skany (<em>presets</em>) to filtr plus sortowanie: największe wzrosty i spadki, wyprzedanie (RSI &lt; 30), wykupienie (RSI &gt; 70), największa zmienność i „blisko maksimum” (górne 10% zakresu). Dane odświeżają się co 5 s.</p></div>
+<div class="en"><p><code>GET /api/market/stats</code> returns a technical snapshot of every instrument the broker offers, computed from the engine's history (2 hours of ticks):</p>
+<ul>
+<li><strong>daily change</strong> and <strong>spread</strong> in basis points,</li>
+<li><strong>1-hour volatility</strong>: the standard deviation of 1-second log returns scaled to one hour (√3600),</li>
+<li><strong>RSI(14)</strong> on 1-minute candles (the same candles as on the chart),</li>
+<li><strong>range position</strong>: where the price sits between the window's low and high (0 = low, 100 = high),</li>
+<li><strong>sentiment</strong> (share of long positions).</li>
+</ul>
+<p>Filtering happens in the client, in the pure function <code>screen()</code>. Presets are a filter plus a sort: top gainers and losers, oversold (RSI &lt; 30), overbought (RSI &gt; 70), most volatile and "near session high" (top 10% of the range). Data refreshes every 5 s.</p></div>
+<p class="file">GET /api/market/stats (aurora, <span class="pl">jeden wiersz</span><span class="en">one row</span>)</p>
+<pre><code class="language-json">{
+  "symbol": "XAUUSD", "name": "Gold", "assetClass": "COMMODITY", "category": "Metals", "decimals": 2,
+  "mid": 2668.78, "changePct": 0.75, "volatilityPct": 4.2, "rsi14": 55,
+  "high": 2714.49, "low": 2585.99, "rangePct": 64.4, "spreadBps": 10, "longPct": 42
+}</code></pre>
+<p class="file">angular-client/src/app/shared/insights.ts</p>
+<pre><code class="language-typescript">export function screen(stats: readonly InstrumentStats[], f: ScreenFilters): InstrumentStats[] {
+  return stats.filter((s) =&gt;
+    (f.assetClass === null || s.assetClass === f.assetClass)
+    &amp;&amp; (f.minChange === null || s.changePct &gt;= f.minChange)
+    &amp;&amp; (f.maxChange === null || s.changePct &lt;= f.maxChange)
+    &amp;&amp; (f.minRsi === null || (s.rsi14 !== null &amp;&amp; s.rsi14 &gt;= f.minRsi))
+    &amp;&amp; (f.maxRsi === null || (s.rsi14 !== null &amp;&amp; s.rsi14 &lt;= f.maxRsi))
+    &amp;&amp; (f.minVolatility === null || s.volatilityPct &gt;= f.minVolatility)
+    &amp;&amp; (f.maxSpreadBps === null || s.spreadBps &lt;= f.maxSpreadBps));
+}</code></pre>
+<div class="pl"><p><strong>Porównanie</strong> (<code>/compare?symbols=SPY,AAPL,XAUUSD</code>) rysuje do 4 instrumentów na jednym wykresie, każdy <em>znormalizowany do 0%</em> na początku okna (inaczej złoto po 2 650 i akcja po 228 byłyby nieporównywalne). To dobry przykład równoległego pobierania wielu zasobów:</p></div>
+<div class="en"><p><strong>Compare</strong> (<code>/compare?symbols=SPY,AAPL,XAUUSD</code>) draws up to 4 instruments on one chart, each <em>rebased to 0%</em> at the start of the window (otherwise gold at 2,650 and a stock at 228 would not be comparable). It is a good example of fetching several resources in parallel:</p></div>
+<div class="grid2">
+<div>
+<p class="file">Angular: resource() + Promise.all</p>
+<pre><code class="language-typescript">protected readonly histories = resource({
+  params: () =&gt; ({ symbols: this.symbols() }),
+  loader: ({ params }) =&gt; Promise.all(params.symbols.map(async (symbol) =&gt; ({
+    symbol,
+    points: (await firstValueFrom(this.http.get&lt;PricePoint[]&gt;(
+      `/api/market/instruments/${symbol}/history`, { params: { points: 600 } })))
+      .map((p) =&gt; ({ t: Date.parse(p.t), price: p.price })),
+  }))),
+});</code></pre>
+</div>
+<div>
+<p class="file">React: useQueries</p>
+<pre><code class="language-typescript">const [params, setParams] = useSearchParams()
+const symbols = (params.get('symbols') ?? 'SPY,AAPL')
+  .split(',').map((s) =&gt; s.trim().toUpperCase())
+  .filter(Boolean).slice(0, 4)
+const histories = useQueries({
+  queries: symbols.map((s) =&gt; queries.history(s, 600)),
+})</code></pre>
+</div>
+</div>
+</section>
+
+<section class="chapter" id="risk-margin">
+<h2><span class="pl">Ryzyko, depozyt i dźwignia (widok CFD) oraz tryb jasny/ciemny</span><span class="en">Risk, margin and leverage (CFD view), and the light/dark override</span></h2>
+<div class="pl"><p>Platforma rozlicza transakcje gotówkowo (bez dźwigni), ale brokerzy CFD pokazują klientom wymagany depozyt. <code>MarginRules</code> (publiczne API modułu <code>market</code>) zawiera stawki wzorowane na limitach ESMA dla klientów detalicznych:</p></div>
+<div class="en"><p>The platform settles trades in cash (no leverage), but CFD brokers show clients the margin they would need. <code>MarginRules</code> (public API of the <code>market</code> module) holds rates modelled on the ESMA retail limits:</p></div>
+<table>
+<thead><tr><th><span class="pl">Klasa</span><span class="en">Class</span></th><th><span class="pl">Depozyt</span><span class="en">Margin</span></th><th><span class="pl">Dźwignia</span><span class="en">Leverage</span></th></tr></thead>
+<tbody>
+<tr><td><span class="pl">Główne pary walutowe</span><span class="en">Major FX pairs</span></td><td>3.33%</td><td>1:30</td></tr>
+<tr><td><span class="pl">Pozostałe FX, indeksy, złoto</span><span class="en">Other FX, indices, gold</span></td><td>5%</td><td>1:20</td></tr>
+<tr><td><span class="pl">Inne surowce, obligacje</span><span class="en">Other commodities, bonds</span></td><td>10%</td><td>1:10</td></tr>
+<tr><td><span class="pl">Akcje, ETF</span><span class="en">Stocks, ETFs</span></td><td>20%</td><td>1:5</td></tr>
+<tr><td>Crypto</td><td>50%</td><td>1:2</td></tr>
+</tbody>
+</table>
+<div class="pl"><p><code>GET /api/portfolio/risk</code> liczy z bieżącej wyceny portfela: kapitał (equity = gotówka + pozycje), ekspozycję, wymagany depozyt (Σ ekspozycja × stawka), wolny depozyt, <strong>poziom depozytu</strong> (equity / depozyt × 100%; przy 100% broker wzywa do uzupełnienia, przy 50% zamyka pozycje) i dźwignię portfela, a także rozbicie na klasy i ostrzeżenia (pozycja &gt; 40% ekspozycji, krypto &gt; 25%, poziom depozytu &lt; 150%). Instrument w API ma pola <code>marginRate</code> i <code>leverage</code>, więc bilet zlecenia pokazuje „As a CFD (1:5) margin would be …”.</p></div>
+<div class="en"><p><code>GET /api/portfolio/risk</code> computes from the live valuation: equity (cash + positions), exposure, margin required (Σ exposure × rate), free margin, the <strong>margin level</strong> (equity / margin × 100%; at 100% a broker issues a margin call, at 50% it closes positions) and portfolio leverage, plus a per-class breakdown and warnings (a position &gt; 40% of exposure, crypto &gt; 25%, margin level &lt; 150%). Instruments in the API carry <code>marginRate</code> and <code>leverage</code>, so the order ticket shows "As a CFD (1:5) margin would be …".</p></div>
+<p class="file">GET /api/portfolio/risk (viewer@aurora.test, <span class="pl">fragment</span><span class="en">excerpt</span>)</p>
+<pre><code class="language-json">{
+  "currency": "GBP",
+  "equity": 146332.81,
+  "exposure": 46332.81,
+  "marginRequired": 20428.95,
+  "freeMargin": 125903.86,
+  "marginLevelPct": 716.3,
+  "leverage": 0.32,
+  "byClass": [ { "assetClass": "CRYPTO", "exposure": 37207.96, "sharePct": 80.31, "margin": 18603.98 }, … ],
+  "positions": [ { "symbol": "BTCUSD", "exposure": 37207.96, "sharePct": 80.31, "marginRate": 0.5, "leverage": 2, "margin": 18603.98 }, … ],
+  "warnings": [
+    "BTCUSD is 80.31% of your exposure: concentration risk.",
+    "Crypto is 80.31% of your exposure: high volatility asset class."
+  ]
+}</code></pre>
+<div class="pl"><p><strong>Tryb jasny/ciemny.</strong> Motyw należy do brokera, ale użytkownik może go nadpisać przyciskiem ◐ / ☾ / ☀ w nagłówku (marka → ciemny → jasny). Czysta funkcja <code>themeFor()</code> podmienia tylko powierzchnie i tekst, a kolory marki zostają, dzięki czemu Kestrel w trybie jasnym nadal wygląda jak Kestrel. W Angularze efekt w <code>TenantService</code> reaguje na sygnały brokera i preferencji, a w React robi to <code>useEffect</code> w <code>TenantProvider</code>. Wybór jest zapamiętywany w <code>localStorage</code>.</p></div>
+<div class="en"><p><strong>Light/dark override.</strong> The theme belongs to the broker, but the user can override it with the ◐ / ☾ / ☀ button in the header (brand → dark → light). The pure function <code>themeFor()</code> swaps only surfaces and text while brand colours stay, so Kestrel in light mode still looks like Kestrel. In Angular an effect in <code>TenantService</code> reacts to the broker and preference signals; in React a <code>useEffect</code> in <code>TenantProvider</code> does the same. The choice is remembered in <code>localStorage</code>.</p></div>
+<p class="file">angular-client/src/app/shared/insights.ts</p>
+<pre><code class="language-typescript">export function themeFor(brand: Theme, preference: SchemePreference): Theme {
+  if (preference === 'brand' || preference === brand.colorScheme) return brand;
+  return preference === 'dark'
+    ? { ...brand, colorScheme: 'dark', background: '#0f1115', surface: '#171a21', text: '#e7e9ee', muted: '#9aa1ad' }
+    : { ...brand, colorScheme: 'light', background: '#f5f6f8', surface: '#ffffff', text: '#161a22', muted: '#5f6676' };
+}</code></pre>
+<div class="pl"><p>Testy tej części: <code>InsightsUnitTest</code> (determinizm kalendarza i newsów, ciche weekendy, <code>actual</code> tylko po publikacji), <code>StatsAndMarginTest</code> (RSI, zmienność, granice sentymentu, stawki depozytu), <code>InsightsIntegrationTests</code> (filtrowanie po brokerze, zakres dat, spójność widoku ryzyka) oraz testy czystych funkcji screenera, porównania i motywu w obu klientach. Razem: backend 88, Angular 29, React 28.</p></div>
+<div class="en"><p>Tests for this part: <code>InsightsUnitTest</code> (calendar and news determinism, quiet weekends, <code>actual</code> only after release), <code>StatsAndMarginTest</code> (RSI, volatility, sentiment bounds, margin rates), <code>InsightsIntegrationTests</code> (broker filtering, date ranges, risk view consistency) and tests of the screener, comparison and theme pure functions in both clients. In total: backend 88, Angular 29, React 28.</p></div>
+</section>
+
 <section class="chapter" id="next-steps">
 <h2><span class="pl">Ćwiczenia i dalsze kroki</span><span class="en">Exercises and next steps</span></h2>
 <div class="pl"><ol>
