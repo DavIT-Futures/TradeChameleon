@@ -116,6 +116,10 @@ export default function OrderTicket({ instrument, quote }: { instrument: Instrum
             <span className="muted">Estimated {side === 'BUY' ? 'cost' : 'proceeds'}</span>
             <strong className="num">{fmt.price(qty * price, 2)} {instrument.currency}</strong>
           </div>
+          <div className="margin-hint">
+            <span>As a CFD (1:{instrument.leverage}) margin would be</span>
+            <span className="num">{fmt.price(qty * price * instrument.marginRate, 2)} {instrument.currency}</span>
+          </div>
           {problem && <div className="alert alert--error" role="alert"><strong>{problem.title}</strong>{problem.detail}</div>}
           <button className={`btn ${side === 'BUY' ? 'btn--buy' : 'btn--sell'}`} type="submit" disabled={!valid || place.isPending}>
             {place.isPending ? 'Sending…' : `${side === 'BUY' ? 'Buy' : 'Sell'} ${instrument.symbol}${type === 'MARKET' ? '' : ' · ' + LABELS[type]}`}

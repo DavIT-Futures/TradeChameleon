@@ -1,4 +1,4 @@
-import type { Tenant } from '../api/types'
+import type { Tenant, Theme } from '../api/types'
 
 const STORAGE_KEY = 'tc.tenant'
 
@@ -37,8 +37,8 @@ export function setRequestedTenant(id: string): void {
 }
 
 /** Writes the tenant theme into CSS custom properties. */
-export function applyTheme(tenant: Tenant, root: HTMLElement = document.documentElement): void {
-  const t = tenant.theme
+export function applyTheme(tenant: Tenant, root: HTMLElement = document.documentElement, theme: Theme = tenant.theme): void {
+  const t = theme
   const vars: Record<string, string> = {
     '--tc-primary': t.primary,
     '--tc-on-primary': t.onPrimary,

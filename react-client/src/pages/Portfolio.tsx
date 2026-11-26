@@ -8,6 +8,7 @@ import { useAuth } from '../core/auth'
 import { useFormat } from '../core/format'
 import { useStream } from '../core/priceStream'
 import { showToast } from '../core/toast'
+import RiskCard from './RiskCard'
 
 type StatusFilter = Order['status'] | 'ALL'
 const STATUSES: StatusFilter[] = ['ALL', 'OPEN', 'FILLED', 'CANCELLED', 'REJECTED']
@@ -111,6 +112,7 @@ export default function Portfolio() {
               </table>
             </div>
           </section>
+          <RiskCard />
         </>
       ) : portfolio.isPending && <div className="card"><div className="skeleton" style={{ blockSize: '8rem' }} /></div>}
 

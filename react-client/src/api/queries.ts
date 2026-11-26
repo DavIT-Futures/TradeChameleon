@@ -1,7 +1,7 @@
 import { queryOptions } from '@tanstack/react-query'
 import { getRequestedTenant } from '../core/tenant'
 import { api, unwrap } from './client'
-import type { Order } from './types'
+import type { AssetClass, Order } from './types'
 
 /**
  * Query definitions in one place. Keys start with the tenant so caches of different brokers never mix.
@@ -56,6 +56,22 @@ export const queries = {
       placeholderData: (previous) => previous, // keep the old chain on screen while switching expiries
       retry: false,
     }),
+  stats: () =>
+    queryOptions({ queryKey: [t(), 'stats'], queryFn: () => unwrap(api.GET('/api/market/stats')), refetchInterval: 5_000 }),
+  calendar: (minImportance: number) =>
+    queryOptions({
+      queryKey: [t(), 'calendar', minImportance],
+      queryFn: () => unwrap(api.GET('/api/market/calendar', { params: { query: { minImportance } } })),
+      staleTime: 60_000,
+    }),
+  news: (filter: { symbol?: string; assetClass?: AssetClass; limit?: number }) =>
+    queryOptions({
+      queryKey: [t(), 'news', filter.symbol ?? '*', filter.assetClass ?? '*', filter.limit ?? 30],
+      queryFn: () => unwrap(api.GET('/api/market/news', { params: { query: filter } })),
+      refetchInterval: 60_000,
+    }),
+  risk: () =>
+    queryOptions({ queryKey: [t(), 'risk'], queryFn: () => unwrap(api.GET('/api/portfolio/risk')), refetchInterval: 5_000 }),
   alerts: () => queryOptions({ queryKey: [t(), 'alerts'], queryFn: () => unwrap(api.GET('/api/alerts')) }),
   transactions: (limit = 100) =>
     queryOptions({

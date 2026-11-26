@@ -11,6 +11,7 @@ import { useQuote } from '../core/priceStream'
 import { toggleWatch, useWatchlist } from '../core/watchlist'
 import AlertCard from './AlertCard'
 import ContractCard from './ContractCard'
+import NewsCard from './NewsCard'
 
 /** The option chain is a separate chunk, loaded only for optionable instruments. */
 const OptionChainCard = lazy(() => import('./OptionChainCard'))
@@ -128,6 +129,7 @@ export default function Instrument() {
                   : points.length > 1 && <PriceChart points={points} decimals={i.decimals} label={`${symbol} price chart`} />}
               </section>
               <DepthCard symbol={i.symbol} decimals={i.decimals} />
+              <NewsCard symbol={i.symbol} />
             </div>
             <div className="stack">
               {quote && <OrderTicket instrument={i} quote={quote} />}

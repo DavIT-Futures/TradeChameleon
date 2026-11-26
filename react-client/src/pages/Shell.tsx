@@ -9,7 +9,7 @@ import { useTenant } from '../core/TenantProvider'
 
 /** Authenticated layout: brand, navigation, user and the live-price connection. */
 export default function Shell() {
-  const { tenant } = useTenant()
+  const { tenant, scheme, cycleScheme } = useTenant()
   const { user } = useAuth()
   const { status } = useStream()
   const navigate = useNavigate()
@@ -39,12 +39,20 @@ export default function Shell() {
         </div>
         <div className="row">
           {user && <span>{user.name} <span className="badge">{user.roles.join(', ')}</span></span>}
+          <button className="btn btn--ghost btn--small" type="button" onClick={cycleScheme}
+            aria-label={`Colour scheme: ${scheme}`} title={`Colour scheme: ${scheme}`}>
+            {scheme === 'dark' ? '☾' : scheme === 'light' ? '☀' : '◐'}
+          </button>
           <button className="btn btn--ghost btn--small" onClick={signOut}>Sign out</button>
         </div>
       </header>
       <nav className="shell__nav" aria-label="Main">
         <NavLink to="/dashboard">▦ Dashboard</NavLink>
         <NavLink to="/markets" end={false}>↗ Markets</NavLink>
+        <NavLink to="/screener">⌕ Screener</NavLink>
+        <NavLink to="/compare">⇄ Compare</NavLink>
+        <NavLink to="/calendar">▤ Calendar</NavLink>
+        <NavLink to="/news">✎ News</NavLink>
         <NavLink to="/portfolio">◔ Portfolio</NavLink>
         <NavLink to="/account">≡ Account</NavLink>
         <NavLink to="/alerts">🔔 Alerts</NavLink>
