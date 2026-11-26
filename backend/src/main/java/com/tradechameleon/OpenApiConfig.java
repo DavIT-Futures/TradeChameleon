@@ -63,6 +63,7 @@ class OpenApiConfig {
             "CashTransaction.reference",
             "PriceAlert.note", "PriceAlert.triggeredAt", "PriceAlert.triggeredPrice",
             "CreateAlertRequest.note",
+            "InstrumentView.pipSize", "ClassOverview.best", "ClassOverview.worst",
             "UserProfile.email");
 
     /** Request bodies: their nullable fields may also be omitted. */
@@ -78,6 +79,10 @@ class OpenApiConfig {
             }
             List<String> required = new ArrayList<>();
             properties.forEach((prop, propSchema) -> {
+                if (NULLABLE.contains(name + "." + prop) && propSchema.get$ref() != null) {
+                    // a nullable reference: leave it optional (TS: field?: Type)
+                    return;
+                }
                 if (NULLABLE.contains(name + "." + prop)) {
                     Set<String> types = propSchema.getTypes() != null ? propSchema.getTypes()
                             : Set.of(propSchema.getType());

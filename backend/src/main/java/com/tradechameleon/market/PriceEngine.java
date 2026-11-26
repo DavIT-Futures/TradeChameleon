@@ -39,7 +39,10 @@ class PriceEngine implements SmartLifecycle {
             AssetClass.ETF, 0.0005,
             AssetClass.FX, 0.0002,
             AssetClass.CRYPTO, 0.0022,
-            AssetClass.BOND, 0.00015);
+            AssetClass.BOND, 0.00015,
+            AssetClass.COMMODITY, 0.0007,
+            AssetClass.INDEX, 0.0005,
+            AssetClass.OPTION, 0.0);
 
     private final Map<String, Series> series = new LinkedHashMap<>();
     private final MarketProperties props;

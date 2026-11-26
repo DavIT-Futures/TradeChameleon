@@ -28,7 +28,10 @@ class MarketAnalytics {
             AssetClass.ETF, new double[] {20, 1500, 0},
             AssetClass.FX, new double[] {50_000, 3_000_000, 0},
             AssetClass.CRYPTO, new double[] {0.05, 12, 3},
-            AssetClass.BOND, new double[] {10, 400, 0});
+            AssetClass.BOND, new double[] {10, 400, 0},
+            AssetClass.COMMODITY, new double[] {1, 60, 0},
+            AssetClass.INDEX, new double[] {1, 80, 0},
+            AssetClass.OPTION, new double[] {1, 50, 0});
 
     /** Groups ticks into OHLC candles of the given interval; returns the last {@code limit} candles. */
     static List<Candle> candles(List<PriceEngine.PricePoint> points, Duration interval, int limit) {

@@ -25,7 +25,10 @@ public class MarketData {
             AssetClass.ETF, 3,
             AssetClass.FX, 1,
             AssetClass.CRYPTO, 15,
-            AssetClass.BOND, 5);
+            AssetClass.BOND, 5,
+            AssetClass.COMMODITY, 5,
+            AssetClass.INDEX, 2,
+            AssetClass.OPTION, 0);
 
     private static final BigDecimal TEN_THOUSAND = BigDecimal.valueOf(10_000);
 

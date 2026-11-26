@@ -79,7 +79,7 @@ class TradingApiIntegrationTests {
         void instrumentsAreFilteredByAllowedAssetClasses() {
             var kestrel = api.get("/api/market/instruments", "kestrel", null).body();
             for (JsonNode i : kestrel) {
-                assertThat(i.get("assetClass").asString()).isIn("STOCK", "ETF", "CRYPTO");
+                assertThat(i.get("assetClass").asString()).isIn("STOCK", "ETF", "CRYPTO", "INDEX");
             }
             assertThat(api.get("/api/market/instruments/PL10Y", "kestrel", null).status()).isEqualTo(404);
         }

@@ -1254,6 +1254,41 @@
         }
       }
     },
+    "/api/market/overview": {
+      "get": {
+        "tags": [
+          "Market"
+        ],
+        "summary": "Market overview per asset class the broker offers (counts, breadth, best and worst)",
+        "operationId": "overview",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClassOverview"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/market/instruments": {
       "get": {
         "tags": [
@@ -1322,6 +1357,56 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/InstrumentView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/market/instruments/{symbol}/options": {
+      "get": {
+        "tags": [
+          "Market"
+        ],
+        "summary": "Option chain (Black-Scholes prices and greeks) for an optionable underlying",
+        "description": "Read-only. expiry is one of the returned expiries (ISO date); default = the second one.",
+        "operationId": "optionChain",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expiry",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptionChain"
                 }
               }
             }
@@ -1739,7 +1824,10 @@
               "ETF",
               "FX",
               "CRYPTO",
-              "BOND"
+              "BOND",
+              "COMMODITY",
+              "INDEX",
+              "OPTION"
             ]
           },
           "currency": {
@@ -2265,7 +2353,10 @@
                 "ETF",
                 "FX",
                 "CRYPTO",
-                "BOND"
+                "BOND",
+                "COMMODITY",
+                "INDEX",
+                "OPTION"
               ]
             }
           },
@@ -2437,6 +2528,71 @@
           "timestamp"
         ]
       },
+      "ClassOverview": {
+        "type": "object",
+        "properties": {
+          "assetClass": {
+            "type": "string",
+            "enum": [
+              "STOCK",
+              "ETF",
+              "FX",
+              "CRYPTO",
+              "BOND",
+              "COMMODITY",
+              "INDEX",
+              "OPTION"
+            ]
+          },
+          "instruments": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "avgChangePct": {
+            "type": "number"
+          },
+          "gainers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "losers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "best": {
+            "$ref": "#/components/schemas/Mover"
+          },
+          "worst": {
+            "$ref": "#/components/schemas/Mover"
+          }
+        },
+        "required": [
+          "assetClass",
+          "avgChangePct",
+          "gainers",
+          "instruments",
+          "losers"
+        ]
+      },
+      "Mover": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "changePct": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "changePct",
+          "name",
+          "symbol"
+        ]
+      },
       "InstrumentView": {
         "type": "object",
         "properties": {
@@ -2453,7 +2609,10 @@
               "ETF",
               "FX",
               "CRYPTO",
-              "BOND"
+              "BOND",
+              "COMMODITY",
+              "INDEX",
+              "OPTION"
             ]
           },
           "exchange": {
@@ -2466,18 +2625,160 @@
             "type": "integer",
             "format": "int32"
           },
+          "category": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "contractSize": {
+            "type": "number"
+          },
+          "pipSize": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "optionChain": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
           "quote": {
             "$ref": "#/components/schemas/Quote"
           }
         },
         "required": [
           "assetClass",
+          "category",
+          "contractSize",
           "currency",
           "decimals",
+          "description",
           "exchange",
           "name",
+          "optionChain",
+          "pipSize",
           "quote",
-          "symbol"
+          "symbol",
+          "unit"
+        ]
+      },
+      "OptionChain": {
+        "type": "object",
+        "properties": {
+          "underlying": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "spot": {
+            "type": "number"
+          },
+          "rate": {
+            "type": "number"
+          },
+          "contractSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "expiries": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          "expiry": {
+            "type": "string",
+            "format": "date"
+          },
+          "daysToExpiry": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Row"
+            }
+          }
+        },
+        "required": [
+          "contractSize",
+          "currency",
+          "daysToExpiry",
+          "expiries",
+          "expiry",
+          "rate",
+          "rows",
+          "spot",
+          "underlying"
+        ]
+      },
+      "OptionQuote": {
+        "type": "object",
+        "properties": {
+          "bid": {
+            "type": "number"
+          },
+          "ask": {
+            "type": "number"
+          },
+          "mid": {
+            "type": "number"
+          },
+          "iv": {
+            "type": "number"
+          },
+          "delta": {
+            "type": "number"
+          },
+          "gamma": {
+            "type": "number"
+          },
+          "theta": {
+            "type": "number"
+          },
+          "vega": {
+            "type": "number"
+          },
+          "inTheMoney": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ask",
+          "bid",
+          "delta",
+          "gamma",
+          "inTheMoney",
+          "iv",
+          "mid",
+          "theta",
+          "vega"
+        ]
+      },
+      "Row": {
+        "type": "object",
+        "properties": {
+          "strike": {
+            "type": "number"
+          },
+          "call": {
+            "$ref": "#/components/schemas/OptionQuote"
+          },
+          "put": {
+            "$ref": "#/components/schemas/OptionQuote"
+          }
+        },
+        "required": [
+          "call",
+          "put",
+          "strike"
         ]
       },
       "PricePointView": {

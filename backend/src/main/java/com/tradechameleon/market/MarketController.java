@@ -34,17 +34,70 @@ class MarketController {
     private final MarketData market;
     private final PriceStream stream;
     private final MarketAnalytics analytics;
+    private final OptionChains options;
 
-    MarketController(MarketData market, PriceStream stream, MarketAnalytics analytics) {
+    MarketController(MarketData market, PriceStream stream, MarketAnalytics analytics, OptionChains options) {
         this.market = market;
         this.stream = stream;
         this.analytics = analytics;
+        this.options = options;
     }
 
-    /** Instrument plus its current tenant-specific quote. */
+    /**
+     * Instrument plus its current tenant-specific quote and contract details.
+     *
+     * @param optionChain true when the underlying is optionable AND the broker offers options
+     */
     record InstrumentView(
             String symbol, String name, AssetClass assetClass, String exchange, String currency, int decimals,
-            Quote quote) {
+            String category, String unit, BigDecimal contractSize, BigDecimal pipSize, boolean optionChain,
+            String description, Quote quote) {
+    }
+
+    /** Per asset class summary for the market overview cards. */
+    record ClassOverview(AssetClass assetClass, int instruments, BigDecimal avgChangePct, int gainers, int losers,
+                         Mover best, Mover worst) {
+    }
+
+    record Mover(String symbol, String name, BigDecimal changePct) {
+    }
+
+    @GetMapping("/overview")
+    @Operation(summary = "Market overview per asset class the broker offers (counts, breadth, best and worst)")
+    List<ClassOverview> overview() {
+        Tenant tenant = TenantContext.current();
+        var byClass = new java.util.TreeMap<AssetClass, List<InstrumentView>>();
+        for (Instrument i : market.instruments(tenant)) {
+            byClass.computeIfAbsent(i.assetClass(), k -> new java.util.ArrayList<>()).add(view(i, tenant));
+        }
+        var result = new java.util.ArrayList<ClassOverview>();
+        byClass.forEach((assetClass, views) -> {
+            var sorted = views.stream().sorted(java.util.Comparator.comparing(v -> v.quote().changePct())).toList();
+            BigDecimal sum = views.stream().map(v -> v.quote().changePct()).reduce(BigDecimal.ZERO, BigDecimal::add);
+            var best = sorted.getLast();
+            var worst = sorted.getFirst();
+            result.add(new ClassOverview(assetClass, views.size(),
+                    sum.divide(BigDecimal.valueOf(views.size()), 2, java.math.RoundingMode.HALF_UP),
+                    (int) views.stream().filter(v -> v.quote().changePct().signum() > 0).count(),
+                    (int) views.stream().filter(v -> v.quote().changePct().signum() < 0).count(),
+                    new Mover(best.symbol(), best.name(), best.quote().changePct()),
+                    new Mover(worst.symbol(), worst.name(), worst.quote().changePct())));
+        });
+        if (tenant.allows(AssetClass.OPTION)) {
+            var optionable = byClass.values().stream().flatMap(List::stream).filter(InstrumentView::optionChain).toList();
+            if (!optionable.isEmpty()) {
+                result.add(new ClassOverview(AssetClass.OPTION, optionable.size(), BigDecimal.ZERO, 0, 0, null, null));
+            }
+        }
+        return result;
+    }
+
+    @GetMapping("/instruments/{symbol}/options")
+    @Operation(summary = "Option chain (Black-Scholes prices and greeks) for an optionable underlying",
+            description = "Read-only. expiry is one of the returned expiries (ISO date); default = the second one.")
+    OptionChain optionChain(@PathVariable String symbol,
+                            @RequestParam(required = false) java.time.LocalDate expiry) {
+        return options.chain(symbol, TenantContext.current(), expiry);
     }
 
     record PricePointView(Instant t, BigDecimal price) {
@@ -119,6 +172,7 @@ class MarketController {
 
     private InstrumentView view(Instrument i, Tenant tenant) {
         return new InstrumentView(i.symbol(), i.name(), i.assetClass(), i.exchange(), i.currency(), i.decimals(),
-                market.quote(i, tenant));
+                i.category(), i.unit(), i.contractSize(), i.pipSize(), i.optionable() && tenant.allows(AssetClass.OPTION),
+                i.description(), market.quote(i, tenant));
     }
 }
