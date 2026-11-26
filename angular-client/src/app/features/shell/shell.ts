@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AlertNotifier } from '../../core/alerts';
 import { AuthService } from '../../core/auth';
+import { WatchlistService } from '../../core/watchlist';
 import { PriceStreamService } from '../../core/price-stream';
 import { TenantService } from '../../core/tenant';
 
@@ -34,6 +36,8 @@ import { TenantService } from '../../core/tenant';
         <a routerLink="/dashboard" routerLinkActive="active">▦ Dashboard</a>
         <a routerLink="/markets" routerLinkActive="active">↗ Markets</a>
         <a routerLink="/portfolio" routerLinkActive="active">◔ Portfolio</a>
+        <a routerLink="/account" routerLinkActive="active">≡ Account</a>
+        <a routerLink="/alerts" routerLinkActive="active">🔔 Alerts</a>
         @if (tenant.features()?.simulatorPanel) {
           <a routerLink="/dev" routerLinkActive="active">⚙ Developer</a>
         }
@@ -49,13 +53,18 @@ export class Shell implements OnInit, OnDestroy {
   protected readonly auth = inject(AuthService);
   protected readonly stream = inject(PriceStreamService);
   private readonly router = inject(Router);
+  private readonly watchlist = inject(WatchlistService);
+  private readonly alerts = inject(AlertNotifier);
 
   ngOnInit(): void {
     this.stream.connect();
+    void this.watchlist.load();
+    this.alerts.start();
   }
 
   ngOnDestroy(): void {
     this.stream.disconnect();
+    this.alerts.stop();
   }
 
   protected logout(): void {

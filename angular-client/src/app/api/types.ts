@@ -22,6 +22,13 @@ export type Position = Schemas['PositionView'];
 export type Order = Schemas['Order'];
 export type PlaceOrderRequest = Schemas['PlaceOrderRequest'];
 export type SimulatorSettings = Schemas['SimulatorSettings'];
+export type Candle = Schemas['Candle'];
+export type OrderBook = Schemas['OrderBook'];
+export type PriceAlert = Schemas['PriceAlert'];
+export type CreateAlertRequest = Schemas['CreateAlertRequest'];
+export type CashTransaction = Schemas['CashTransaction'];
+export type ClosedTrade = Schemas['ClosedTrade'];
+export type ProtectionRequest = Schemas['ProtectionRequest'];
 
 /** RFC 9457 Problem Details as returned by every error response of the API. */
 export interface Problem {

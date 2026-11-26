@@ -5,6 +5,7 @@ import type { AssetClass, InstrumentView } from '../../api/types';
 import { PercentPipe, PricePipe } from '../../core/format';
 import { PriceStreamService } from '../../core/price-stream';
 import { TenantService } from '../../core/tenant';
+import { WatchlistService } from '../../core/watchlist';
 import { Flash } from '../../shared/flash';
 import { Sparkline } from '../../shared/sparkline';
 
@@ -19,6 +20,7 @@ import { Sparkline } from '../../shared/sparkline';
         <div class="row">
           <div class="segmented" role="group" aria-label="Asset class">
             <button type="button" [attr.aria-pressed]="filter() === null" (click)="filter.set(null)">All</button>
+            <button type="button" [attr.aria-pressed]="filter() === 'WATCH'" (click)="filter.set('WATCH')">★ Watchlist</button>
             @for (c of tenant.tenant()?.allowedAssetClasses ?? []; track c) {
               <button type="button" [attr.aria-pressed]="filter() === c" (click)="filter.set(c)">{{ c }}</button>
             }
@@ -35,18 +37,20 @@ import { Sparkline } from '../../shared/sparkline';
           <table class="table">
             <thead>
               <tr>
-                <th>Instrument</th><th>Class</th><th>Trend</th>
+                <th><span class="sr-only">Watch</span></th><th>Instrument</th><th>Class</th><th>Trend</th>
                 <th class="num">Bid</th><th class="num">Ask</th><th class="num">Change</th>
               </tr>
             </thead>
             <tbody>
               @if (instruments.isLoading()) {
                 @for (i of [1, 2, 3, 4, 5, 6]; track i) {
-                  <tr><td colspan="6"><div class="skeleton"></div></td></tr>
+                  <tr><td colspan="7"><div class="skeleton"></div></td></tr>
                 }
               }
               @for (row of rows(); track row.symbol) {
                 <tr>
+                  <td><button class="star" type="button" [attr.aria-pressed]="watchlist.symbols().has(row.symbol)"
+                              [attr.aria-label]="'Watch ' + row.symbol" (click)="watchlist.toggle(row.symbol)">★</button></td>
                   <td>
                     <a [routerLink]="[row.symbol]">{{ row.symbol }}</a>
                     <div class="muted" style="font-size: .8rem">{{ row.name }} · {{ row.exchange }}</div>
@@ -60,7 +64,7 @@ import { Sparkline } from '../../shared/sparkline';
                   </td>
                 </tr>
               } @empty {
-                @if (!instruments.isLoading()) { <tr><td colspan="6" class="muted">No instruments match.</td></tr> }
+                @if (!instruments.isLoading()) { <tr><td colspan="7" class="muted">No instruments match.</td></tr> }
               }
             </tbody>
           </table>
@@ -74,7 +78,8 @@ export class Markets {
   protected readonly stream = inject(PriceStreamService);
 
   protected readonly instruments = httpResource<InstrumentView[]>(() => '/api/market/instruments');
-  protected readonly filter = signal<AssetClass | null>(null);
+  protected readonly watchlist = inject(WatchlistService);
+  protected readonly filter = signal<AssetClass | 'WATCH' | null>(null);
   protected readonly search = signal('');
 
   /** Static instrument data merged with the latest streamed quote. */
@@ -82,7 +87,7 @@ export class Markets {
     const q = this.search().trim().toLowerCase();
     const live = this.stream.quotes();
     return (this.instruments.value() ?? [])
-      .filter((i) => this.filter() === null || i.assetClass === this.filter())
+      .filter((i) => this.filter() === null || i.assetClass === this.filter() || (this.filter() === 'WATCH' && this.watchlist.symbols().has(i.symbol)))
       .filter((i) => !q || i.symbol.toLowerCase().includes(q) || i.name.toLowerCase().includes(q))
       .map((i) => ({ ...i, quote: live.get(i.symbol) ?? i.quote }));
   });

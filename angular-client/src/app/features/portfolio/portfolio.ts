@@ -19,7 +19,7 @@ type StatusFilter = Order['status'] | 'ALL';
     <div class="page">
       <div class="page__header">
         <h1>Portfolio</h1>
-        <button class="btn btn--ghost" (click)="reload()" [disabled]="portfolio.isLoading()">â†» Refresh</button>
+        <button class="btn btn--ghost" (click)="reload()" [disabled]="portfolio.isLoading()">↻ Refresh</button>
       </div>
 
       @if (portfolio.value(); as p) {
@@ -28,6 +28,8 @@ type StatusFilter = Order['status'] | 'ALL';
           <div class="card kpi"><div class="kpi__label">Cash</div><div class="kpi__value">{{ p.cash | money: p.currency }}</div></div>
           <div class="card kpi"><div class="kpi__label">Unrealised P&amp;L</div>
             <div class="kpi__value" [class.up]="p.unrealizedPnl >= 0" [class.down]="p.unrealizedPnl < 0">{{ p.unrealizedPnl | money: p.currency }}</div></div>
+          <div class="card kpi"><div class="kpi__label">Realised P&amp;L</div>
+            <div class="kpi__value" [class.up]="p.realizedPnl >= 0" [class.down]="p.realizedPnl < 0">{{ p.realizedPnl | money: p.currency }}</div></div>
         </section>
 
         <section class="card">
@@ -36,20 +38,35 @@ type StatusFilter = Order['status'] | 'ALL';
             <table class="table">
               <thead><tr>
                 <th>Instrument</th><th class="num">Quantity</th><th class="num">Avg price</th><th class="num">Last</th>
-                <th class="num">Value ({{ p.currency }})</th><th class="num">P&amp;L</th>
+                <th class="num">Value ({{ p.currency }})</th><th class="num">P&amp;L</th><th>SL / TP</th>
               </tr></thead>
               <tbody>
                 @for (pos of positions(); track pos.symbol) {
                   <tr>
                     <td><a [routerLink]="['/markets', pos.symbol]">{{ pos.symbol }}</a> <span class="muted">{{ pos.name }}</span></td>
                     <td class="num">{{ pos.quantity | qty }}</td>
-                    <td class="num">{{ pos.avgPrice | price }} <span class="muted">{{ pos.currency }}</span></td>
-                    <td class="num">{{ pos.live | price }}</td>
+                    <td class="num">{{ pos.avgPrice | price: pos.decimals }} <span class="muted">{{ pos.currency }}</span></td>
+                    <td class="num">{{ pos.live | price: pos.decimals }}</td>
                     <td class="num">{{ pos.liveValue | money: p.currency }}</td>
                     <td class="num" [class.up]="pos.pnl >= 0" [class.down]="pos.pnl < 0">{{ pos.pnlPct | pct }}</td>
+                    <td>
+                      @if (editing() === pos.symbol) {
+                        <form class="inline-edit" (submit)="saveProtection($event, pos.symbol)">
+                          <input name="sl" type="number" step="any" placeholder="SL" [value]="pos.stopLoss ?? ''" aria-label="Stop loss" />
+                          <input name="tp" type="number" step="any" placeholder="TP" [value]="pos.takeProfit ?? ''" aria-label="Take profit" />
+                          <button class="btn btn--small" type="submit">Save</button>
+                          <button class="btn btn--ghost btn--small" type="button" (click)="editing.set(null)">×</button>
+                        </form>
+                      } @else {
+                        <span class="muted">{{ pos.stopLoss ?? '–' }} / {{ pos.takeProfit ?? '–' }}</span>
+                        @if (auth.isTrader()) {
+                          <button class="btn btn--ghost btn--small" (click)="editing.set(pos.symbol)">Edit</button>
+                        }
+                      }
+                    </td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="6" class="muted">No positions.</td></tr>
+                  <tr><td colspan="7" class="muted">No positions.</td></tr>
                 }
               </tbody>
             </table>
@@ -70,14 +87,17 @@ type StatusFilter = Order['status'] | 'ALL';
         </div>
         <div class="table-wrap">
           <table class="table">
-            <thead><tr><th>Created</th><th>Order</th><th class="num">Qty</th><th class="num">Limit</th><th class="num">Fill</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th>Created</th><th>Order</th><th class="num">Qty</th><th class="num">Stop / limit</th><th class="num">Fill</th><th>Status</th><th></th></tr></thead>
             <tbody>
               @for (o of orders.value(); track o.id) {
                 <tr>
                   <td>{{ o.createdAt.slice(11, 19) }}</td>
-                  <td>{{ o.side }} {{ o.symbol }} <span class="muted">{{ o.type }}</span></td>
+                  <td>
+                    {{ o.side }} {{ o.symbol }} <span class="muted">{{ o.type }}{{ o.triggered ? ' (triggered)' : '' }}</span>
+                    @if (o.origin !== 'CLIENT') { <span class="badge badge--accent">{{ o.origin }}</span> }
+                  </td>
                   <td class="num">{{ o.quantity | qty }}</td>
-                  <td class="num">{{ o.limitPrice | price }}</td>
+                  <td class="num">{{ o.stopPrice ? 'stop ' : '' }}{{ o.stopPrice | price }} {{ o.limitPrice | price }}</td>
                   <td class="num">{{ o.fillPrice | price }}</td>
                   <td><span class="badge" [title]="o.rejectReason ?? ''">{{ o.status }}</span></td>
                   <td>
@@ -127,6 +147,25 @@ export class Portfolio {
 
   protected readonly liveTotal = computed(() =>
     (this.portfolio.value()?.cash ?? 0) + this.positions().reduce((sum, p) => sum + p.liveValue, 0));
+
+  /** Symbol whose SL/TP row editor is open. */
+  protected readonly editing = signal<string | null>(null);
+
+  protected async saveProtection(event: Event, symbol: string): Promise<void> {
+    event.preventDefault();
+    const data = new FormData(event.target as HTMLFormElement);
+    const num = (v: FormDataEntryValue | null) => (v === null || v === '' ? null : Number(v));
+    try {
+      const updated = await firstValueFrom(this.http.put<PortfolioDto>(`/api/portfolio/positions/${symbol}/protection`,
+        { stopLoss: num(data.get('sl')), takeProfit: num(data.get('tp')) }));
+      this.portfolio.set(updated);
+      this.editing.set(null);
+      this.toasts.show('success', 'Protection saved', symbol);
+    } catch (e) {
+      const p = toProblem(e);
+      this.toasts.show('error', p.title ?? 'Error', p.detail);
+    }
+  }
 
   protected reload(): void {
     this.portfolio.reload();

@@ -14,6 +14,8 @@ export const routes: Routes = [
       { path: 'markets', loadComponent: () => import('./features/markets/markets').then((m) => m.Markets), title: 'Markets' },
       { path: 'markets/:symbol', loadComponent: () => import('./features/instrument/instrument').then((m) => m.Instrument), title: 'Instrument' },
       { path: 'portfolio', loadComponent: () => import('./features/portfolio/portfolio').then((m) => m.Portfolio), title: 'Portfolio' },
+      { path: 'account', loadComponent: () => import('./features/account/account').then((m) => m.Account), title: 'Account' },
+      { path: 'alerts', loadComponent: () => import('./features/alerts/alerts').then((m) => m.Alerts), title: 'Alerts' },
       {
         path: 'dev',
         canActivate: [featureGuard('simulatorPanel')],

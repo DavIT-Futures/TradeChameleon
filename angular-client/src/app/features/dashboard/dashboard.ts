@@ -6,6 +6,7 @@ import { AuthService } from '../../core/auth';
 import { MoneyPipe, PercentPipe, PricePipe, QuantityPipe } from '../../core/format';
 import { PriceStreamService } from '../../core/price-stream';
 import { TenantService } from '../../core/tenant';
+import { WatchlistService } from '../../core/watchlist';
 import { Allocation } from './allocation';
 
 @Component({
@@ -79,6 +80,27 @@ import { Allocation } from './allocation';
         </section>
       </div>
 
+      <section class="card">
+        <h2>★ Watchlist</h2>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>Symbol</th><th class="num">Bid</th><th class="num">Ask</th><th class="num">Change</th></tr></thead>
+            <tbody>
+              @for (w of watched(); track w.symbol) {
+                <tr>
+                  <td><a [routerLink]="['/markets', w.symbol]">{{ w.symbol }}</a></td>
+                  <td class="num">{{ w.bid | price: w.decimals }}</td>
+                  <td class="num">{{ w.ask | price: w.decimals }}</td>
+                  <td class="num"><span class="badge" [class.badge--up]="w.changePct >= 0" [class.badge--down]="w.changePct < 0">{{ w.changePct | pct }}</span></td>
+                </tr>
+              } @empty {
+                <tr><td colspan="4" class="muted">Star instruments on the Markets page to follow them here.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <!-- @defer: the allocation card's code is split into its own chunk and only loaded when scrolled into view -->
       @defer (on viewport) {
         @if (portfolio.value(); as p) {
@@ -113,6 +135,16 @@ export class Dashboard {
       { label: 'Invested', value: this.money.transform(p.positionsValue, p.currency), tone: '' },
       { label: 'Unrealised P&L', value: `${this.money.transform(p.unrealizedPnl, p.currency)} (${this.pct.transform(p.unrealizedPnlPct)})`, tone },
     ];
+  });
+
+  private readonly watchlist = inject(WatchlistService);
+
+  protected readonly watched = computed(() => {
+    const meta = new Map((this.instruments.value() ?? []).map((i) => [i.symbol, i]));
+    return [...this.watchlist.symbols()]
+      .map((s) => ({ quote: this.stream.quotes().get(s) ?? meta.get(s)?.quote, decimals: meta.get(s)?.decimals ?? 2 }))
+      .filter((w) => w.quote !== undefined)
+      .map((w) => ({ ...w.quote!, decimals: w.decimals }));
   });
 
   /** Derived from the live stream: recomputed on every tick, no subscriptions to manage. */
