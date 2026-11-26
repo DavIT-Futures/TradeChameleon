@@ -1,0 +1,3 @@
+/* The design system lives in ../shared/styles/tradechameleon.css (shared with the React client).
+   Angular-specific global tweaks go here. */
+tc-sparkline, tc-price-chart { display: block; }

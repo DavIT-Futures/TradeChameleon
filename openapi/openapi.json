@@ -692,6 +692,56 @@
         }
       }
     },
+    "/api/market/sparklines": {
+      "get": {
+        "tags": [
+          "Market"
+        ],
+        "summary": "Last N mid prices of every instrument of the broker, in one call (for the markets list)",
+        "operationId": "sparklines",
+        "parameters": [
+          {
+            "name": "points",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 60,
+              "maximum": 240,
+              "minimum": 2
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/market/instruments": {
       "get": {
         "tags": [
@@ -888,7 +938,14 @@
           "paused": {
             "type": "boolean"
           }
-        }
+        },
+        "required": [
+          "failureRate",
+          "jitterMs",
+          "latencyMs",
+          "paused",
+          "volatilityMultiplier"
+        ]
       },
       "PlaceOrderRequest": {
         "type": "object",
@@ -964,7 +1021,10 @@
             "type": "number"
           },
           "limitPrice": {
-            "type": "number"
+            "type": [
+              "number",
+              "null"
+            ]
           },
           "status": {
             "type": "string",
@@ -976,10 +1036,16 @@
             ]
           },
           "fillPrice": {
-            "type": "number"
+            "type": [
+              "number",
+              "null"
+            ]
           },
           "rejectReason": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -989,7 +1055,22 @@
             "type": "string",
             "format": "date-time"
           }
-        }
+        },
+        "required": [
+          "createdAt",
+          "fillPrice",
+          "id",
+          "limitPrice",
+          "quantity",
+          "rejectReason",
+          "side",
+          "status",
+          "symbol",
+          "tenantId",
+          "type",
+          "updatedAt",
+          "userId"
+        ]
       },
       "LoginRequest": {
         "type": "object",
@@ -1024,7 +1105,13 @@
           "user": {
             "$ref": "#/components/schemas/UserProfile"
           }
-        }
+        },
+        "required": [
+          "accessToken",
+          "expiresIn",
+          "tokenType",
+          "user"
+        ]
       },
       "UserProfile": {
         "type": "object",
@@ -1036,7 +1123,10 @@
             "type": "string"
           },
           "email": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "roles": {
             "type": "array",
@@ -1047,7 +1137,14 @@
           "tenant": {
             "type": "string"
           }
-        }
+        },
+        "required": [
+          "email",
+          "id",
+          "name",
+          "roles",
+          "tenant"
+        ]
       },
       "Features": {
         "type": "object",
@@ -1064,7 +1161,13 @@
           "livePrices": {
             "type": "boolean"
           }
-        }
+        },
+        "required": [
+          "limitOrders",
+          "livePrices",
+          "simulatorPanel",
+          "trading"
+        ]
       },
       "TenantDto": {
         "type": "object",
@@ -1110,7 +1213,19 @@
           "features": {
             "$ref": "#/components/schemas/Features"
           }
-        }
+        },
+        "required": [
+          "allowedAssetClasses",
+          "currency",
+          "features",
+          "id",
+          "locale",
+          "logoUrl",
+          "name",
+          "spreadMarkupBps",
+          "tagline",
+          "theme"
+        ]
       },
       "Theme": {
         "type": "object",
@@ -1154,7 +1269,22 @@
           "fontHeading": {
             "type": "string"
           }
-        }
+        },
+        "required": [
+          "accent",
+          "background",
+          "colorScheme",
+          "fontBody",
+          "fontHeading",
+          "muted",
+          "negative",
+          "onPrimary",
+          "positive",
+          "primary",
+          "radius",
+          "surface",
+          "text"
+        ]
       },
       "PortfolioView": {
         "type": "object",
@@ -1183,7 +1313,16 @@
               "$ref": "#/components/schemas/PositionView"
             }
           }
-        }
+        },
+        "required": [
+          "cash",
+          "currency",
+          "positions",
+          "positionsValue",
+          "totalValue",
+          "unrealizedPnl",
+          "unrealizedPnlPct"
+        ]
       },
       "PositionView": {
         "type": "object",
@@ -1225,7 +1364,19 @@
           "pnlPct": {
             "type": "number"
           }
-        }
+        },
+        "required": [
+          "assetClass",
+          "avgPrice",
+          "currency",
+          "lastPrice",
+          "marketValue",
+          "name",
+          "pnl",
+          "pnlPct",
+          "quantity",
+          "symbol"
+        ]
       },
       "Quote": {
         "type": "object",
@@ -1252,7 +1403,16 @@
             "type": "string",
             "format": "date-time"
           }
-        }
+        },
+        "required": [
+          "ask",
+          "bid",
+          "change",
+          "changePct",
+          "mid",
+          "symbol",
+          "timestamp"
+        ]
       },
       "InstrumentView": {
         "type": "object",
@@ -1286,7 +1446,16 @@
           "quote": {
             "$ref": "#/components/schemas/Quote"
           }
-        }
+        },
+        "required": [
+          "assetClass",
+          "currency",
+          "decimals",
+          "exchange",
+          "name",
+          "quote",
+          "symbol"
+        ]
       },
       "PricePointView": {
         "type": "object",
@@ -1298,7 +1467,11 @@
           "price": {
             "type": "number"
           }
-        }
+        },
+        "required": [
+          "price",
+          "t"
+        ]
       }
     },
     "securitySchemes": {

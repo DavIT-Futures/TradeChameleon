@@ -7,6 +7,13 @@ import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.HeaderParameter;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import io.swagger.v3.oas.models.media.Schema;
+import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,6 +45,43 @@ class OpenApiConfig {
                         .scheme("bearer")
                         .bearerFormat("JWT")
                         .description("RS256 JWT from POST /api/auth/token (dev) or from your corporate SSO (oidc)")));
+    }
+
+    /**
+     * Java records have no "optional" fields: every component is always serialised. Mark all properties
+     * as required so the generated TypeScript types are {@code symbol: string} rather than
+     * {@code symbol?: string}. The few fields that can be {@code null} are listed explicitly and typed
+     * as {@code T | null} (OpenAPI 3.1 type arrays).
+     */
+    private static final Set<String> NULLABLE = Set.of(
+            "Order.limitPrice", "Order.fillPrice", "Order.rejectReason",
+            "PlaceOrderRequest.limitPrice", "UserProfile.email");
+
+    @Bean
+    OpenApiCustomizer requiredRecordProperties() {
+        return openApi -> openApi.getComponents().getSchemas().forEach((name, schema) -> {
+            @SuppressWarnings("unchecked")
+            Map<String, Schema<?>> properties = (Map<String, Schema<?>>) (Map<?, ?>) schema.getProperties();
+            if (properties == null) {
+                return;
+            }
+            List<String> required = new ArrayList<>();
+            properties.forEach((prop, propSchema) -> {
+                if (NULLABLE.contains(name + "." + prop)) {
+                    Set<String> types = propSchema.getTypes() != null ? propSchema.getTypes()
+                            : Set.of(propSchema.getType());
+                    var withNull = new LinkedHashSet<>(types);
+                    withNull.add("null");
+                    propSchema.setTypes(withNull);
+                    if (!name.equals("PlaceOrderRequest")) {
+                        required.add(prop);
+                    }
+                } else {
+                    required.add(prop);
+                }
+            });
+            schema.setRequired(required);
+        });
     }
 
     /** Documents the optional tenant header on every operation so it can be set from Swagger UI. */

@@ -12,7 +12,9 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -68,6 +70,16 @@ class MarketController {
         return market.history(instrument.symbol(), points).stream()
                 .map(p -> new PricePointView(p.at(), p.price()))
                 .toList();
+    }
+
+    @GetMapping("/sparklines")
+    @Operation(summary = "Last N mid prices of every instrument of the broker, in one call (for the markets list)")
+    Map<String, List<BigDecimal>> sparklines(@RequestParam(defaultValue = "60") @Min(2) @Max(240) int points) {
+        var result = new LinkedHashMap<String, List<BigDecimal>>();
+        for (Instrument i : market.instruments(TenantContext.current())) {
+            result.put(i.symbol(), market.history(i.symbol(), points).stream().map(PriceEngine.PricePoint::price).toList());
+        }
+        return result;
     }
 
     @GetMapping(path = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
