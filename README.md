@@ -14,7 +14,17 @@ markup and feature flags. One broker is portfolio-only (no trading).
 | React client | React 19, Vite, React Router, TanStack Query, `useSyncExternalStore`, Vitest + Testing Library |
 | Styling | Plain modern CSS shared by both clients, themed with custom properties |
 
-📘 **The full technical guide (≈30 chapters, Polish/English, Mermaid diagrams, real code and real API responses) is in [`docs/guide.html`](docs/guide.html).**
+📘 **The full technical guide (36 chapters, Polish/English, Mermaid diagrams, real code and real API responses) is in [`docs/guide.html`](docs/guide.html).**
+
+## Trading features
+
+- Live prices over SSE with per-broker spreads, sparklines and price flashes
+- Market, limit, **stop** and **stop-limit** orders; **stop-loss / take-profit** on positions, closed automatically
+- **Candlestick chart** (5s / 15s / 1m / 5m) with **SMA 20, EMA 9 and RSI 14**, plus a line chart
+- **Market depth** (10 bid/ask levels), **watchlist** and **price alerts** with in-app notifications
+- Portfolio valued live in the broker currency, **account statement** (deposits, withdrawals, trade cash flows)
+  and **closed trades with realised P&L**
+- Developer panel: latency, jitter, failure rate, volatility and pause for the simulated market
 
 ## Brokers
 

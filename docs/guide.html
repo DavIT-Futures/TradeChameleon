@@ -134,8 +134,8 @@
 
 <section class="chapter" id="architecture">
 <h2><span class="pl">Architektura w pigułce</span><span class="en">Architecture at a glance</span></h2>
-<div class="pl"><p>Przeglądarka rozmawia z backendem przez REST (JSON) i Server-Sent Events. Serwery deweloperskie Angulara (4200) i Vite (5173) przekierowują <code>/api</code> na Spring Boot (8080), dzięki czemu nie trzeba konfigurować CORS w trybie dev (CORS jest jednak włączony dla <code>*.localhost</code>). Backend jest jednym procesem z siedmioma modułami Spring Modulith, które komunikują się przez publiczne API i zdarzenia.</p></div>
-<div class="en"><p>The browser talks to the backend through REST (JSON) and Server-Sent Events. The Angular (4200) and Vite (5173) dev servers proxy <code>/api</code> to Spring Boot (8080), so no CORS setup is needed in development (CORS is still enabled for <code>*.localhost</code>). The backend is one process with seven Spring Modulith modules that talk through public APIs and events.</p></div>
+<div class="pl"><p>Przeglądarka rozmawia z backendem przez REST (JSON) i Server-Sent Events. Serwery deweloperskie Angulara (4200) i Vite (5173) przekierowują <code>/api</code> na Spring Boot (8080), dzięki czemu nie trzeba konfigurować CORS w trybie dev (CORS jest jednak włączony dla <code>*.localhost</code>). Backend jest jednym procesem z dziewięcioma modułami Spring Modulith, które komunikują się przez publiczne API i zdarzenia.</p></div>
+<div class="en"><p>The browser talks to the backend through REST (JSON) and Server-Sent Events. The Angular (4200) and Vite (5173) dev servers proxy <code>/api</code> to Spring Boot (8080), so no CORS setup is needed in development (CORS is still enabled for <code>*.localhost</code>). The backend is one process with nine Spring Modulith modules that talk through public APIs and events.</p></div>
 <pre class="mermaid">
 flowchart LR
   subgraph Browser
@@ -148,6 +148,8 @@ flowchart LR
     TR[trading] --> M
     TR --> P[portfolio]
     P --> M
+    W[watchlist] --> M
+    AL[alerts] --> M
     SH[(shared)]
   end
   DB[(PostgreSQL 18<br/>Flyway)]
@@ -1037,6 +1039,8 @@ flowchart LR
   trading --> market
   trading --> portfolio
   trading --> identity
+  watchlist --> market
+  alerts --> market
   trading -. "OrderFilled (event)" .-> portfolio
   market -. "PricesTicked (event)" .-> trading
   market -. "PricesTicked (event)" .-> stream[PriceStream SSE]
@@ -1051,6 +1055,8 @@ flowchart LR
 <tr><td>simulator</td><td><span class="pl">opóźnienia, awarie, zmienność</span><span class="en">latency, failures, volatility</span></td><td><code>Simulator</code></td></tr>
 <tr><td>trading</td><td><span class="pl">zlecenia rynkowe i z limitem</span><span class="en">market and limit orders</span></td><td><code>OrderService</code></td></tr>
 <tr><td>portfolio</td><td><span class="pl">gotówka i pozycje</span><span class="en">cash and positions</span></td><td><code>Portfolios</code></td></tr>
+<tr><td>watchlist</td><td><span class="pl">obserwowane instrumenty</span><span class="en">followed instruments</span></td><td><code>/api/watchlist</code></td></tr>
+<tr><td>alerts</td><td><span class="pl">alerty cenowe i powiadomienia</span><span class="en">price alerts and notifications</span></td><td><code>AlertTriggered</code></td></tr>
 <tr><td>shared</td><td><span class="pl">zdarzenia, błędy, kursy walut</span><span class="en">events, errors, FX</span></td><td><code>OrderFilled</code>, <code>DomainException</code></td></tr>
 </tbody>
 </table>
@@ -1732,12 +1738,288 @@ void tokenOfOneTenantCannotBeUsedAtAnother() {
 .\mvnw test "-Dtc.test.external-db=true" "-Dspring.datasource.url=jdbc:postgresql://localhost:5432/tradechameleon_test"</code></pre>
 </section>
 
+<div class="part-title"><span class="pl">Część VII · Funkcje profesjonalnej platformy</span><span class="en">Part VII · Pro trading features</span></div>
+
+<section class="chapter" id="pro-orders">
+<h2><span class="pl">Zlecenia STOP, STOP LIMIT oraz Stop Loss / Take Profit</span><span class="en">STOP and STOP LIMIT orders, Stop Loss / Take Profit</span></h2>
+<div class="pl"><p>Dojrzałe platformy oferują więcej niż „kup teraz” i „kup po cenie X”. Doszły dwa typy zleceń oczekujących i ochrona pozycji:</p>
+<ul>
+<li><strong>STOP</strong>: „kup, gdy cena <em>wzrośnie</em> do X” (wybicie) albo „sprzedaj, gdy <em>spadnie</em> do X”. Po osiągnięciu stopu staje się zleceniem rynkowym.</li>
+<li><strong>STOP LIMIT</strong>: jak STOP, ale po wyzwoleniu staje się zleceniem z limitem (kolumna <code>triggered</code>), więc nie wykona się gorzej niż limit.</li>
+<li><strong>SL/TP</strong> przy zakupie: po realizacji portfel zapisuje je na pozycji, a <code>ProtectionMonitor</code> zamyka całą pozycję zleceniem SELL z <code>origin = STOP_LOSS</code> lub <code>TAKE_PROFIT</code>. SL/TP można też edytować na otwartej pozycji (<code>PUT /api/portfolio/positions/{symbol}/protection</code>).</li>
+</ul></div>
+<div class="en"><p>Mature platforms offer more than "buy now" and "buy at X". Two pending order types and position protection were added:</p>
+<ul>
+<li><strong>STOP</strong>: "buy when the price <em>rises</em> to X" (breakout) or "sell when it <em>falls</em> to X". Once the stop is reached it becomes a market order.</li>
+<li><strong>STOP LIMIT</strong>: like STOP, but once triggered it becomes a limit order (the <code>triggered</code> column), so it never fills worse than the limit.</li>
+<li><strong>SL/TP</strong> on a buy: when it fills the portfolio stores them on the position, and <code>ProtectionMonitor</code> closes the whole position with a SELL whose <code>origin</code> is <code>STOP_LOSS</code> or <code>TAKE_PROFIT</code>. SL/TP can also be edited on an open position (<code>PUT /api/portfolio/positions/{symbol}/protection</code>).</li>
+</ul></div>
+<pre class="mermaid">
+stateDiagram-v2
+  [*] --> OPEN: STOP / STOP_LIMIT placed
+  OPEN --> FILLED: STOP reached (fills at market)
+  OPEN --> TRIGGERED: STOP_LIMIT reached
+  TRIGGERED --> FILLED: limit crossed
+  OPEN --> CANCELLED: cancelled by the user
+  TRIGGERED --> CANCELLED: cancelled by the user
+  state TRIGGERED {
+    [*] --> RestingLimit
+  }
+</pre>
+<p class="file">backend/src/main/java/com/tradechameleon/trading/OrderMatcher.java</p>
+<pre><code class="language-java">boolean limitActive = order.type() == Order.OrderType.LIMIT
+        || (order.type() == Order.OrderType.STOP_LIMIT &amp;&amp; order.triggered());
+if (limitActive) {
+    if (limitCrossed(order.side(), executable, order.limitPrice())) {
+        service.fillPending(order, instrument, tenant, executable);
+    }
+    return;
+}
+if (stopReached(order.side(), executable, order.stopPrice())) {
+    if (order.type() == Order.OrderType.STOP) {
+        service.fillPending(order, instrument, tenant, executable);
+    } else if (service.trigger(order) &amp;&amp; limitCrossed(order.side(), executable, order.limitPrice())) {
+        service.fillPending(order, instrument, tenant, executable);
+    }
+}
+
+static boolean stopReached(Side side, BigDecimal executable, BigDecimal stop) {
+    return side == Side.BUY ? executable.compareTo(stop) &gt;= 0 : executable.compareTo(stop) &lt;= 0;
+}</code></pre>
+<div class="pl"><p>Najciekawszy problem to <strong>podwójne zamknięcie</strong>. Portfel aktualizuje się asynchronicznie, więc przy kolejnym ticku pozycja „wciąż istnieje” i monitor mógłby sprzedać ją drugi raz. Rozwiązanie: w jednej transakcji najpierw <em>compare-and-set</em> czyszczący SL/TP, dopiero potem zlecenie. Wygrywa tylko pierwszy tick.</p></div>
+<div class="en"><p>The interesting problem is the <strong>double close</strong>. The portfolio updates asynchronously, so on the next tick the position "still exists" and the monitor could sell it twice. The fix: in one transaction, first a <em>compare-and-set</em> that clears SL/TP, only then the order. Only the first tick wins.</p></div>
+<p class="file">backend/src/main/java/com/tradechameleon/trading/OrderService.java</p>
+<pre><code class="language-java">@Transactional
+public Optional&lt;Order&gt; closeByProtection(Tenant tenant, String userId, Instrument instrument,
+                                        BigDecimal quantity, BigDecimal bid, Order.Origin origin) {
+    // compare-and-set: only the first tick that sees the trigger wins
+    if (!portfolios.clearProtection(tenant, userId, instrument.symbol())) {
+        return Optional.empty();
+    }
+    // … insert a FILLED market SELL with this origin and publish OrderFilled
+}</code></pre>
+<div class="grid2">
+<div>
+<p class="file">POST /api/orders (ASML, MARKET, stopLoss 650, takeProfit 800) → 201</p>
+<pre><code class="language-json">{
+  "symbol": "ASML",
+  "side": "BUY",
+  "type": "MARKET",
+  "quantity": 1,
+  "stopPrice": null,
+  "stopLoss": 650,
+  "takeProfit": 800,
+  "status": "FILLED",
+  "triggered": false,
+  "origin": "CLIENT",
+  "fillPrice": 713.05
+}</code></pre>
+</div>
+<div>
+<p class="file">POST /api/orders (BUY STOP 1 SAP, stopPrice 1) → 422</p>
+<pre><code class="language-json">{
+  "detail": "A BUY stop must be above the current ask (236.57).",
+  "status": 422,
+  "title": "Invalid stop price",
+  "type": "https://tradechameleon.dev/problems/invalid-stop",
+  "ask": 236.57,
+  "bid": 236.19
+}</code></pre>
+</div>
+</div>
+<div class="note"><span class="pl">Wisła Invest ma wyłączone zlecenia oczekujące, więc LIMIT, STOP i STOP_LIMIT dostają tam 403 <code>limit-orders-disabled</code>; w obu klientach przyciski są wyłączone.</span><span class="en">Wisła Invest has pending orders switched off, so LIMIT, STOP and STOP_LIMIT get a 403 <code>limit-orders-disabled</code> there; both clients disable the buttons.</span></div>
+</section>
+
+<section class="chapter" id="pro-charts">
+<h2><span class="pl">Wykres świecowy i wskaźniki SMA, EMA, RSI</span><span class="en">Candlestick chart and SMA, EMA, RSI indicators</span></h2>
+<div class="pl"><p>Silnik trzyma teraz 2 godziny ticków (<code>tc.market.history-size: 7200</code>). Endpoint <code>/candles</code> grupuje je w świece OHLC (open, high, low, close) o interwale 5 s, 15 s, 1 min lub 5 min. Klienci pobierają świece co 5 sekund, a ostatnią świecę na bieżąco aktualizują z SSE, więc wykres „żyje” bez dodatkowych żądań.</p></div>
+<div class="en"><p>The engine now keeps 2 hours of ticks (<code>tc.market.history-size: 7200</code>). The <code>/candles</code> endpoint groups them into OHLC candles (open, high, low, close) of 5 s, 15 s, 1 min or 5 min. Clients refetch candles every 5 seconds and update the last candle live from SSE, so the chart moves without extra requests.</p></div>
+<p class="file">backend/src/main/java/com/tradechameleon/market/MarketAnalytics.java</p>
+<pre><code class="language-java">static List&lt;Candle&gt; candles(List&lt;PriceEngine.PricePoint&gt; points, Duration interval, int limit) {
+    long size = interval.toMillis();
+    List&lt;Candle&gt; result = new ArrayList&lt;&gt;();
+    long bucket = Long.MIN_VALUE;
+    BigDecimal open = null, high = null, low = null, close = null;
+    int ticks = 0;
+    for (var p : points) {
+        long b = Math.floorDiv(p.at().toEpochMilli(), size) * size;
+        if (b != bucket) {
+            if (open != null) {
+                result.add(new Candle(Instant.ofEpochMilli(bucket), open, high, low, close, ticks));
+            }
+            bucket = b;
+            open = high = low = close = p.price();
+            ticks = 0;
+        }
+        high = high.max(p.price());
+        low = low.min(p.price());
+        close = p.price();
+        ticks++;
+    }
+    // … last bucket, then keep the last `limit` candles
+}</code></pre>
+<p class="file">GET /api/market/instruments/SAP/candles?interval=1m&amp;limit=2 → 200</p>
+<pre><code class="language-json">[
+  { "t": "2026-11-26T17:30:00Z", "open": 232.41, "high": 235.74, "low": 232.41, "close": 235.28, "ticks": 60 },
+  { "t": "2026-11-26T17:31:00Z", "open": 235.41, "high": 237.37, "low": 235.06, "close": 236.38, "ticks": 46 }
+]</code></pre>
+<div class="pl"><p>Wskaźniki liczy klient, w czystych funkcjach (identyczna kopia w Angularze i Reakcie, z testami):</p>
+<ul>
+<li><strong>SMA 20</strong>: średnia z 20 ostatnich zamknięć; wygładza szum.</li>
+<li><strong>EMA 9</strong>: średnia wykładnicza z wagą <code>k = 2/(n+1)</code>; szybciej reaguje na zmiany.</li>
+<li><strong>RSI 14</strong> (wygładzanie Wildera): 0–100; powyżej 70 rynek uznaje się za „wykupiony”, poniżej 30 za „wyprzedany”. Rysowany w osobnym panelu z pasmem 30–70.</li>
+</ul></div>
+<div class="en"><p>Indicators are computed on the client, as pure functions (identical copy in Angular and React, with tests):</p>
+<ul>
+<li><strong>SMA 20</strong>: mean of the last 20 closes; smooths noise.</li>
+<li><strong>EMA 9</strong>: exponential average with weight <code>k = 2/(n+1)</code>; reacts faster to changes.</li>
+<li><strong>RSI 14</strong> (Wilder's smoothing): 0–100; above 70 is commonly read as "overbought", below 30 as "oversold". Drawn in its own pane with a 30–70 band.</li>
+</ul></div>
+<p class="file">angular-client/src/app/shared/indicators.ts</p>
+<pre><code class="language-typescript">export function rsi(values: readonly number[], period = 14): (number | null)[] {
+  const out: (number | null)[] = values.map(() =&gt; null);
+  if (values.length &lt;= period) return out;
+  let gain = 0;
+  let loss = 0;
+  for (let i = 1; i &lt;= period; i++) {
+    const change = values[i] - values[i - 1];
+    if (change &gt;= 0) gain += change;
+    else loss -= change;
+  }
+  gain /= period;
+  loss /= period;
+  out[period] = loss === 0 ? 100 : 100 - 100 / (1 + gain / loss);
+  for (let i = period + 1; i &lt; values.length; i++) {
+    const change = values[i] - values[i - 1];
+    gain = (gain * (period - 1) + Math.max(change, 0)) / period;
+    loss = (loss * (period - 1) + Math.max(-change, 0)) / period;
+    out[i] = loss === 0 ? 100 : 100 - 100 / (1 + gain / loss);
+  }
+  return out;
+}</code></pre>
+<div class="pl"><p>Aktualizacja ostatniej świecy z SSE to w Angularze <code>computed</code> nad zasobem i sygnałem kursów, a w Reakcie <code>useMemo</code> nad <code>useQuery</code> i <code>useQuote</code>. Ta sama logika, dwa modele reaktywności.</p></div>
+<div class="en"><p>Updating the last candle from SSE is a <code>computed</code> over the resource and the quotes signal in Angular, and a <code>useMemo</code> over <code>useQuery</code> and <code>useQuote</code> in React. Same logic, two reactivity models.</p></div>
+<p class="file">angular-client/src/app/features/instrument/instrument.ts</p>
+<pre><code class="language-typescript">protected readonly liveCandles = computed&lt;OhlcCandle[]&gt;(() =&gt; {
+  const base = (this.candles.value() ?? []).map((c) =&gt; ({ t: Date.parse(c.t), open: c.open, high: c.high, low: c.low, close: c.close }));
+  const live = this.stream.quotes().get(this.symbol());
+  if (!live || base.length === 0) return base;
+  const size = INTERVAL_MS[this.interval()];
+  const bucket = Math.floor(Date.parse(live.timestamp) / size) * size;
+  const last = base[base.length - 1];
+  if (bucket === last.t) {
+    base[base.length - 1] = { ...last, high: Math.max(last.high, live.mid), low: Math.min(last.low, live.mid), close: live.mid };
+  } else if (bucket &gt; last.t) {
+    base.push({ t: bucket, open: last.close, high: Math.max(last.close, live.mid), low: Math.min(last.close, live.mid), close: live.mid });
+  }
+  return base;
+});</code></pre>
+</section>
+
+<section class="chapter" id="pro-depth-alerts">
+<h2><span class="pl">Arkusz zleceń, lista obserwowanych i alerty cenowe</span><span class="en">Market depth, watchlist and price alerts</span></h2>
+<div class="pl"><p><strong>Arkusz zleceń</strong> (<code>/depth</code>) pokazuje 10 poziomów bid i ask wokół kwotowania brokera. To symulacja: wielkości są pseudolosowe, ale stałe w obrębie sekundy (ziarno = symbol + sekunda), więc testy są deterministyczne. Klienci odświeżają go co sekundę (<code>every(1000, () =&gt; book.reload())</code> w Angularze, <code>refetchInterval: 1000</code> w TanStack Query).</p></div>
+<div class="en"><p><strong>Market depth</strong> (<code>/depth</code>) shows 10 bid and ask levels around the broker's quote. It is simulated: sizes are pseudo-random but stable within a second (seed = symbol + second), so tests are deterministic. Clients refresh it every second (<code>every(1000, () =&gt; book.reload())</code> in Angular, <code>refetchInterval: 1000</code> in TanStack Query).</p></div>
+<p class="file">GET /api/market/instruments/SAP/depth?levels=3 (kestrel) → 200</p>
+<pre><code class="language-json">{
+  "symbol": "SAP",
+  "bids": [ { "price": 236.19, "size": 727 }, { "price": 236.14, "size": 2993 }, { "price": 236.09, "size": 3054 } ],
+  "asks": [ { "price": 236.57, "size": 1976 }, { "price": 236.62, "size": 3329 }, { "price": 236.67, "size": 233 } ],
+  "timestamp": "2026-11-26T17:31:45.696066400Z"
+}</code></pre>
+<div class="pl"><p><strong>Lista obserwowanych</strong> to osobny moduł Modulith (<code>watchlist</code>) z idempotentnymi <code>PUT</code>/<code>DELETE /api/watchlist/{symbol}</code>. Gwiazdka w klientach przełącza się <em>optymistycznie</em>: UI zmienia się od razu i cofa, jeśli serwer odmówi.</p>
+<p><strong>Alerty cenowe</strong> to moduł <code>alerts</code>. Alert „ABOVE/BELOW cena” jest sprawdzany na każdym ticku względem ceny mid (więc nie zależy od spreadu brokera). Alert, który byłby spełniony od razu, jest odrzucany (422 <code>alert-already-met</code>). Klienci odpytują <code>/api/alerts/notifications</code> co 4 sekundy, pokazują toast i potwierdzają alert (<code>/ack</code>).</p></div>
+<div class="en"><p><strong>The watchlist</strong> is its own Modulith module (<code>watchlist</code>) with idempotent <code>PUT</code>/<code>DELETE /api/watchlist/{symbol}</code>. The star in the clients toggles <em>optimistically</em>: the UI changes at once and rolls back if the server refuses.</p>
+<p><strong>Price alerts</strong> are the <code>alerts</code> module. An "ABOVE/BELOW price" alert is checked on every tick against the mid price (so it does not depend on the broker's spread). An alert that would fire immediately is rejected (422 <code>alert-already-met</code>). Clients poll <code>/api/alerts/notifications</code> every 4 seconds, show a toast and acknowledge the alert (<code>/ack</code>).</p></div>
+<pre class="mermaid">
+sequenceDiagram
+  participant UI as Client (Shell)
+  participant API as AlertController
+  participant S as AlertService
+  participant E as PriceEngine
+  UI->>API: POST /api/alerts {SAP, ABOVE, 250}
+  API->>S: create (reject if already met)
+  E-->>S: PricesTicked (every second)
+  S->>S: mid ≥ 250? CAS ACTIVE → TRIGGERED
+  S-->>S: publish AlertTriggered
+  loop every 4 s
+    UI->>API: GET /api/alerts/notifications
+  end
+  API-->>UI: [triggered, not acknowledged]
+  UI->>UI: toast 🔔 SAP above 250
+  UI->>API: POST /api/alerts/{id}/ack
+</pre>
+<p class="file">POST /api/alerts {"symbol":"SAP","condition":"ABOVE","price":250,"note":"breakout"} → 201</p>
+<pre><code class="language-json">{
+  "id": "c3385aae-854c-4577-89f1-d35cf91e363d",
+  "symbol": "SAP",
+  "condition": "ABOVE",
+  "price": 250,
+  "note": "breakout",
+  "status": "ACTIVE",
+  "acknowledged": false,
+  "createdAt": "2026-11-26T17:31:46.513561300Z",
+  "triggeredAt": null,
+  "triggeredPrice": null
+}</code></pre>
+<div class="note"><span class="pl"><strong>Dlaczego polling, a nie SSE?</strong> Strumień cen jest publiczny i bez tokenu. Powiadomienia są prywatne, więc wymagałyby osobnego, uwierzytelnionego kanału (np. SSE z biletem jednorazowym). Polling co 4 s jest prosty i wystarcza; to dobre ćwiczenie do rozbudowy.</span><span class="en"><strong>Why polling, not SSE?</strong> The price stream is public and token-free. Notifications are private, so they would need a separate authenticated channel (e.g. SSE with a one-time ticket). Polling every 4 s is simple and good enough; it is a good exercise to extend.</span></div>
+</section>
+
+<section class="chapter" id="pro-account">
+<h2><span class="pl">Wyciąg z konta i zrealizowany P&amp;L</span><span class="en">Account statement and realised P&amp;L</span></h2>
+<div class="pl"><p>Każda zmiana gotówki trafia do księgi <code>cash_transaction</code> z saldem po operacji: wpłata otwierająca (z danych startowych), wpłaty i wypłaty (<code>POST /api/portfolio/deposits</code>, <code>/withdrawals</code>, tylko rola TRADER) oraz przepływy z transakcji. Każda sprzedaż zapisuje <code>closed_trade</code> ze zrealizowanym wynikiem: <code>(cena sprzedaży − średni koszt) × ilość</code>, przeliczony na walutę konta. Wszystko dzieje się w tym samym słuchaczu zdarzenia <code>OrderFilled</code>, w jednej transakcji z aktualizacją salda.</p></div>
+<div class="en"><p>Every cash change goes into the <code>cash_transaction</code> ledger with the balance after it: the opening deposit (from the seed), deposits and withdrawals (<code>POST /api/portfolio/deposits</code>, <code>/withdrawals</code>, TRADER role only) and trade cash flows. Every sale writes a <code>closed_trade</code> with the realised result: <code>(sell price − average cost) × quantity</code>, converted to the account currency. It all happens in the same <code>OrderFilled</code> listener, in one transaction with the balance update.</p></div>
+<p class="file">backend/src/main/java/com/tradechameleon/portfolio/Portfolios.java</p>
+<pre><code class="language-java">repository.insertTransaction(account.id(),
+        fill.side() == Side.BUY ? CashTransaction.Type.BUY : CashTransaction.Type.SELL,
+        cashDelta, balance, fill.orderId(), what, fill.filledAt());
+
+if (fill.side() == Side.SELL &amp;&amp; current.quantity().signum() &gt; 0) {
+    BigDecimal pnl = FxRates.convert(fill.price().subtract(current.avgPrice()).multiply(fill.quantity()),
+            fill.currency(), account.currency());
+    repository.insertClosedTrade(account.id(), fill.orderId(), fill.symbol(), fill.quantity(),
+            current.avgPrice(), fill.price(), fill.currency(), pnl, fill.filledAt());
+}</code></pre>
+<div class="grid2">
+<div>
+<p class="file">GET /api/portfolio/transactions?limit=3 → 200</p>
+<pre><code class="language-json">[
+  { "type": "SELL", "amount": 2358.5, "balanceAfter": 101645.45,
+    "description": "SELL 10 SAP @ 235.85 EUR" },
+  { "type": "BUY", "amount": -713.05, "balanceAfter": 99286.95,
+    "description": "BUY 1 ASML @ 713.05 EUR" },
+  { "id": "c0000002-0000-4000-8000-000000000001",
+    "type": "DEPOSIT", "amount": 100000, "balanceAfter": 100000,
+    "description": "Opening deposit", "createdAt": "2026-01-02T09:00:00Z" }
+]</code></pre>
+</div>
+<div>
+<p class="file">GET /api/portfolio/closed-trades?limit=1 → 200</p>
+<pre><code class="language-json">[
+  {
+    "symbol": "SAP",
+    "quantity": 10,
+    "openPrice": 220,
+    "closePrice": 235.85,
+    "currency": "EUR",
+    "realizedPnl": 158.5,
+    "closedAt": "2026-11-26T17:31:48.061008Z"
+  }
+]</code></pre>
+</div>
+</div>
+<div class="pl"><p>Ekran <strong>Account</strong> w obu klientach pokazuje gotówkę, zrealizowany i niezrealizowany P&amp;L, formularz wpłat i wypłat, wyciąg oraz zamknięte transakcje. <code>PortfolioView</code> ma nowe pole <code>realizedPnl</code>, a pozycje mają <code>stopLoss</code>/<code>takeProfit</code> i <code>decimals</code>.</p>
+<p>Nowe testy: <code>ProFeaturesIntegrationTests</code> (14 scenariuszy, część z podniesioną zmiennością w symulatorze, by ceny szybko dochodziły do wyzwalaczy), <code>MarketAnalyticsTest</code> i <code>OrderRulesTest</code>. Razem backend ma 59 testów; klienci po 19 (Angular) i 18 (React).</p></div>
+<div class="en"><p>The <strong>Account</strong> screen in both clients shows cash, realised and unrealised P&amp;L, the deposit/withdrawal form, the statement and closed trades. <code>PortfolioView</code> has a new <code>realizedPnl</code> field, and positions have <code>stopLoss</code>/<code>takeProfit</code> and <code>decimals</code>.</p>
+<p>New tests: <code>ProFeaturesIntegrationTests</code> (14 scenarios, some with raised simulator volatility so prices reach triggers quickly), <code>MarketAnalyticsTest</code> and <code>OrderRulesTest</code>. The backend now has 59 tests; the clients 19 (Angular) and 18 (React).</p></div>
+</section>
+
 <section class="chapter" id="next-steps">
 <h2><span class="pl">Ćwiczenia i dalsze kroki</span><span class="en">Exercises and next steps</span></h2>
 <div class="pl"><ol>
 <li><strong>Piąty broker.</strong> Dodaj migrację <code>V4__…</code> z nowym brokerem (np. tylko kryptowaluty, ciemny motyw, kształt <code>monogram</code>). Bez zmiany kodu powinien pojawić się w przełączniku marek.</li>
 <li><strong>Rezerwacja środków.</strong> Usuń wyścig opisany w rozdziale o Modulith: rezerwuj gotówkę przy składaniu zlecenia z limitem i zwalniaj przy anulowaniu.</li>
-<li><strong>Zlecenia stop.</strong> Dodaj typ <code>STOP</code> (nowa wartość w <code>check</code>, logika w <code>LimitOrderMatcher</code>, test integracyjny, regeneracja typów TS: kompilator pokaże miejsca do zmiany w obu klientach).</li>
+<li><strong>Trailing stop.</strong> Dodaj typ <code>TRAILING_STOP</code>, którego cena stop podąża za rynkiem w stałej odległości (nowa wartość w <code>check</code>, logika w <code>OrderMatcher</code>, test integracyjny, regeneracja typów TS: kompilator pokaże miejsca do zmiany w obu klientach).</li>
 <li><strong>Prawdziwe SSO.</strong> Uruchom Keycloak w <code>compose.yaml</code>, przełącz <code>tc.security.mode=oidc</code> i dodaj Authorization Code + PKCE w jednym z klientów.</li>
 <li><strong>Historia wartości portfela.</strong> Zapisuj migawki wyceny w tabeli i narysuj je istniejącym komponentem wykresu.</li>
 <li><strong>Signal Forms.</strong> Przepisz bilet zlecenia w Angularze na eksperymentalne Signal Forms i porównaj z Reactive Forms.</li>
@@ -1746,7 +2028,7 @@ void tokenOfOneTenantCannotBeUsedAtAnother() {
 <div class="en"><ol>
 <li><strong>A fifth broker.</strong> Add a <code>V4__…</code> migration with a new broker (e.g. crypto only, dark theme, <code>monogram</code> shape). Without any code change it should appear in the brand switcher.</li>
 <li><strong>Funds reservation.</strong> Remove the race described in the Modulith chapter: reserve cash when a limit order is placed and release it on cancel.</li>
-<li><strong>Stop orders.</strong> Add a <code>STOP</code> type (new value in the <code>check</code>, logic in <code>LimitOrderMatcher</code>, an integration test, regenerated TS types: the compiler will show what to change in both clients).</li>
+<li><strong>Trailing stop.</strong> Add a <code>TRAILING_STOP</code> type whose stop follows the market at a fixed distance (new value in the <code>check</code>, logic in <code>OrderMatcher</code>, an integration test, regenerated TS types: the compiler will show what to change in both clients).</li>
 <li><strong>Real SSO.</strong> Run Keycloak in <code>compose.yaml</code>, switch <code>tc.security.mode=oidc</code> and add Authorization Code + PKCE to one of the clients.</li>
 <li><strong>Portfolio value history.</strong> Store valuation snapshots in a table and draw them with the existing chart component.</li>
 <li><strong>Signal Forms.</strong> Rewrite the Angular order ticket with the experimental Signal Forms and compare with Reactive Forms.</li>
