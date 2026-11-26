@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pl" data-lang="pl">
+<html lang="en" data-lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -31,11 +31,11 @@
   nav.toc a { color: var(--text); text-decoration: none; }
   nav.toc a:hover, nav.toc a.active { color: var(--primary); }
   nav.toc .part { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: .9rem 0 .2rem; list-style: none; margin-left: -1.4rem; }
-  .lang { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; margin: .5rem 0 1rem; }
+  .lang { position: fixed; top: 1rem; right: 1rem; z-index: 10; display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; background: var(--surface); box-shadow: 0 2px 10px rgb(0 0 0 / .15); }
   .lang button { border: 0; background: transparent; color: var(--text); padding: .3rem .9rem; cursor: pointer; font: inherit; font-size: .85rem; }
   .lang button[aria-pressed="true"] { background: var(--primary); color: #fff; }
   main { padding: 2rem clamp(1rem, 4vw, 4rem); max-width: 1000px; min-width: 0; }
-  header.hero { padding: 2rem; border-radius: 16px; color: #fff; margin-bottom: 2rem;
+  header.hero { padding: 2rem 2rem 2rem; margin-top: 2rem; border-radius: 16px; color: #fff; margin-bottom: 2rem;
     background: radial-gradient(40rem 20rem at 0% 0%, #14b8a6, transparent), radial-gradient(30rem 20rem at 100% 100%, #6366f1, transparent), #0f172a; }
   header.hero h1 { margin: 0 0 .5rem; font-size: clamp(1.8rem, 1.2rem + 2vw, 2.6rem); }
   header.hero p { margin: 0; opacity: .9; }
@@ -70,13 +70,13 @@
 <div class="layout">
 <nav class="toc" aria-label="Table of contents">
   <h1>🦎 TradeChameleon</h1>
-  <div class="lang" role="group" aria-label="Language">
-    <button type="button" data-set-lang="pl">Polski</button>
-    <button type="button" data-set-lang="en">English</button>
-  </div>
   <ol id="toc"></ol>
 </nav>
 <main>
+<div class="lang" role="group" aria-label="Language / Język">
+  <button type="button" data-set-lang="en">EN</button>
+  <button type="button" data-set-lang="pl">PL</button>
+</div>
 <header class="hero">
   <h1><span class="pl">Podręcznik techniczny</span><span class="en">Technical guide</span></h1>
   <p class="pl">Wielodostępna (multi-tenant), white-label platforma treningowa do handlu: Java 25 + Spring Boot 4 + Spring Modulith, PostgreSQL, OAuth2/JWT RS256, Angular 21 i React 19. Każdy fragment kodu pochodzi z repozytorium, każda odpowiedź API została przechwycona z działającego serwera.</p>
@@ -2062,7 +2062,7 @@ if (fill.side() == Side.SELL &amp;&amp; current.quantity().signum() &gt; 0) {
     document.querySelectorAll('[data-set-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.setLang === lang)));
     try { localStorage.setItem('tc.guide.lang', lang); } catch {}
   };
-  setLang(saved ?? (navigator.language.startsWith('pl') ? 'pl' : 'en'));
+  setLang(saved === 'pl' || saved === 'en' ? saved : 'en'); // English by default, the reader's last choice is remembered
   document.querySelectorAll('[data-set-lang]').forEach((b) => b.addEventListener('click', () => setLang(b.dataset.setLang)));
 
   // ---- table of contents built from the chapters ----
