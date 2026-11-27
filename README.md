@@ -26,7 +26,7 @@ whole tools (screener, calendar, risk view…) or cap order sizes, enforced by t
 | React client | React 19, Vite, React Router, TanStack Query, `useSyncExternalStore`, Vitest + Testing Library |
 | Styling | Plain modern CSS shared by both clients, themed with custom properties |
 
-📘 **Technical guide (44 chapters, Polish/English, Mermaid diagrams, real code and real API responses):
+📘 **Technical guide (45 chapters, Polish/English, Mermaid diagrams, real code and real API responses):
 [davit-futures.github.io/TradeChameleon](https://davit-futures.github.io/TradeChameleon/)**. The source is
 [`docs/guide.html`](docs/guide.html); the [Publish guide](.github/workflows/pages.yml) workflow deploys it to GitHub Pages on every push to `main`.
 
@@ -46,10 +46,12 @@ whole tools (screener, calendar, risk view…) or cap order sizes, enforced by t
 - **Light/dark override** on top of each broker's theme
 - Portfolio valued live in the broker currency, **account statement** (deposits, withdrawals, trade cash flows)
   and **closed trades with realised P&L**
-- **Two admin levels**: each broker's **maintainer** edits only that broker on its own site (`/admin`);
+- **Two admin levels**: each broker's **maintainer** edits only that broker and its users on its own site (`/admin`);
   the **platform super admin** has a separate console at `admin.localhost` with all brokers side by side, a feature/limit matrix with differences highlighted, live usage,
   and an **editor for every broker setting** (branding, colours, fonts, locale, currency, asset classes, spread, feature flags,
   limits) with a live preview, server-side validation, changes live on the next request and an audit log
+- **User management**: create, change roles, disable, reset passwords and delete users (maintainer: own broker,
+  super admin: any broker); deleting a user cancels their open orders via a domain event
 - Developer panel: latency, jitter, failure rate, volatility and pause for the simulated market
 
 ## Brokers

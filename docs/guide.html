@@ -2560,6 +2560,59 @@ GET /api/portfolio  (admin@tradechameleon.com)  →  403
 <p>Tests: <code>AdminRolesIntegrationTests</code> (a maintainer sees and changes only their own broker, 403 for another broker and for the console, no admin page for traders/viewers, separate sign-ins and 401 for the old <code>admin@aurora.test</code>, platform token rejected on broker endpoints). In total: backend 103, Angular 36, React 35.</p></div>
 </section>
 
+<section class="chapter" id="user-management">
+<h2><span class="pl">Zarządzanie użytkownikami</span><span class="en">User management</span></h2>
+<div class="pl"><p>Obaj administratorzy zarządzają użytkownikami tymi samymi regułami, różni ich tylko zakres: maintainer widzi użytkowników swojego brokera (<code>/api/tenant-admin/users</code>), super admin dowolnego (<code>/api/platform/tenants/{id}/users</code>). Na stronie Admin i w konsoli platformy jest tabela <em>Users</em>: tworzenie, zmiana nazwy i ról, blokowanie, reset hasła i usuwanie (z potwierdzeniem w wierszu).</p>
+<p><strong>Gdzie mieszka logika.</strong> Tabela <code>app_user</code> należy do modułu <code>identity</code>, więc to on udostępnia publiczny serwis <code>UserManagement</code>. Moduł <code>admin</code> jedynie decyduje, któremu brokerowi wolno go użyć (tak jak przy ustawieniach). Migracja V9 dodaje kolumny <code>enabled</code> i <code>created_at</code>.</p></div>
+<div class="en"><p>Both administrators manage users with the same rules; only the scope differs: a maintainer sees their broker's users (<code>/api/tenant-admin/users</code>), the super admin any broker's (<code>/api/platform/tenants/{id}/users</code>). The Admin page and the platform console both have a <em>Users</em> table: create, rename, change roles, disable, reset the password and delete (with an in-row confirmation).</p>
+<p><strong>Where the logic lives.</strong> The <code>app_user</code> table belongs to the <code>identity</code> module, so it exposes the public <code>UserManagement</code> service. The <code>admin</code> module only decides which broker the caller may use it for (as with settings). Migration V9 adds the <code>enabled</code> and <code>created_at</code> columns.</p></div>
+<table>
+<thead><tr><th><span class="pl">Reguła</span><span class="en">Rule</span></th><th><span class="pl">Odpowiedź</span><span class="en">Response</span></th></tr></thead>
+<tbody>
+<tr><td><span class="pl">Role tylko TRADER, VIEWER, MAINTAINER (ADMIN istnieje wyłącznie na platformie)</span><span class="en">Roles are TRADER, VIEWER, MAINTAINER only (ADMIN exists on the platform only)</span></td><td>400</td></tr>
+<tr><td><span class="pl">Poprawny e-mail, nazwa, hasło 4–72 znaki, co najmniej jedna rola</span><span class="en">Valid e-mail, name, password of 4–72 characters, at least one role</span></td><td>400 + <code>errors</code></td></tr>
+<tr><td><span class="pl">E-mail unikalny w ramach brokera</span><span class="en">E-mail unique per broker</span></td><td>409 <code>email-taken</code></td></tr>
+<tr><td><span class="pl">Nie można usunąć ani zablokować siebie, ani odebrać sobie roli MAINTAINER</span><span class="en">You cannot delete or disable yourself, nor drop your own MAINTAINER role</span></td><td>422 <code>self-lockout</code></td></tr>
+<tr><td><span class="pl">Zablokowany użytkownik nie dostanie tokenu</span><span class="en">A disabled user gets no token</span></td><td>403 <code>account-disabled</code></td></tr>
+</tbody>
+</table>
+<div class="pl"><p><strong>Usuwanie przez zdarzenia.</strong> Usunięcie kasuje login, a <code>UserManagement</code> publikuje <code>UserDeleted</code>. Każdy moduł sprząta swoje dane w swoim <code>@ApplicationModuleListener</code>: <code>trading</code> anuluje otwarte zlecenia (inaczej zlecenie limit mogłoby się wypełnić na koncie usuniętej osoby), <code>alerts</code> i <code>watchlist</code> usuwają wpisy. Konto, historia gotówki i zamknięte transakcje zostają, bo broker musi przechowywać zapisy. Moduł <code>identity</code> nie zna żadnego z tych modułów. Każda zmiana publikuje też <code>UserAccountsChanged</code>, który <code>TenantAuditLog</code> zapisuje w tym samym dzienniku co zmiany ustawień (np. <code>user created: ola@wisla.test [TRADER]</code>, <code>user ola@wisla.test disabled</code>).</p>
+<p><strong>Ograniczenie świadomie pozostawione.</strong> Tokeny są bezstanowe, więc token wydany przed zablokowaniem lub usunięciem działa do wygaśnięcia (8 h). Produkcyjnie skraca się czas życia tokenów albo dodaje listę unieważnionych (np. sprawdzanie <code>enabled</code> w filtrze z krótkim cache). Interfejs mówi o tym wprost pod tabelą.</p></div>
+<div class="en"><p><strong>Deletion through events.</strong> Deleting removes the login and <code>UserManagement</code> publishes <code>UserDeleted</code>. Each module cleans up its own data in its own <code>@ApplicationModuleListener</code>: <code>trading</code> cancels open orders (otherwise a limit order could still fill on a deleted person's account), <code>alerts</code> and <code>watchlist</code> delete their entries. The account, cash ledger and closed trades are kept, because a broker must keep records. The <code>identity</code> module knows none of these modules. Every change also publishes <code>UserAccountsChanged</code>, which <code>TenantAuditLog</code> writes to the same log as settings changes (e.g. <code>user created: ola@wisla.test [TRADER]</code>, <code>user ola@wisla.test disabled</code>).</p>
+<p><strong>A limitation kept on purpose.</strong> Tokens are stateless, so a token issued before disabling or deleting keeps working until it expires (8 h). In production you shorten token lifetimes or add a revocation list (e.g. checking <code>enabled</code> in a filter with a short cache). The UI says so under the table.</p></div>
+<p class="file">backend/src/main/java/com/tradechameleon/trading/UserCleanup.java</p>
+<pre><code class="language-java">@ApplicationModuleListener
+void on(UserDeleted event) {
+    jdbc.sql("""
+                    update trade_order set status = 'CANCELLED', reject_reason = 'User deleted', updated_at = ?
+                    where tenant_id = ? and user_id = ? and status = 'OPEN'
+                    """)
+            .params(Timestamp.from(Instant.now()), event.tenantId(), event.userId())
+            .update();
+}</code></pre>
+<pre class="mermaid">sequenceDiagram
+  participant UI as Users table
+  participant A as admin module (controller)
+  participant I as identity.UserManagement
+  participant T as trading
+  participant AL as alerts / watchlist
+  participant L as TenantAuditLog
+  UI->>A: DELETE /api/tenant-admin/users/{id}
+  A->>I: delete(tenant, id, actor)
+  I->>I: 422 if it is you
+  I-->>T: UserDeleted
+  I-->>AL: UserDeleted
+  I-->>L: UserAccountsChanged
+  A-->>UI: 204
+  T->>T: cancel OPEN orders
+  AL->>AL: delete alerts, watchlist
+  L->>L: "user deleted: ola@wisla.test"</pre>
+<div class="pl"><p><strong>Klienci.</strong> Wspólny komponent <code>UserManager</code> (Angular: wejście <code>baseUrl</code>; React: obiekt <code>userApi</code> z czterema funkcjami) i czyste funkcje <code>user-admin.ts</code>: <code>toggleRole()</code>, <code>selfLockout()</code> (interfejs nie proponuje zmian, które serwer by odrzucił, np. przy własnym wierszu „You cannot remove your own MAINTAINER role.”), <code>sortUsers()</code> i <code>summary()</code>. Szkice wierszy trzymane są per użytkownik, więc można zmienić kilka osób i zapisać każdą osobno.</p>
+<p>Testy: <code>UserManagementIntegrationTests</code> (tworzenie, duplikat 409, blokada i 403 przy logowaniu, ponowne włączenie z nowym hasłem, błędy pól, rola ADMIN odrzucona, ochrona przed odcięciem samego siebie, zakres maintainera, super admin w innym brokerze, anulowanie zlecenia po usunięciu i wpis w dzienniku) oraz testy <code>user-admin</code> w obu klientach. Razem: backend 108, Angular 39, React 38.</p></div>
+<div class="en"><p><strong>Clients.</strong> A shared <code>UserManager</code> component (Angular: a <code>baseUrl</code> input; React: a <code>userApi</code> object with four functions) and the pure functions in <code>user-admin.ts</code>: <code>toggleRole()</code>, <code>selfLockout()</code> (the UI does not offer changes the server would refuse, e.g. "You cannot remove your own MAINTAINER role." on your own row), <code>sortUsers()</code> and <code>summary()</code>. Row drafts are kept per user, so you can change several people and save each one separately.</p>
+<p>Tests: <code>UserManagementIntegrationTests</code> (create, duplicate 409, disable and 403 at sign-in, re-enable with a new password, field errors, ADMIN role rejected, self-lockout protection, maintainer scope, super admin on another broker, order cancelled after deletion and the audit entry) and the <code>user-admin</code> tests in both clients. In total: backend 108, Angular 39, React 38.</p></div>
+</section>
+
 <section class="chapter" id="next-steps">
 <h2><span class="pl">Ćwiczenia i dalsze kroki</span><span class="en">Exercises and next steps</span></h2>
 <div class="pl"><ol>
