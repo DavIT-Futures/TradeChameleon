@@ -148,7 +148,8 @@ public class Portfolios {
             warnings.add("Margin level " + marginLevel + "% is close to the 100% margin call threshold.");
         }
         positions.sort((a, b) -> b.exposure().compareTo(a.exposure()));
-        return new PortfolioRisk(view.currency(), equity, exposure, money(margin), money(equity.subtract(margin)),
+        BigDecimal roundedMargin = money(margin); // free margin from the displayed (rounded) margin, so the numbers add up
+        return new PortfolioRisk(view.currency(), equity, exposure, roundedMargin, money(equity.subtract(roundedMargin)),
                 marginLevel, leverage, classes, List.copyOf(positions), List.copyOf(warnings));
     }
 
