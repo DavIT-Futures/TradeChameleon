@@ -28,6 +28,48 @@ class TenantRepository {
                 .list();
     }
 
+    void update(String id, TenantSettings s) {
+        var t = s.theme();
+        var f = s.features();
+        jdbc.sql("""
+                        update tenant set
+                            name = :name, tagline = :tagline, locale = :locale, currency = :currency,
+                            allowed_asset_classes = cast(:classes as text[]), spread_markup_bps = :markup,
+                            logo_shape = :logo,
+                            theme_primary = :primary, theme_on_primary = :onPrimary, theme_accent = :accent,
+                            theme_background = :background, theme_surface = :surface, theme_text = :text,
+                            theme_muted = :muted, theme_positive = :positive, theme_negative = :negative,
+                            theme_radius = :radius, theme_color_scheme = :scheme, font_body = :fontBody,
+                            font_heading = :fontHeading,
+                            feature_trading = :trading, feature_limit_orders = :limitOrders,
+                            feature_simulator_panel = :simulator, feature_live_prices = :livePrices,
+                            feature_screener = :screener, feature_news = :news, feature_calendar = :calendar,
+                            feature_compare = :compare, feature_alerts = :alerts, feature_risk_view = :riskView,
+                            max_order_value = :maxOrderValue, max_open_orders = :maxOpenOrders
+                        where id = :id
+                        """)
+                .param("id", id).param("name", s.name()).param("tagline", s.tagline())
+                .param("locale", s.locale()).param("currency", s.currency())
+                .param("classes", "{" + String.join(",", s.allowedAssetClasses().stream().map(Enum::name).distinct().toList()) + "}")
+                .param("markup", s.spreadMarkupBps()).param("logo", s.logoShape())
+                .param("primary", t.primary()).param("onPrimary", t.onPrimary()).param("accent", t.accent())
+                .param("background", t.background()).param("surface", t.surface()).param("text", t.text())
+                .param("muted", t.muted()).param("positive", t.positive()).param("negative", t.negative())
+                .param("radius", t.radius()).param("scheme", t.colorScheme())
+                .param("fontBody", t.fontBody()).param("fontHeading", t.fontHeading())
+                .param("trading", f.trading()).param("limitOrders", f.limitOrders())
+                .param("simulator", f.simulatorPanel()).param("livePrices", f.livePrices())
+                .param("screener", f.screener()).param("news", f.news()).param("calendar", f.calendar())
+                .param("compare", f.compare()).param("alerts", f.alerts()).param("riskView", f.riskView())
+                .param("maxOrderValue", s.limits().maxOrderValue(), java.sql.Types.NUMERIC)
+                .param("maxOpenOrders", s.limits().maxOpenOrders(), java.sql.Types.INTEGER)
+                .update();
+    }
+
+    Tenant findById(String id) {
+        return jdbc.sql("select * from tenant where id = ?").param(id).query((rs, n) -> map(rs)).single();
+    }
+
     private static Tenant map(ResultSet rs) throws SQLException {
         var theme = new Tenant.Theme(
                 rs.getString("theme_primary"),

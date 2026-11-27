@@ -33,7 +33,9 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const { data: tenant, error } = useQuery({
     queryKey: ['tenant', 'current', requested],
     queryFn: () => unwrap(api.GET('/api/tenants/current')),
-    staleTime: Infinity,
+    // An admin may change this broker at any time: pick it up on window focus and every 30 s.
+    staleTime: 15_000,
+    refetchInterval: 30_000,
   })
 
   useEffect(() => {

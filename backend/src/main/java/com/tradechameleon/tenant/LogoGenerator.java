@@ -9,6 +9,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class LogoGenerator {
 
+    /** Logo marks an admin can pick; "monogram" draws the first letter of the broker name. */
+    public static final java.util.List<String> SHAPES =
+            java.util.List.of("aurora", "kestrel", "wisla", "sakura", "alpenrose", "pulse", "monogram");
+
+
     public String svg(Tenant tenant) {
         var t = tenant.theme();
         String mark = switch (tenant.logoShape()) {

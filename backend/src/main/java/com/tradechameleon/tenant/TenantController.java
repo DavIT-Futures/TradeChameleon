@@ -69,7 +69,7 @@ class TenantController {
         static TenantDto from(Tenant t) {
             return new TenantDto(t.id(), t.name(), t.tagline(), t.locale(), t.currency(),
                     t.allowedAssetClasses().stream().sorted().toList(),
-                    t.spreadMarkupBps(), "/api/tenants/" + t.id() + "/logo.svg", t.theme(), t.features(), t.limits());
+                    t.spreadMarkupBps(), t.logoUrl(), t.theme(), t.features(), t.limits());
         }
     }
 }

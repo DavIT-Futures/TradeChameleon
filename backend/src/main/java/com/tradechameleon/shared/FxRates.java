@@ -23,6 +23,11 @@ public final class FxRates {
     private FxRates() {
     }
 
+    /** Currencies the platform can value accounts in (and so the only ones a broker may use). */
+    public static java.util.SortedSet<String> supported() {
+        return new java.util.TreeSet<>(USD_PER_UNIT.keySet());
+    }
+
     public static BigDecimal convert(BigDecimal amount, String from, String to) {
         if (from.equals(to)) {
             return amount;

@@ -12,9 +12,20 @@ import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.tradechameleon.shared.FxRates;
+import com.tradechameleon.tenant.LogoGenerator;
+import com.tradechameleon.tenant.TenantSettings;
+import jakarta.validation.Valid;
+import java.time.Instant;
+import java.util.Arrays;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -52,11 +63,53 @@ class AdminController {
                 new Usage(0, 0, 0, 0, 0, BigDecimal.ZERO)))).toList();
     }
 
+    @PutMapping("/tenants/{id}")
+    @Operation(summary = "Change a broker's settings (branding, locale, currency, asset classes, spread, features, limits)",
+            description = "Validated with Bean Validation (400 with an errors map) and business rules (422). "
+                    + "The change is live for the next request; the diff is written to the audit log.")
+    BrokerOverview update(@PathVariable String id, @Valid @RequestBody TenantSettings settings, Authentication auth) {
+        String who = auth instanceof org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken jwt
+                && jwt.getToken().getClaimAsString("email") != null
+                ? jwt.getToken().getClaimAsString("email") : auth.getName();
+        Tenant updated = tenants.update(id, settings, who);
+        return overview(updated, usage().getOrDefault(updated.id(), new Usage(0, 0, 0, 0, 0, BigDecimal.ZERO)));
+    }
+
+    @GetMapping("/settings-options")
+    @Operation(summary = "Allowed values for the broker editor (currencies, asset classes, logo shapes)")
+    SettingsOptions options() {
+        return new SettingsOptions(List.copyOf(FxRates.supported()),
+                Arrays.stream(AssetClass.values()).toList(), LogoGenerator.SHAPES);
+    }
+
+    @GetMapping("/tenants/{id}/changes")
+    @Operation(summary = "Audit log of a broker's settings, newest first")
+    List<TenantChange> changes(@PathVariable String id, @RequestParam(defaultValue = "20") int limit) {
+        tenants.get(id);
+        return jdbc.sql("""
+                        select changed_by, changed_at, changes from tenant_change
+                        where tenant_id = ? order by changed_at desc limit ?
+                        """)
+                .params(id, Math.clamp(limit, 1, 100))
+                .query((rs, n) -> new TenantChange(rs.getString("changed_by"),
+                        rs.getTimestamp("changed_at").toInstant(),
+                        List.of((String[]) rs.getArray("changes").getArray())))
+                .list();
+    }
+
+    /** Allowed values for selects in the editor. */
+    record SettingsOptions(List<String> currencies, List<AssetClass> assetClasses, List<String> logoShapes) {
+    }
+
+    /** One audit entry: who changed what and when. */
+    record TenantChange(String changedBy, Instant changedAt, List<String> changes) {
+    }
+
     private BrokerOverview overview(Tenant t, Usage u) {
         var offered = market.instruments(t);
         int chains = t.allows(AssetClass.OPTION) ? (int) offered.stream().filter(i -> i.optionable()).count() : 0;
         return new BrokerOverview(t.id(), t.name(), t.tagline(), t.locale(), t.currency(),
-                "/api/tenants/" + t.id() + "/logo.svg", t.theme(),
+                t.logoUrl(), t.logoShape(), t.theme(),
                 t.allowedAssetClasses().stream().sorted().toList(), t.spreadMarkupBps(), t.features(), t.limits(),
                 offered.size(), chains, u.users(), u.traders(), u.viewers(), u.openOrders(), u.filledOrders(),
                 u.cash().setScale(2, RoundingMode.HALF_UP));

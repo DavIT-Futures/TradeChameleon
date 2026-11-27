@@ -57,6 +57,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/tenants/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Change a broker's settings (branding, locale, currency, asset classes, spread, features, limits)
+         * @description Validated with Bean Validation (400 with an errors map) and business rules (422). The change is live for the next request; the diff is written to the audit log.
+         */
+        put: operations["update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/simulator/reset": {
         parameters: {
             query?: never;
@@ -636,6 +656,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/tenants/{id}/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Audit log of a broker's settings, newest first */
+        get: operations["changes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/settings-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Allowed values for the broker editor (currencies, asset classes, logo shapes) */
+        get: operations["options"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/.well-known/openid-configuration": {
         parameters: {
             query?: never;
@@ -715,6 +769,81 @@ export interface components {
             pnlPct: number;
             stopLoss: number | null;
             takeProfit: number | null;
+        };
+        Features: {
+            trading: boolean;
+            limitOrders: boolean;
+            simulatorPanel: boolean;
+            livePrices: boolean;
+            screener: boolean;
+            news: boolean;
+            calendar: boolean;
+            compare: boolean;
+            alerts: boolean;
+            riskView: boolean;
+        };
+        Limits: {
+            maxOrderValue: number | null;
+            /** Format: int32 */
+            maxOpenOrders: number | null;
+        };
+        TenantSettings: {
+            name: string;
+            tagline: string;
+            locale: string;
+            currency: string;
+            allowedAssetClasses: ("STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND" | "COMMODITY" | "INDEX" | "OPTION")[];
+            /** Format: int32 */
+            spreadMarkupBps: number;
+            logoShape: string;
+            theme: components["schemas"]["Theme"];
+            features: components["schemas"]["Features"];
+            limits: components["schemas"]["Limits"];
+        };
+        Theme: {
+            primary: string;
+            onPrimary: string;
+            accent: string;
+            background: string;
+            surface: string;
+            text: string;
+            muted: string;
+            positive: string;
+            negative: string;
+            radius: string;
+            colorScheme: string;
+            fontBody: string;
+            fontHeading: string;
+        };
+        BrokerOverview: {
+            id: string;
+            name: string;
+            tagline: string;
+            locale: string;
+            currency: string;
+            logoUrl: string;
+            logoShape: string;
+            theme: components["schemas"]["Theme"];
+            allowedAssetClasses: ("STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND" | "COMMODITY" | "INDEX" | "OPTION")[];
+            /** Format: int32 */
+            spreadMarkupBps: number;
+            features: components["schemas"]["Features"];
+            limits: components["schemas"]["Limits"];
+            /** Format: int32 */
+            instruments: number;
+            /** Format: int32 */
+            optionChains: number;
+            /** Format: int32 */
+            users: number;
+            /** Format: int32 */
+            traders: number;
+            /** Format: int32 */
+            viewers: number;
+            /** Format: int32 */
+            openOrders: number;
+            /** Format: int32 */
+            filledOrders: number;
+            totalCash: number;
         };
         AmountRequest: {
             amount: number;
@@ -813,23 +942,6 @@ export interface components {
             triggeredAt: string | null;
             triggeredPrice: number | null;
         };
-        Features: {
-            trading: boolean;
-            limitOrders: boolean;
-            simulatorPanel: boolean;
-            livePrices: boolean;
-            screener: boolean;
-            news: boolean;
-            calendar: boolean;
-            compare: boolean;
-            alerts: boolean;
-            riskView: boolean;
-        };
-        Limits: {
-            maxOrderValue: number | null;
-            /** Format: int32 */
-            maxOpenOrders: number | null;
-        };
         TenantDto: {
             id: string;
             name: string;
@@ -843,21 +955,6 @@ export interface components {
             theme: components["schemas"]["Theme"];
             features: components["schemas"]["Features"];
             limits: components["schemas"]["Limits"];
-        };
-        Theme: {
-            primary: string;
-            onPrimary: string;
-            accent: string;
-            background: string;
-            surface: string;
-            text: string;
-            muted: string;
-            positive: string;
-            negative: string;
-            radius: string;
-            colorScheme: string;
-            fontBody: string;
-            fontHeading: string;
         };
         ClassRisk: {
             /** @enum {string} */
@@ -1055,34 +1152,16 @@ export interface components {
             surprise: string | null;
             symbols: string[];
         };
-        BrokerOverview: {
-            id: string;
-            name: string;
-            tagline: string;
-            locale: string;
-            currency: string;
-            logoUrl: string;
-            theme: components["schemas"]["Theme"];
-            allowedAssetClasses: ("STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND" | "COMMODITY" | "INDEX" | "OPTION")[];
-            /** Format: int32 */
-            spreadMarkupBps: number;
-            features: components["schemas"]["Features"];
-            limits: components["schemas"]["Limits"];
-            /** Format: int32 */
-            instruments: number;
-            /** Format: int32 */
-            optionChains: number;
-            /** Format: int32 */
-            users: number;
-            /** Format: int32 */
-            traders: number;
-            /** Format: int32 */
-            viewers: number;
-            /** Format: int32 */
-            openOrders: number;
-            /** Format: int32 */
-            filledOrders: number;
-            totalCash: number;
+        TenantChange: {
+            changedBy: string;
+            /** Format: date-time */
+            changedAt: string;
+            changes: string[];
+        };
+        SettingsOptions: {
+            currencies: string[];
+            assetClasses: ("STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND" | "COMMODITY" | "INDEX" | "OPTION")[];
+            logoShapes: string[];
         };
     };
     responses: never;
@@ -1214,6 +1293,35 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["PortfolioView"];
+                };
+            };
+        };
+    };
+    update: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TenantSettings"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BrokerOverview"];
                 };
             };
         };
@@ -2112,6 +2220,56 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["BrokerOverview"][];
+                };
+            };
+        };
+    };
+    changes: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TenantChange"][];
+                };
+            };
+        };
+    };
+    options: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SettingsOptions"];
                 };
             };
         };

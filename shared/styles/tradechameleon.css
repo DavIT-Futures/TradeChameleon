@@ -532,6 +532,50 @@
     & .swatches i { inline-size: 1.1rem; block-size: 0.5rem; border-radius: 2px; border: 1px solid color-mix(in oklab, var(--b-text) 20%, transparent); }
     & .swatches .p { background: var(--b-primary); } & .swatches .a { background: var(--b-accent); } & .swatches .bg { background: var(--b-bg); }
     & .score { grid-row: 1 / span 2; grid-column: 3; font-weight: 800; font-size: 1.3rem; color: var(--b-primary); }
+    & .edit {
+      grid-column: 1 / -1; justify-self: start; margin-block-start: 0.35rem; cursor: pointer;
+      border: 1px solid var(--b-primary); background: transparent; color: var(--b-text);
+      border-radius: 999px; padding: 0.15rem 0.7rem; font-size: 0.78rem;
+      &:hover, &[aria-pressed="true"] { background: var(--b-primary); color: var(--b-bg); }
+    }
+    &.is-editing { outline: 3px solid var(--tc-primary); outline-offset: 3px; }
+  }
+
+  /* broker editor: a form on the left, a live preview painted with the draft on the right */
+  .broker-editor {
+    display: grid; grid-template-columns: minmax(0, 1fr) 18rem; gap: 1.25rem; align-items: start;
+    @container (max-width: 52rem) { grid-template-columns: 1fr; }
+    & fieldset { border: 1px solid var(--tc-border); border-radius: var(--tc-radius-sm); padding: 0.75rem 1rem 1rem; margin: 0 0 1rem; }
+    & legend { font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--tc-primary); padding-inline: 0.35rem; }
+    & .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 0.75rem; align-items: start; }
+    & .colors { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: 0.5rem; }
+    & .color { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;
+      & input[type="color"] { inline-size: 2.2rem; block-size: 2rem; padding: 0; border: 1px solid var(--tc-border-strong); border-radius: 6px; background: none; cursor: pointer; }
+      & code { font-size: 0.75rem; color: var(--tc-muted); }
+    }
+    & .checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 0.4rem 1rem; }
+    & .check { display: flex; gap: 0.5rem; align-items: start; font-size: 0.9rem;
+      & small { display: block; color: var(--tc-muted); font-size: 0.75rem; }
+    }
+    & .field__error { color: var(--tc-negative); font-size: 0.8rem; }
+    & .actions { position: sticky; inset-block-end: 0; display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;
+      padding: 0.75rem 0; background: var(--tc-surface); border-block-start: 1px solid var(--tc-border); }
+  }
+  .broker-preview {
+    position: sticky; inset-block-start: 1rem; display: grid; gap: 0.6rem; padding: 1rem;
+    background: var(--b-bg); color: var(--b-text); border-radius: var(--b-radius); font-family: var(--b-font);
+    border: 1px solid color-mix(in oklab, var(--b-text) 15%, transparent);
+    & header { display: flex; align-items: center; gap: 0.6rem; font-family: var(--b-font-heading); font-weight: 700; }
+    & header img { inline-size: 36px; block-size: 36px; }
+    & .panel { background: var(--b-surface); border-radius: var(--b-radius); padding: 0.75rem; display: grid; gap: 0.35rem; }
+    & .muted { color: var(--b-muted); font-size: 0.8rem; }
+    & .up { color: var(--b-positive); font-weight: 700; } & .down { color: var(--b-negative); font-weight: 700; }
+    & button { border: 0; border-radius: var(--b-radius); background: var(--b-primary); color: var(--b-on-primary); padding: 0.5rem; font-weight: 700; }
+    & .chip { display: inline-block; border-radius: 999px; padding: 0.05rem 0.5rem; font-size: 0.72rem; background: color-mix(in oklab, var(--b-accent) 25%, transparent); }
+  }
+  .audit { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.5rem; font-size: 0.85rem;
+    & li { border-inline-start: 3px solid var(--tc-primary); padding-inline-start: 0.6rem; }
+    & ul { margin: 0.2rem 0 0; padding-inline-start: 1rem; color: var(--tc-muted); }
   }
   table.admin-matrix {
     & th img { inline-size: 18px; block-size: 18px; display: inline-block; vertical-align: -3px; }

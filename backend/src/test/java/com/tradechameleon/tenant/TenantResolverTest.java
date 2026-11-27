@@ -19,7 +19,7 @@ class TenantResolverTest {
     private static TenantDirectory directory() {
         TenantRepository repo = mock(TenantRepository.class);
         when(repo.findAll()).thenReturn(List.of(tenant("aurora"), tenant("kestrel"), tenant("sakura")));
-        return new TenantDirectory(repo, new TenantProperties("aurora"));
+        return new TenantDirectory(repo, new TenantProperties("aurora"), event -> { });
     }
 
     private static Tenant tenant(String id) {

@@ -20,6 +20,7 @@ public record BrokerOverview(
         String locale,
         String currency,
         String logoUrl,
+        String logoShape,
         Tenant.Theme theme,
         List<AssetClass> allowedAssetClasses,
         int spreadMarkupBps,

@@ -12,6 +12,13 @@ const t = () => getRequestedTenant() ?? 'default'
 export const queries = {
   adminTenants: () =>
     queryOptions({ queryKey: ['admin', 'tenants'], queryFn: () => unwrap(api.GET('/api/admin/tenants')), refetchInterval: 10_000 }),
+  adminSettingsOptions: () =>
+    queryOptions({ queryKey: ['admin', 'options'], queryFn: () => unwrap(api.GET('/api/admin/settings-options')), staleTime: Infinity }),
+  adminTenantChanges: (id: string) =>
+    queryOptions({
+      queryKey: ['admin', 'changes', id],
+      queryFn: () => unwrap(api.GET('/api/admin/tenants/{id}/changes', { params: { path: { id }, query: { limit: 20 } } })),
+    }),
   tenants: () => queryOptions({ queryKey: ['tenants'], queryFn: () => unwrap(api.GET('/api/tenants')), staleTime: 60_000 }),
   instruments: () =>
     queryOptions({ queryKey: [t(), 'instruments'], queryFn: () => unwrap(api.GET('/api/market/instruments')), staleTime: 30_000 }),

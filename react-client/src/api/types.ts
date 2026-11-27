@@ -38,6 +38,9 @@ export type NewsItem = Schemas['NewsItem'];
 export type PortfolioRisk = Schemas['PortfolioRisk'];
 export type BrokerOverview = Schemas['BrokerOverview'];
 export type Limits = Schemas['Limits'];
+export type TenantSettings = Schemas['TenantSettings'];
+export type SettingsOptions = Schemas['SettingsOptions'];
+export type TenantChange = Schemas['TenantChange'];
 
 /** RFC 9457 Problem Details as returned by every error response of the API. */
 export interface Problem {

@@ -2,7 +2,7 @@ import type { BrokerOverview } from '../api/types';
 import { buildMatrix, featureScore } from './adminMatrix';
 
 const broker = (id: string, over: Partial<BrokerOverview> = {}): BrokerOverview => ({
-  id, name: id, tagline: '', locale: 'en-GB', currency: 'GBP', logoUrl: '',
+  id, name: id, tagline: '', locale: 'en-GB', currency: 'GBP', logoUrl: '', logoShape: 'monogram',
   theme: { colorScheme: 'light', radius: '8px' } as BrokerOverview['theme'],
   allowedAssetClasses: ['STOCK'], spreadMarkupBps: 5,
   features: { trading: true, limitOrders: true, simulatorPanel: true, livePrices: true, screener: true, news: true, calendar: true, compare: true, alerts: true, riskView: true },

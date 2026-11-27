@@ -82,6 +82,20 @@ export class TenantService {
       const tenant = this.loaded();
       if (tenant) applyTheme(tenant, document.documentElement, themeFor(tenant.theme, this.scheme()));
     });
+    // An admin may change this broker at any time: pick it up when the tab regains focus and every 30 s.
+    const refresh = () => void this.refresh();
+    window.addEventListener('focus', refresh);
+    setInterval(refresh, 30_000);
+  }
+
+  /** Re-reads the broker; only a real change touches the signal (so nothing re-renders needlessly). */
+  async refresh(): Promise<void> {
+    try {
+      const fresh = await firstValueFrom(this.http.get<Tenant>('/api/tenants/current'));
+      if (JSON.stringify(fresh) !== JSON.stringify(this.loaded())) await this.load();
+    } catch {
+      /* offline or backend restarting: keep the current brand */
+    }
   }
 
   /** brand → dark → light → brand */
