@@ -127,7 +127,8 @@
 
   .shell__main { grid-area: main; padding: var(--tc-space); container-type: inline-size; min-inline-size: 0; }
 
-  .page { display: grid; gap: var(--tc-space); max-inline-size: 1200px; }
+  /* minmax(0, 1fr): wide tables scroll inside their .table-wrap instead of widening the page */
+  .page { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--tc-space); max-inline-size: 1200px; }
   .page__header { display: flex; align-items: end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 
   .grid { display: grid; gap: var(--tc-space); }
@@ -561,6 +562,8 @@
     & .actions { position: sticky; inset-block-end: 0; display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;
       padding: 0.75rem 0; background: var(--tc-surface); border-block-start: 1px solid var(--tc-border); }
   }
+  /* one column: the preview scrolls with the page instead of sticking over the change log */
+  @container (max-width: 52rem) { .broker-preview { position: static; } }
   .broker-preview {
     position: sticky; inset-block-start: 1rem; display: grid; gap: 0.6rem; padding: 1rem;
     background: var(--b-bg); color: var(--b-text); border-radius: var(--b-radius); font-family: var(--b-font);
@@ -585,6 +588,20 @@
   .platform-login { min-block-size: 100dvh; display: grid; place-items: center; padding: 1rem;
     background: radial-gradient(circle at 30% 20%, #1f2937, #0b0f17);
     & form { inline-size: min(26rem, 100%); }
+  }
+  /* user management table */
+  .user-new { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 0.75rem; align-items: end;
+    padding: 0.75rem 0 1rem; border-block-end: 1px solid var(--tc-border); margin-block-end: 0.75rem;
+    & .label { font-size: 0.85rem; color: var(--tc-muted); }
+  }
+  table.users-table {
+    & td { vertical-align: middle; }
+    & input.inline { inline-size: 100%; min-inline-size: 8rem; padding: 0.3rem 0.45rem; border: 1px solid var(--tc-border);
+      border-radius: var(--tc-radius-sm); background: var(--tc-surface); color: inherit; }
+    & td small { display: block; }
+    & .check { display: inline-flex; gap: 0.3rem; align-items: center; font-size: 0.85rem; white-space: nowrap; }
+    & tr.is-disabled td { opacity: 0.6; }
+    & .actions-cell { white-space: nowrap; text-align: end; }
   }
   .audit { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.5rem; font-size: 0.85rem;
     & li { border-inline-start: 3px solid var(--tc-primary); padding-inline-start: 0.6rem; }

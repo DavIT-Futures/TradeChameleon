@@ -200,6 +200,11 @@ export class BrokerEditor {
 
   private draftFor: string | null = null;
 
+  /** Re-reads the change log (e.g. after users were changed next to the editor). */
+  reloadChanges(): void {
+    this.changes.reload();
+  }
+
   protected reset(): void {
     const s = this.savedSettings();
     if (s) this.draft.set(structuredClone(s));

@@ -3,6 +3,7 @@ import { Fragment, useEffect, useState, type CSSProperties } from 'react'
 import { ApiError, unwrap } from '../api/client'
 import { buildMatrix, featureScore } from '../components/adminMatrix'
 import { BrokerEditor } from '../components/BrokerEditor'
+import { UserManager } from '../components/UserManager'
 import { formatMoney } from '../core/format'
 import { platformApi, platformLogin, platformLogout, platformQueries, usePlatformSession } from './platformApi'
 
@@ -101,6 +102,7 @@ function PlatformConsole() {
       </section>
 
       {editing && (
+        <>
         <BrokerEditor
           key={editing.id}
           broker={editing}
@@ -111,6 +113,24 @@ function PlatformConsole() {
           onSaved={() => void queryClient.invalidateQueries({ queryKey: platformQueries.tenants().queryKey })}
           onClose={() => setEditingId(null)}
         />
+        <UserManager
+          key={`users-${editing.id}`}
+          selfId={null}
+          userApi={{
+            list: platformQueries.users(editing.id),
+            create: (body) => unwrap(platformApi.POST('/api/platform/tenants/{id}/users', { params: { path: { id: editing.id } }, body })),
+            update: (userId, body) =>
+              unwrap(platformApi.PUT('/api/platform/tenants/{id}/users/{userId}', { params: { path: { id: editing.id, userId } }, body })),
+            remove: async (userId) => {
+              await unwrap(platformApi.DELETE('/api/platform/tenants/{id}/users/{userId}', { params: { path: { id: editing.id, userId } } }))
+            },
+          }}
+          onChanged={() => {
+            void queryClient.invalidateQueries({ queryKey: platformQueries.changes(editing.id).queryKey })
+            void queryClient.invalidateQueries({ queryKey: platformQueries.tenants().queryKey })
+          }}
+        />
+        </>
       )}
 
       <section className="card">

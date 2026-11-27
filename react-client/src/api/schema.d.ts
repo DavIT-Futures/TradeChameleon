@@ -22,6 +22,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tenant-admin/users/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Change a user's name, roles, enabled flag or password
+         * @description 422 self-lockout when you would disable yourself or drop your own MAINTAINER role.
+         */
+        put: operations["updateUser"];
+        post?: never;
+        /**
+         * Delete a user
+         * @description Open orders are cancelled, alerts and watchlist removed; account history is kept.
+         */
+        delete: operations["deleteUser"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tenant-admin/broker": {
         parameters: {
             query?: never;
@@ -98,6 +122,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/platform/tenants/{id}/users/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Change a user's name, roles, enabled flag or password
+         * @description 422 self-lockout when you would disable yourself or drop your own MAINTAINER role.
+         */
+        put: operations["updateUser_1"];
+        post?: never;
+        /**
+         * Delete a user
+         * @description Open orders are cancelled, alerts and watchlist removed; account history is kept.
+         */
+        delete: operations["deleteUser_1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tenant-admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Users of this broker */
+        get: operations["users"];
+        put?: never;
+        /**
+         * Create a user at this broker
+         * @description Roles: TRADER, VIEWER, MAINTAINER. 409 if the e-mail is taken.
+         */
+        post: operations["createUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/simulator/reset": {
         parameters: {
             query?: never;
@@ -143,6 +212,27 @@ export interface paths {
         put?: never;
         /** Deposit demo cash (role TRADER) */
         post: operations["deposit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/platform/tenants/{id}/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Users of a broker */
+        get: operations["users_1"];
+        put?: never;
+        /**
+         * Create a user at a broker
+         * @description Roles: TRADER, VIEWER, MAINTAINER. 409 if the e-mail is taken.
+         */
+        post: operations["createUser_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -803,6 +893,21 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        UserUpdate: {
+            name: string;
+            roles: ("TRADER" | "VIEWER" | "MAINTAINER")[];
+            enabled: boolean;
+            password: string | null;
+        };
+        ManagedUser: {
+            id: string;
+            email: string;
+            name: string;
+            roles: ("TRADER" | "VIEWER" | "MAINTAINER")[];
+            enabled: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
         Features: {
             trading: boolean;
             limitOrders: boolean;
@@ -921,6 +1026,13 @@ export interface components {
             pnlPct: number;
             stopLoss: number | null;
             takeProfit: number | null;
+        };
+        NewUser: {
+            /** Format: email */
+            email: string;
+            name: string;
+            password: string;
+            roles: ("TRADER" | "VIEWER" | "MAINTAINER")[];
         };
         AmountRequest: {
             amount: number;
@@ -1295,6 +1407,58 @@ export interface operations {
             };
         };
     };
+    updateUser: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserUpdate"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ManagedUser"];
+                };
+            };
+        };
+    };
+    deleteUser: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     broker: {
         parameters: {
             query?: never;
@@ -1453,6 +1617,110 @@ export interface operations {
             };
         };
     };
+    updateUser_1: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path: {
+                id: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserUpdate"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ManagedUser"];
+                };
+            };
+        };
+    };
+    deleteUser_1: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path: {
+                id: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    users: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ManagedUser"][];
+                };
+            };
+        };
+    };
+    createUser: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewUser"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ManagedUser"];
+                };
+            };
+        };
+    };
     reset: {
         parameters: {
             query?: never;
@@ -1526,6 +1794,60 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CashTransaction"];
+                };
+            };
+        };
+    };
+    users_1: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ManagedUser"][];
+                };
+            };
+        };
+    };
+    createUser_1: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewUser"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ManagedUser"];
                 };
             };
         };

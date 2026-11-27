@@ -41,6 +41,10 @@ export type Limits = Schemas['Limits'];
 export type TenantSettings = Schemas['TenantSettings'];
 export type SettingsOptions = Schemas['SettingsOptions'];
 export type TenantChange = Schemas['TenantChange'];
+export type ManagedUser = Schemas['ManagedUser'];
+export type NewUser = Schemas['NewUser'];
+export type UserUpdate = Schemas['UserUpdate'];
+export type Role = ManagedUser['roles'][number];
 
 /** RFC 9457 Problem Details as returned by every error response of the API. */
 export interface Problem {

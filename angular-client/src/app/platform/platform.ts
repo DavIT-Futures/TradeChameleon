@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import type { BrokerOverview, Problem } from '../api/types';
 import { formatMoney } from '../core/format';
 import { BrokerEditor } from '../features/admin/broker-editor';
+import { UserManager } from '../features/admin/user-manager';
 import { buildMatrix, featureScore } from '../shared/admin-matrix';
 import { every } from '../shared/polling';
 import { Toasts } from '../shared/toasts';
@@ -11,7 +12,7 @@ import { PlatformAuth } from './platform-auth';
 /** All brokers side by side, differences highlighted, each one editable (role ADMIN, platform token). */
 @Component({
   selector: 'tc-platform-console',
-  imports: [BrokerEditor],
+  imports: [BrokerEditor, UserManager],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -43,9 +44,10 @@ import { PlatformAuth } from './platform-auth';
       </section>
 
       @if (editing(); as b) {
-        <tc-broker-editor [broker]="b" [heading]="'Edit ' + b.name"
+        <tc-broker-editor #editor [broker]="b" [heading]="'Edit ' + b.name"
                           [saveUrl]="'/api/platform/tenants/' + b.id" [changesUrl]="'/api/platform/tenants/' + b.id + '/changes'"
                           optionsUrl="/api/platform/settings-options" (saved)="brokers.reload()" (closed)="editingId.set(null)" />
+        <tc-user-manager [baseUrl]="'/api/platform/tenants/' + b.id + '/users'" (changed)="editor.reloadChanges(); brokers.reload()" />
       }
 
       <section class="card">

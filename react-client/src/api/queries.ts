@@ -15,6 +15,8 @@ export const queries = {
     queryOptions({ queryKey: [t(), 'tenant-admin', 'broker'], queryFn: () => unwrap(api.GET('/api/tenant-admin/broker')) }),
   tenantAdminOptions: () =>
     queryOptions({ queryKey: [t(), 'tenant-admin', 'options'], queryFn: () => unwrap(api.GET('/api/tenant-admin/settings-options')), staleTime: Infinity }),
+  tenantAdminUsers: () =>
+    queryOptions({ queryKey: [t(), 'tenant-admin', 'users'], queryFn: () => unwrap(api.GET('/api/tenant-admin/users')) }),
   tenantAdminChanges: () =>
     queryOptions({
       queryKey: [t(), 'tenant-admin', 'changes'],

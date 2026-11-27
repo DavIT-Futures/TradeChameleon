@@ -2,6 +2,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, unwrap } from '../api/client'
 import { queries } from '../api/queries'
 import { BrokerEditor } from '../components/BrokerEditor'
+import { UserManager } from '../components/UserManager'
+import { useAuth } from '../core/auth'
 import { useTenant } from '../core/TenantProvider'
 
 /**
@@ -11,6 +13,7 @@ import { useTenant } from '../core/TenantProvider'
 export default function Admin() {
   const { tenant } = useTenant()
   const queryClient = useQueryClient()
+  const { user } = useAuth()
   const { data: broker } = useQuery(queries.tenantAdminBroker())
 
   return (
@@ -18,7 +21,7 @@ export default function Admin() {
       <div className="page__header">
         <div>
           <h1>Admin · {tenant.name}</h1>
-          <p className="muted">You maintain this broker: its branding, catalogue, tools and limits. Other brokers are managed in the platform console.</p>
+          <p className="muted">You maintain this broker: its branding, catalogue, tools, limits and users. Other brokers are managed in the platform console.</p>
         </div>
       </div>
       {broker && (
@@ -43,6 +46,19 @@ export default function Admin() {
               void queryClient.invalidateQueries({ queryKey: queries.tenantAdminBroker().queryKey })
               // The maintainer is looking at their own broker: re-skin the site right away.
               void queryClient.invalidateQueries({ queryKey: ['tenant', 'current'] })
+            }}
+          />
+          <UserManager
+            selfId={user?.id ?? null}
+            userApi={{
+              list: queries.tenantAdminUsers(),
+              create: (body) => unwrap(api.POST('/api/tenant-admin/users', { body })),
+              update: (userId, body) => unwrap(api.PUT('/api/tenant-admin/users/{userId}', { params: { path: { userId } }, body })),
+              remove: async (userId) => { await unwrap(api.DELETE('/api/tenant-admin/users/{userId}', { params: { path: { userId } } })) },
+            }}
+            onChanged={() => {
+              void queryClient.invalidateQueries({ queryKey: queries.tenantAdminChanges().queryKey })
+              void queryClient.invalidateQueries({ queryKey: queries.tenantAdminBroker().queryKey })
             }}
           />
         </>

@@ -68,6 +68,11 @@ export const platformQueries = {
     queryOptions({ queryKey: ['platform', 'tenants'], queryFn: () => unwrap(platformApi.GET('/api/platform/tenants')), refetchInterval: 10_000 }),
   options: () =>
     queryOptions({ queryKey: ['platform', 'options'], queryFn: () => unwrap(platformApi.GET('/api/platform/settings-options')), staleTime: Infinity }),
+  users: (id: string) =>
+    queryOptions({
+      queryKey: ['platform', 'users', id],
+      queryFn: () => unwrap(platformApi.GET('/api/platform/tenants/{id}/users', { params: { path: { id } } })),
+    }),
   changes: (id: string) =>
     queryOptions({
       queryKey: ['platform', 'changes', id],
