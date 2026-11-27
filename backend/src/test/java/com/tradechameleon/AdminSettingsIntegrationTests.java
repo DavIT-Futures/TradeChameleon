@@ -80,6 +80,8 @@ class AdminSettingsIntegrationTests {
         assertThat(r.body().get("type").asString()).endsWith("/validation");
         assertThat(r.body().get("errors").propertyNames())
                 .contains("locale", "allowedAssetClasses", "spreadMarkupBps", "theme.primary", "limits.maxOrderValue");
+        // messages are English regardless of the server's OS language (spring.web.locale=en)
+        assertThat(r.body().get("errors").get("spreadMarkupBps").asString()).isEqualTo("must be less than or equal to 500");
 
         var currency = settingsOf("wisla");
         currency.put("currency", "XYZ");

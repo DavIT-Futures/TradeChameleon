@@ -2425,9 +2425,81 @@ gated('calendar', 'calendar', () =&gt; import('./pages/Calendar')),</code></pre>
   C --> U[("app_user · orders · account")]
   C --> M["buildMatrix() in Angular / React"]</pre>
 <div class="pl"><p><strong>Poprawka przy okazji: stary token na publicznych endpointach.</strong> Po restarcie backendu klucz deweloperski RSA jest nowy, więc token zapisany w przeglądarce jest nieważny. Spring domyślnie odrzucał go nawet na publicznym <code>GET /api/tenants/current</code> (401), przez co ekran logowania nie mógł załadować marki. Własny <code>BearerTokenResolver</code> zwraca <code>null</code> dla ścieżek publicznych, więc nagłówek <code>Authorization</code> jest tam ignorowany; test <code>staleTokensAreIgnoredOnPublicEndpointsButRejectedOnProtectedOnes</code> pilnuje obu stron.</p>
-<p>Testy tej części: <code>BrokerProfilesIntegrationTests</code> (marki i katalogi, 403 dla wyłączonych funkcji, limit Pulse, limit wartości i 5 oczekujących w Alpenrose, panel admina 401/403/200) oraz testy <code>buildMatrix()</code> w obu klientach. Razem: backend 94, Angular 32, React 31.</p></div>
+<p>W następnym rozdziale ten sam panel zyskuje edycję każdego parametru. Testy tej części: <code>BrokerProfilesIntegrationTests</code> (marki i katalogi, 403 dla wyłączonych funkcji, limit Pulse, limit wartości i 5 oczekujących w Alpenrose, panel admina 401/403/200) oraz testy <code>buildMatrix()</code> w obu klientach. Razem: backend 94, Angular 32, React 31.</p></div>
 <div class="en"><p><strong>A fix along the way: stale tokens on public endpoints.</strong> After a backend restart the dev RSA key is new, so a token stored in the browser is invalid. By default Spring rejected it even on the public <code>GET /api/tenants/current</code> (401), so the login screen could not load the brand. A custom <code>BearerTokenResolver</code> returns <code>null</code> for public paths, so the <code>Authorization</code> header is ignored there; the test <code>staleTokensAreIgnoredOnPublicEndpointsButRejectedOnProtectedOnes</code> guards both sides.</p>
-<p>Tests for this part: <code>BrokerProfilesIntegrationTests</code> (brands and catalogues, 403 for disabled features, Pulse's limit, Alpenrose's value cap and 5 pending orders, admin panel 401/403/200) and the <code>buildMatrix()</code> tests in both clients. In total: backend 94, Angular 32, React 31.</p></div>
+<p>The next chapter turns the same panel into an editor for every parameter. Tests for this part: <code>BrokerProfilesIntegrationTests</code> (brands and catalogues, 403 for disabled features, Pulse's limit, Alpenrose's value cap and 5 pending orders, admin panel 401/403/200) and the <code>buildMatrix()</code> tests in both clients. In total: backend 94, Angular 32, React 31.</p></div>
+</section>
+
+<section class="chapter" id="broker-editor">
+<h2><span class="pl">Edycja brokerów na żywo: walidacja, natychmiastowe działanie, audyt</span><span class="en">Editing brokers live: validation, immediate effect, audit</span></h2>
+<div class="pl"><p>Panel admina nie tylko porównuje, ale też <strong>edytuje</strong> każdego brokera: nazwę, slogan, logo, locale, walutę, 9 kolorów motywu, promień zaokrągleń, schemat, czcionki, klasy aktywów, narzut na spread, 10 flag funkcji i oba limity. Przycisk „✎ Edit” na karcie marki otwiera formularz z <em>podglądem na żywo</em>, który maluje się kolorami szkicu, oraz z dziennikiem zmian.</p>
+<p>Przepływ zapisu:</p></div>
+<div class="en"><p>The admin panel does not only compare brokers, it <strong>edits</strong> them: name, tagline, logo, locale, currency, the 9 theme colours, corner radius, scheme, fonts, asset classes, spread markup, the 10 feature flags and both limits. The "✎ Edit" button on a brand card opens a form with a <em>live preview</em> painted in the draft's colours, plus a change log.</p>
+<p>The save flow:</p></div>
+<pre class="mermaid">sequenceDiagram
+  participant UI as Admin editor (Angular / React)
+  participant C as AdminController
+  participant D as TenantDirectory (tenant module)
+  participant DB as PostgreSQL
+  participant A as TenantAuditLog (admin module)
+  UI->>C: PUT /api/admin/tenants/pulse (TenantSettings JSON)
+  C->>C: @Valid: Bean Validation (400 + errors map)
+  C->>D: update(id, settings, admin e-mail)
+  D->>D: business rules (422: unsupported currency, unknown logo)
+  D->>DB: UPDATE tenant SET ...
+  D->>D: swap in-memory copy (copy-on-write map)
+  D-->>A: TenantUpdated event (diff lines)
+  C-->>UI: 200 BrokerOverview
+  A->>DB: INSERT INTO tenant_change (after commit)</pre>
+<div class="pl"><p><strong>Walidacja dwuwarstwowa.</strong> Kształt sprawdza Bean Validation na rekordach: <code>TenantSettings</code> (locale <code>xx-XX</code>, waluta <code>[A-Z]{3}</code>, co najmniej jedna klasa aktywów, narzut 0–500), a <code>Tenant.Theme</code> i <code>Tenant.Limits</code> mają adnotacje na komponentach rekordu i są walidowane kaskadowo przez <code>@Valid</code>. Wartości trafiają do CSS i do SVG logo, więc wzorce są restrykcyjne: kolor tylko <code>#rrggbb</code>, promień <code>0–39px</code>, czcionki bez <code>; { } &lt; &gt;</code> (nie da się wstrzyknąć CSS). Reguły wymagające wiedzy o systemie sprawdza <code>TenantDirectory.update()</code>: waluta musi być w tabeli <code>FxRates</code>, kształt logo w <code>LogoGenerator.SHAPES</code> (422). Formularze mają <code>novalidate</code>, więc jedynym źródłem prawdy jest serwer, a błędy z mapy <code>errors</code> lądują przy polach (<code>theme.primary</code>, <code>limits.maxOrderValue</code>…).</p></div>
+<div class="en"><p><strong>Two layers of validation.</strong> Bean Validation checks the shape on records: <code>TenantSettings</code> (locale <code>xx-XX</code>, currency <code>[A-Z]{3}</code>, at least one asset class, markup 0–500), while <code>Tenant.Theme</code> and <code>Tenant.Limits</code> carry annotations on their record components and are validated in cascade via <code>@Valid</code>. Values end up in CSS and in the SVG logo, so the patterns are strict: colours only <code>#rrggbb</code>, radius <code>0–39px</code>, fonts without <code>; { } &lt; &gt;</code> (no CSS injection). Rules that need knowledge of the system live in <code>TenantDirectory.update()</code>: the currency must be in <code>FxRates</code>, the logo shape in <code>LogoGenerator.SHAPES</code> (422). The forms use <code>novalidate</code>, so the server is the single source of truth and the <code>errors</code> map lands next to the fields (<code>theme.primary</code>, <code>limits.maxOrderValue</code>…).</p></div>
+<p class="file">PUT /api/admin/tenants/wisla <span class="pl">(błędne dane, prawdziwa odpowiedź)</span><span class="en">(invalid input, real response)</span></p>
+<pre><code class="language-json">{
+  "type": "https://tradechameleon.dev/problems/validation",
+  "title": "Validation failed",
+  "status": 400,
+  "detail": "The request contains invalid fields.",
+  "errors": {
+    "allowedAssetClasses": "pick at least one asset class",
+    "limits.maxOrderValue": "must be at least 1 (leave empty for unlimited)",
+    "locale": "must be a locale like en-GB",
+    "spreadMarkupBps": "must be less than or equal to 500",
+    "theme.primary": "must be a colour like #1a2b3c"
+  }
+}</code></pre>
+<div class="pl"><p><strong>Natychmiastowe działanie.</strong> Wszystkie moduły pytają <code>TenantDirectory</code> o brokera przy każdym żądaniu (filtr tenantów, silnik cen, dopasowanie zleceń, SL/TP), więc wystarczy podmienić kopię w pamięci. Mapa jest <em>copy-on-write</em> w polu <code>volatile</code>: czytelnicy nigdy nie blokują, a rzadki zapis tworzy nową mapę. Następne żądanie widzi nowy spread, flagi i limity, bez restartu i bez ponownego logowania. URL logo zawiera wersję liczoną z nazwy, kształtu i kolorów (<code>logo.svg?v=…</code>), więc godzinny cache przeglądarki nie pokaże starego logo. Klienci odświeżają brokera przy powrocie do karty i co 30 s (Angular: <code>TenantService.refresh()</code>, React: <code>refetchInterval</code> w <code>TenantProvider</code>), a admin edytujący własnego brokera widzi zmianę od razu.</p>
+<p><strong>Audyt przez zdarzenie.</strong> <code>TenantDirectory</code> liczy różnicę refleksją po komponentach rekordów (<code>"features.calendar: false → true"</code>) i publikuje <code>TenantUpdated</code>. Moduł <code>tenant</code> nic nie wie o audycie: <code>TenantAuditLog</code> w module <code>admin</code> to <code>@ApplicationModuleListener</code>, który po commicie zapisuje wpis do tabeli <code>tenant_change</code> (migracja V7), a rejestr publikacji zdarzeń ponowi zapis po awarii. <code>GET /api/admin/tenants/{id}/changes</code> zwraca dziennik, a <code>GET /api/admin/settings-options</code> dozwolone waluty, klasy i kształty logo dla list wyboru.</p>
+<p><strong>Waluta.</strong> Zmiana waluty brokera dotyczy nowych kont, limitów i wyświetlania w bilecie zlecenia; istniejące konta zachowują swoją walutę (kolumna <code>account.currency</code>), bo przeliczenie sald to osobna operacja księgowa.</p></div>
+<div class="en"><p><strong>Immediate effect.</strong> Every module asks <code>TenantDirectory</code> for the broker on each request (tenant filter, price engine, order matching, SL/TP), so swapping the in-memory copy is enough. The map is <em>copy-on-write</em> in a <code>volatile</code> field: readers never lock and the rare writer builds a new map. The next request sees the new spread, flags and limits, with no restart and no new login. The logo URL carries a version computed from name, shape and colours (<code>logo.svg?v=…</code>), so the hour-long browser cache never shows an old logo. Clients reload the broker when the tab regains focus and every 30 s (Angular: <code>TenantService.refresh()</code>, React: <code>refetchInterval</code> in <code>TenantProvider</code>), and an admin editing their own broker sees the change at once.</p>
+<p><strong>Audit through an event.</strong> <code>TenantDirectory</code> computes a diff by walking record components with reflection (<code>"features.calendar: false → true"</code>) and publishes <code>TenantUpdated</code>. The <code>tenant</code> module knows nothing about auditing: <code>TenantAuditLog</code> in the <code>admin</code> module is an <code>@ApplicationModuleListener</code> that writes the entry to <code>tenant_change</code> (migration V7) after commit, and the event publication registry retries it after a crash. <code>GET /api/admin/tenants/{id}/changes</code> returns the log and <code>GET /api/admin/settings-options</code> the allowed currencies, classes and logo shapes for the selects.</p>
+<p><strong>Currency.</strong> Changing a broker's currency affects new accounts, limits and the order ticket; existing accounts keep their currency (<code>account.currency</code>), because converting balances is a separate accounting operation.</p></div>
+<p class="file">backend/src/main/java/com/tradechameleon/tenant/TenantDirectory.java</p>
+<pre><code class="language-java">@Transactional
+public synchronized Tenant update(String id, TenantSettings settings, String changedBy) {
+    Tenant before = get(id);
+    // ... 422 for an unsupported currency or logo shape ...
+    List&lt;String&gt; changes = diff("", TenantSettings.of(before), settings);
+    if (changes.isEmpty()) {
+        return before;
+    }
+    repository.update(before.id(), settings);
+    Tenant after = repository.findById(before.id());
+    var copy = new LinkedHashMap&lt;&gt;(tenants);
+    copy.put(after.id(), after);
+    tenants = copy;                               // volatile: the next request sees the new broker
+    events.publishEvent(new TenantUpdated(after.id(), changedBy, Instant.now(), changes));
+    return after;
+}</code></pre>
+<p class="file">GET /api/admin/tenants/pulse/changes</p>
+<pre><code class="language-json">[ {
+  "changedBy": "admin@aurora.test",
+  "changedAt": "2026-11-27T01:26:07.011623Z",
+  "changes": [ "name: Pulse → Pulse Pro", "features.calendar: false → true", "limits.maxOrderValue: 2000.00 → 5000" ]
+} ]</code></pre>
+<div class="pl"><p><strong>Formularze w obu klientach.</strong> Czyste funkcje w <code>admin-settings.ts</code> (kopia w React) robią całą logikę: <code>toSettings()</code> (głęboka kopia edytowalnej części), <code>toggleClass()</code> (kolejność kanoniczna), <code>parseLimit()</code> (puste = bez limitu), <code>changedFields()</code> (odznaka „Unsaved”) i <code>fieldError()</code>. W Angularze szkic to sygnał zmieniany niemutowalnie metodą <code>set('theme.primary', …)</code>, a „Unsaved” to <code>computed</code>; w React szkic to <code>useState</code>, zapis to <code>useMutation</code>, a komponent edytora ma <code>key={broker.id}</code>, żeby każdy broker dostał świeży stan.</p>
+<p>Testy tej części: <code>AdminSettingsIntegrationTests</code> (401/403/404, błędy pól 400, 422 dla waluty, zmiana działa od razu i trafia do dziennika, przywrócenie ustawień), <code>TenantSettingsDiffTest</code> oraz testy <code>admin-settings</code> w obu klientach. Razem: backend 100, Angular 36, React 35.</p></div>
+<div class="en"><p><strong>Forms in both clients.</strong> Pure functions in <code>admin-settings.ts</code> (copied to React) hold the logic: <code>toSettings()</code> (deep copy of the editable part), <code>toggleClass()</code> (canonical order), <code>parseLimit()</code> (empty = unlimited), <code>changedFields()</code> (the "Unsaved" badge) and <code>fieldError()</code>. In Angular the draft is a signal updated immutably with <code>set('theme.primary', …)</code> and "Unsaved" is a <code>computed</code>; in React the draft is <code>useState</code>, saving is a <code>useMutation</code>, and the editor component has <code>key={broker.id}</code> so every broker gets fresh state.</p>
+<p>Tests for this part: <code>AdminSettingsIntegrationTests</code> (401/403/404, 400 field errors, 422 for the currency, the change is live at once and lands in the log, settings restored), <code>TenantSettingsDiffTest</code> and the <code>admin-settings</code> tests in both clients. In total: backend 100, Angular 36, React 35.</p></div>
 </section>
 
 <section class="chapter" id="next-steps">

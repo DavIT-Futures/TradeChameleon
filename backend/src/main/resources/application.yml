@@ -16,6 +16,9 @@ spring:
       lifecycle-management: start-only
       skip:
         in-tests: true
+  web:
+    locale: en                 # API messages (e.g. validation errors) are English whatever the server's OS language
+    locale-resolver: fixed
   mvc:
     problemdetails:
       enabled: true            # framework errors (400/404/405/415...) are rendered as RFC 9457 problem details
