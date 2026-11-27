@@ -16,6 +16,12 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   return children
 }
 
+/** Platform admin only (role ADMIN). */
+export function RequireAdmin({ children }: { children: ReactNode }) {
+  const { isAdmin } = useAuth()
+  return isAdmin ? children : <Navigate to="/dashboard" replace />
+}
+
 /** The route exists only for brokers with the given feature flag. */
 export function RequireFeature({ flag, children }: { flag: keyof Features; children: ReactNode }) {
   const { tenant } = useTenant()

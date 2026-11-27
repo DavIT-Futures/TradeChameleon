@@ -45,6 +45,7 @@ export function useAuth() {
     user: session?.user ?? null,
     isLoggedIn: session !== null,
     isTrader: session?.user.roles.includes('TRADER') ?? false,
+    isAdmin: session?.user.roles.includes('ADMIN') ?? false,
   }
 }
 

@@ -8,6 +8,7 @@ import { useAuth } from '../core/auth'
 import { useFormat } from '../core/format'
 import { useStream } from '../core/priceStream'
 import { showToast } from '../core/toast'
+import { useTenant } from '../core/TenantProvider'
 import RiskCard from './RiskCard'
 
 type StatusFilter = Order['status'] | 'ALL'
@@ -15,6 +16,7 @@ const STATUSES: StatusFilter[] = ['ALL', 'OPEN', 'FILLED', 'CANCELLED', 'REJECTE
 
 export default function Portfolio() {
   const fmt = useFormat()
+  const { tenant } = useTenant()
   const { isTrader } = useAuth()
   const { quotes } = useStream()
   const queryClient = useQueryClient()
@@ -112,7 +114,7 @@ export default function Portfolio() {
               </table>
             </div>
           </section>
-          <RiskCard />
+          {tenant.features.riskView && <RiskCard />}
         </>
       ) : portfolio.isPending && <div className="card"><div className="skeleton" style={{ blockSize: '8rem' }} /></div>}
 

@@ -10,6 +10,8 @@ import type { AssetClass, Order } from './types'
 const t = () => getRequestedTenant() ?? 'default'
 
 export const queries = {
+  adminTenants: () =>
+    queryOptions({ queryKey: ['admin', 'tenants'], queryFn: () => unwrap(api.GET('/api/admin/tenants')), refetchInterval: 10_000 }),
   tenants: () => queryOptions({ queryKey: ['tenants'], queryFn: () => unwrap(api.GET('/api/tenants')), staleTime: 60_000 }),
   instruments: () =>
     queryOptions({ queryKey: [t(), 'instruments'], queryFn: () => unwrap(api.GET('/api/market/instruments')), staleTime: 30_000 }),

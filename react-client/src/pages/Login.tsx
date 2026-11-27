@@ -111,6 +111,9 @@ export default function Login() {
           <div className="demo-users">
             <button type="button" className="btn btn--ghost btn--small" onClick={() => fill('trader')}>trader@{tenant.id}.test</button>
             <button type="button" className="btn btn--ghost btn--small" onClick={() => fill('viewer')}>viewer@{tenant.id}.test</button>
+            {tenant.id === 'aurora' && (
+              <button type="button" className="btn btn--ghost btn--small" onClick={() => fill('admin')}>admin@aurora.test</button>
+            )}
           </div>
         </div>
       </div>

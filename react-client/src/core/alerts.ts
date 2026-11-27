@@ -7,9 +7,10 @@ import { showToast } from './toast'
  * Polls GET /api/alerts/notifications while mounted, turns triggered alerts into toasts and
  * acknowledges them, then invalidates the cached alert list.
  */
-export function useAlertNotifications(intervalMs = 4000): void {
+export function useAlertNotifications(enabled = true, intervalMs = 4000): void {
   const queryClient = useQueryClient()
   useEffect(() => {
+    if (!enabled) return
     let cancelled = false
     const check = async () => {
       try {
@@ -31,5 +32,5 @@ export function useAlertNotifications(intervalMs = 4000): void {
       cancelled = true
       clearInterval(id)
     }
-  }, [intervalMs, queryClient])
+  }, [enabled, intervalMs, queryClient])
 }

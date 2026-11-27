@@ -42,6 +42,11 @@ export default function OrderTicket({ instrument, quote }: { instrument: Instrum
   const price = needsLimit ? Number(form.limitPrice) : type === 'STOP' ? Number(form.stopPrice) : side === 'BUY' ? quote.ask : quote.bid
   const valid = qty > 0 && (!needsLimit || Number(form.limitPrice) > 0) && (!needsStop || Number(form.stopPrice) > 0)
   const problem = place.error instanceof ApiError ? place.error.problem : null
+  /** Broker limits as one line, e.g. "max 2,000 USD per order · max 5 pending orders". */
+  const limits = [
+    tenant.limits.maxOrderValue != null && `max ${tenant.limits.maxOrderValue.toLocaleString(tenant.locale)} ${tenant.currency} per order`,
+    tenant.limits.maxOpenOrders != null && tenant.features.limitOrders && `max ${tenant.limits.maxOpenOrders} pending orders`,
+  ].filter(Boolean).join(' · ')
   const num = (v: string) => (v === '' ? null : Number(v))
 
   const submit = (e: React.FormEvent) => {
@@ -116,6 +121,9 @@ export default function OrderTicket({ instrument, quote }: { instrument: Instrum
             <span className="muted">Estimated {side === 'BUY' ? 'cost' : 'proceeds'}</span>
             <strong className="num">{fmt.price(qty * price, 2)} {instrument.currency}</strong>
           </div>
+          {limits && (
+            <div className="margin-hint"><span>{tenant.name} limits</span><span>{limits}</span></div>
+          )}
           <div className="margin-hint">
             <span>As a CFD (1:{instrument.leverage}) margin would be</span>
             <span className="num">{fmt.price(qty * price * instrument.marginRate, 2)} {instrument.currency}</span>

@@ -10,14 +10,15 @@ import { useTenant } from '../core/TenantProvider'
 /** Authenticated layout: brand, navigation, user and the live-price connection. */
 export default function Shell() {
   const { tenant, scheme, cycleScheme } = useTenant()
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
+  const f = tenant.features
   const { status } = useStream()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
   useEffect(() => connectStream(), [])
   useEffect(() => void loadWatchlist().catch(() => undefined), [])
-  useAlertNotifications()
+  useAlertNotifications(tenant.features.alerts)
 
   const signOut = () => {
     logout()
@@ -49,14 +50,15 @@ export default function Shell() {
       <nav className="shell__nav" aria-label="Main">
         <NavLink to="/dashboard">▦ Dashboard</NavLink>
         <NavLink to="/markets" end={false}>↗ Markets</NavLink>
-        <NavLink to="/screener">⌕ Screener</NavLink>
-        <NavLink to="/compare">⇄ Compare</NavLink>
-        <NavLink to="/calendar">▤ Calendar</NavLink>
-        <NavLink to="/news">✎ News</NavLink>
+        {f.screener && <NavLink to="/screener">⌕ Screener</NavLink>}
+        {f.compare && <NavLink to="/compare">⇄ Compare</NavLink>}
+        {f.calendar && <NavLink to="/calendar">▤ Calendar</NavLink>}
+        {f.news && <NavLink to="/news">✎ News</NavLink>}
         <NavLink to="/portfolio">◔ Portfolio</NavLink>
         <NavLink to="/account">≡ Account</NavLink>
-        <NavLink to="/alerts">🔔 Alerts</NavLink>
-        {tenant.features.simulatorPanel && <NavLink to="/dev">⚙ Developer</NavLink>}
+        {f.alerts && <NavLink to="/alerts">🔔 Alerts</NavLink>}
+        {f.simulatorPanel && <NavLink to="/dev">⚙ Developer</NavLink>}
+        {isAdmin && <NavLink to="/admin">🛠 Admin</NavLink>}
       </nav>
       <main className="shell__main">
         <Outlet />

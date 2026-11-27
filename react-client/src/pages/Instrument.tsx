@@ -7,6 +7,7 @@ import type { IndicatorFlags, OhlcCandle } from '../components/candleGeometry'
 import type { ChartPoint } from '../components/chartGeometry'
 import { PriceChart } from '../components/PriceChart'
 import { useFormat } from '../core/format'
+import { useTenant } from '../core/TenantProvider'
 import { useQuote } from '../core/priceStream'
 import { toggleWatch, useWatchlist } from '../core/watchlist'
 import AlertCard from './AlertCard'
@@ -25,6 +26,7 @@ const INTERVAL_MS: Record<Interval, number> = { '5s': 5_000, '15s': 15_000, '1m'
 export default function Instrument() {
   const { symbol = '' } = useParams()
   const fmt = useFormat()
+  const { tenant } = useTenant()
   const watchlist = useWatchlist()
   const instrument = useQuery(queries.instrument(symbol))
   const history = useQuery(queries.history(symbol))
@@ -129,12 +131,12 @@ export default function Instrument() {
                   : points.length > 1 && <PriceChart points={points} decimals={i.decimals} label={`${symbol} price chart`} />}
               </section>
               <DepthCard symbol={i.symbol} decimals={i.decimals} />
-              <NewsCard symbol={i.symbol} />
+              {tenant.features.news && <NewsCard symbol={i.symbol} />}
             </div>
             <div className="stack">
               {quote && <OrderTicket instrument={i} quote={quote} />}
               {quote && <ContractCard instrument={i} quote={quote} />}
-              {quote && <AlertCard instrument={i} mid={quote.mid} />}
+              {quote && tenant.features.alerts && <AlertCard instrument={i} mid={quote.mid} />}
             </div>
           </div>
           {i.optionChain && (

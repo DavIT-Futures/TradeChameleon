@@ -2,10 +2,11 @@ import '../../shared/styles/tradechameleon.css'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { StrictMode, Suspense, lazy } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Navigate, createBrowserRouter } from 'react-router'
+import { Navigate, Outlet, createBrowserRouter } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
 import { ApiError } from './api/client'
-import { RequireAuth, RequireFeature } from './components/Guards'
+import type { Features } from './api/types'
+import { RequireAdmin, RequireAuth, RequireFeature } from './components/Guards'
 import { Toasts } from './components/Toasts'
 import { TenantProvider } from './core/TenantProvider'
 import { showToast } from './core/toast'
@@ -38,6 +39,12 @@ queryClient.getMutationCache().config.onError = (error) => {
 /** Data router with lazy routes: each page is its own chunk (React.lazy under the hood). */
 const page = (load: () => Promise<{ default: React.ComponentType }>) => async () => ({ Component: (await load()).default })
 
+/** A lazy route that only exists for brokers with the feature flag (layout route + guard). */
+const gated = (flag: keyof Features, path: string, load: () => Promise<{ default: React.ComponentType }>) => ({
+  element: <RequireFeature flag={flag}><Outlet /></RequireFeature>,
+  children: [{ path, lazy: page(load) }],
+})
+
 const router = createBrowserRouter([
   { path: '/login', lazy: page(() => import('./pages/Login')) },
   {
@@ -48,13 +55,14 @@ const router = createBrowserRouter([
       { path: 'dashboard', lazy: page(() => import('./pages/Dashboard')) },
       { path: 'markets', lazy: page(() => import('./pages/Markets')) },
       { path: 'markets/:symbol', lazy: page(() => import('./pages/Instrument')) },
-      { path: 'screener', lazy: page(() => import('./pages/Screener')) },
-      { path: 'compare', lazy: page(() => import('./pages/Compare')) },
-      { path: 'calendar', lazy: page(() => import('./pages/Calendar')) },
-      { path: 'news', lazy: page(() => import('./pages/News')) },
+      gated('screener', 'screener', () => import('./pages/Screener')),
+      gated('compare', 'compare', () => import('./pages/Compare')),
+      gated('calendar', 'calendar', () => import('./pages/Calendar')),
+      gated('news', 'news', () => import('./pages/News')),
       { path: 'portfolio', lazy: page(() => import('./pages/Portfolio')) },
       { path: 'account', lazy: page(() => import('./pages/Account')) },
-      { path: 'alerts', lazy: page(() => import('./pages/Alerts')) },
+      gated('alerts', 'alerts', () => import('./pages/Alerts')),
+      { element: <RequireAdmin><Outlet /></RequireAdmin>, children: [{ path: 'admin', lazy: page(() => import('./pages/Admin')) }] },
       { path: 'dev', element: <RequireFeature flag="simulatorPanel"><DevRoute /></RequireFeature> },
     ],
   },
