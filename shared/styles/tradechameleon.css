@@ -265,17 +265,111 @@
   }
   @keyframes shimmer { to { background-position: -200% 0; } }
 
-  /* login */
+  /*
+   * login: a 3D "floating" stage. The clients set --rx / --ry (tilt, deg) and --px / --py (parallax, -1..1)
+   * from the pointer position; without JavaScript (or with reduced motion) everything still looks right.
+   */
   .login {
+    --rx: 0deg; --ry: 0deg; --px: 0; --py: 0;
+    position: relative; isolation: isolate; overflow: hidden;
     min-block-size: 100dvh;
-    display: grid; place-items: center; padding: 1rem;
+    display: grid; place-items: center; padding: clamp(1rem, 4vw, 3rem);
+    perspective: 1400px;
     background:
-      radial-gradient(60rem 30rem at 10% -10%, var(--tc-primary-soft), transparent),
-      radial-gradient(40rem 20rem at 110% 110%, color-mix(in oklab, var(--tc-accent) 18%, transparent), transparent),
+      radial-gradient(70rem 40rem at 15% -10%, color-mix(in oklab, var(--tc-primary) 22%, transparent), transparent 70%),
+      radial-gradient(50rem 30rem at 110% 110%, color-mix(in oklab, var(--tc-accent) 20%, transparent), transparent 70%),
       var(--tc-bg);
   }
-  .login__card { inline-size: min(28rem, 100%); display: grid; gap: 1.25rem; }
+  /* soft glowing orbs behind the stage, drifting with the pointer */
+  .login__orb {
+    position: absolute; z-index: -1; border-radius: 50%; filter: blur(60px); opacity: 0.55;
+    transform: translate(calc(var(--px) * var(--depth, 20px)), calc(var(--py) * var(--depth, 20px)));
+    transition: transform 0.4s ease-out;
+    animation: orb-drift 18s ease-in-out infinite alternate;
+  }
+  .login__orb--a { inline-size: 28rem; aspect-ratio: 1; inset: -6rem auto auto -6rem; background: var(--tc-primary); --depth: -40px; }
+  .login__orb--b { inline-size: 22rem; aspect-ratio: 1; inset: auto -5rem -6rem auto; background: var(--tc-accent); --depth: 50px; animation-delay: -6s; }
+  .login__orb--c { inline-size: 14rem; aspect-ratio: 1; inset: 40% auto auto 45%; background: color-mix(in oklab, var(--tc-primary) 50%, var(--tc-accent)); opacity: 0.3; --depth: 25px; animation-delay: -12s; }
+  @keyframes orb-drift { to { translate: 3rem -2rem; scale: 1.15; } }
+
+  .login__stage {
+    inline-size: min(68rem, 100%);
+    display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(2rem, 5vw, 5rem); align-items: center;
+    transform-style: preserve-3d;
+    transform: rotateX(var(--rx)) rotateY(var(--ry));
+    transition: transform 0.25s ease-out;
+  }
+
+  .login__hero { display: grid; justify-items: center; text-align: center; gap: 1rem; transform: translateZ(70px); transform-style: preserve-3d; }
+  .login__logo {
+    position: relative; inline-size: clamp(9rem, 20vw, 15rem); aspect-ratio: 1;
+    display: grid; place-items: center;
+    border-radius: 30%;
+    background:
+      linear-gradient(145deg, color-mix(in oklab, var(--tc-surface) 92%, white), color-mix(in oklab, var(--tc-surface) 80%, var(--tc-primary)));
+    border: 1px solid color-mix(in oklab, var(--tc-text) 8%, transparent);
+    box-shadow:
+      inset 0 2px 0 color-mix(in oklab, white 40%, transparent),
+      0 2px 4px color-mix(in oklab, black 10%, transparent),
+      0 24px 48px -12px color-mix(in oklab, var(--tc-primary) 45%, transparent),
+      0 48px 90px -30px color-mix(in oklab, black 45%, transparent);
+    transform: translateZ(40px) translate(calc(var(--px) * -14px), calc(var(--py) * -14px));
+    animation: logo-float 6s ease-in-out infinite;
+    & img { inline-size: 68%; block-size: 68%; filter: drop-shadow(0 10px 14px color-mix(in oklab, black 30%, transparent)); }
+  }
+  /* the logo's shadow on the "floor" shrinks while the logo rises */
+  .login__floor {
+    inline-size: clamp(7rem, 16vw, 12rem); block-size: 1.1rem; margin-block-start: -0.4rem; border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in oklab, black 35%, transparent), transparent);
+    animation: floor-pulse 6s ease-in-out infinite;
+  }
+  @keyframes logo-float { 0%, 100% { translate: 0 0; rotate: -2deg; } 50% { translate: 0 -16px; rotate: 2deg; } }
+  @keyframes floor-pulse { 0%, 100% { scale: 1; opacity: 0.8; } 50% { scale: 0.75; opacity: 0.45; } }
+
+  .login__hero h1 { font-size: clamp(2rem, 1.4rem + 2.4vw, 3.2rem); letter-spacing: -0.02em; text-shadow: 0 10px 30px color-mix(in oklab, var(--tc-primary) 35%, transparent); }
+  .login__tagline { color: var(--tc-muted); font-size: 1.05rem; max-inline-size: 26rem; }
+  .login__facts { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem; list-style: none; padding: 0; margin: 0;
+    & li { font-size: 0.78rem; padding: 0.2rem 0.65rem; border-radius: 999px; border: 1px solid var(--tc-border-strong);
+           background: color-mix(in oklab, var(--tc-surface) 70%, transparent); backdrop-filter: blur(6px); }
+  }
+
+  .login__card {
+    inline-size: min(28rem, 100%); justify-self: center; display: grid; gap: 1.1rem;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    border-radius: calc(var(--tc-radius) * 1.4);
+    background: color-mix(in oklab, var(--tc-surface) 78%, transparent);
+    backdrop-filter: blur(18px) saturate(1.3);
+    border: 1px solid color-mix(in oklab, var(--tc-text) 10%, transparent);
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, white 35%, transparent),
+      0 1px 2px color-mix(in oklab, black 8%, transparent),
+      0 30px 60px -20px color-mix(in oklab, black 40%, transparent),
+      0 60px 120px -40px color-mix(in oklab, var(--tc-primary) 35%, transparent);
+    transform: translateZ(30px) rotateY(-6deg) translate(calc(var(--px) * 8px), calc(var(--py) * 8px));
+    transition: transform 0.3s ease-out;
+    & h2 { font-size: 1.25rem; }
+    & .btn[type="submit"] { padding-block: 0.75rem; box-shadow: 0 12px 24px -10px var(--tc-primary); }
+  }
+  .login__scheme { position: absolute; inset-block-start: 1rem; inset-inline-end: 1rem; z-index: 2; backdrop-filter: blur(8px); }
   .login__brand { display: flex; gap: 0.8rem; align-items: center; & img { inline-size: 56px; block-size: 56px; } }
+
+  /* medium screens: less depth so the tilted card never leaves the viewport */
+  @media (860px <= width < 1200px) {
+    .login__stage { gap: 2rem; inline-size: min(60rem, 92%); }
+    .login__hero { transform: translateZ(35px); }
+    .login__card { transform: translateZ(10px) rotateY(-3deg) translate(calc(var(--px) * 6px), calc(var(--py) * 6px)); }
+  }
+  @media (width < 860px) {
+    .login { perspective: none; align-items: start; }
+    .login__stage { grid-template-columns: 1fr; gap: 1.5rem; transform: none; }
+    .login__hero { transform: none; gap: 0.6rem; }
+    .login__logo { inline-size: 7.5rem; transform: none; }
+    .login__card { transform: none; justify-self: stretch; inline-size: 100%; }
+    .login__facts { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .login__stage, .login__card, .login__logo, .login__orb { transform: none !important; }
+  }
   .brand-switcher {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem;
     & button {

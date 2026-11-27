@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useActionState, useState } from 'react'
+import { useActionState, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { ApiError, api, unwrap } from '../api/client'
 import { queries } from '../api/queries'
@@ -8,7 +8,23 @@ import { saveSession } from '../core/auth'
 import { useTenant } from '../core/TenantProvider'
 
 export default function Login() {
-  const { tenant, switchTo } = useTenant()
+  const { tenant, switchTo, scheme, cycleScheme } = useTenant()
+  const stage = useRef<HTMLElement>(null)
+
+  /** Pointer position → CSS variables: the stage tilts and the orbs drift (pure CSS does the rest). */
+  const tilt = (event: React.PointerEvent) => {
+    const el = stage.current
+    if (!el || event.pointerType !== 'mouse' || matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const x = (event.clientX / el.clientWidth) * 2 - 1
+    const y = (event.clientY / el.clientHeight) * 2 - 1
+    el.style.setProperty('--ry', `${(x * 6).toFixed(2)}deg`)
+    el.style.setProperty('--rx', `${(-y * 4).toFixed(2)}deg`)
+    el.style.setProperty('--px', x.toFixed(3))
+    el.style.setProperty('--py', y.toFixed(3))
+  }
+  const level = () => {
+    for (const v of ['--rx', '--ry', '--px', '--py']) stage.current?.style.removeProperty(v)
+  }
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const brands = useQuery(queries.tenants())
@@ -32,18 +48,34 @@ export default function Login() {
   const fill = (role: string) => setCredentials({ username: `${role}@${tenant.id}.test`, password: 'demo' })
 
   return (
-    <main className="login">
-      <div className="card login__card">
-        <div className="login__brand">
-          <img src={tenant.logoUrl} alt="" />
-          <div>
-            <h1>{tenant.name}</h1>
-            <p className="muted">{tenant.tagline}</p>
-          </div>
-        </div>
+    <main className="login" ref={stage} onPointerMove={tilt} onPointerLeave={level}>
+      <div className="login__orb login__orb--a" aria-hidden="true" />
+      <div className="login__orb login__orb--b" aria-hidden="true" />
+      <div className="login__orb login__orb--c" aria-hidden="true" />
+      <button className="btn btn--ghost btn--small login__scheme" type="button" onClick={cycleScheme}
+        aria-label={`Colour scheme: ${scheme}`} title={`Colour scheme: ${scheme}`}>
+        {scheme === 'dark' ? '☾' : scheme === 'light' ? '☀' : '◐'}
+      </button>
+
+      <div className="login__stage">
+      <section className="login__hero" aria-label="Broker">
+        <div className="login__logo"><img src={tenant.logoUrl} alt={`${tenant.name} logo`} /></div>
+        <div className="login__floor" aria-hidden="true" />
+        <h1>{tenant.name}</h1>
+        <p className="login__tagline">{tenant.tagline}</p>
+        <ul className="login__facts">
+          <li>{tenant.locale}</li>
+          <li>{tenant.currency}</li>
+          <li>{tenant.allowedAssetClasses.length} asset classes</li>
+          <li>{tenant.features.trading ? 'Trading' : 'Portfolio only'}</li>
+        </ul>
+      </section>
+
+      <div className="login__card">
+        <h2>Sign in</h2>
 
         <section aria-labelledby="brand-title" className="stack">
-          <h2 id="brand-title" className="muted" style={{ fontSize: '.85rem' }}>Choose a broker</h2>
+          <h3 id="brand-title" className="muted" style={{ fontSize: '.85rem' }}>Choose a broker</h3>
           <div className="brand-switcher">
             {brands.isPending && [1, 2, 3, 4].map((i) => <div key={i} className="skeleton" style={{ blockSize: 64 }} />)}
             {brands.data?.map((b) => (
@@ -81,6 +113,7 @@ export default function Login() {
             <button type="button" className="btn btn--ghost btn--small" onClick={() => fill('viewer')}>viewer@{tenant.id}.test</button>
           </div>
         </div>
+      </div>
       </div>
     </main>
   )

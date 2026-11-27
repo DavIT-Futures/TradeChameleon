@@ -12,20 +12,36 @@ import { TenantService } from '../../core/tenant';
   imports: [ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <main class="login">
-      <div class="card login__card">
-        @if (tenant.tenant(); as t) {
-          <div class="login__brand">
-            <img [src]="t.logoUrl" alt="" />
-            <div>
-              <h1>{{ t.name }}</h1>
-              <p class="muted">{{ t.tagline }}</p>
-            </div>
-          </div>
-        }
+    <main class="login" #stage (pointermove)="tilt($event, stage)" (pointerleave)="level(stage)">
+      <div class="login__orb login__orb--a" aria-hidden="true"></div>
+      <div class="login__orb login__orb--b" aria-hidden="true"></div>
+      <div class="login__orb login__orb--c" aria-hidden="true"></div>
+      <button class="btn btn--ghost btn--small login__scheme" type="button" (click)="tenant.cycleScheme()"
+              [attr.aria-label]="'Colour scheme: ' + tenant.scheme()" [title]="'Colour scheme: ' + tenant.scheme()">
+        {{ tenant.scheme() === 'dark' ? '☾' : tenant.scheme() === 'light' ? '☀' : '◐' }}
+      </button>
+
+      <div class="login__stage">
+      @if (tenant.tenant(); as t) {
+        <section class="login__hero" aria-label="Broker">
+          <div class="login__logo"><img [src]="t.logoUrl" [alt]="t.name + ' logo'" /></div>
+          <div class="login__floor" aria-hidden="true"></div>
+          <h1>{{ t.name }}</h1>
+          <p class="login__tagline">{{ t.tagline }}</p>
+          <ul class="login__facts">
+            <li>{{ t.locale }}</li>
+            <li>{{ t.currency }}</li>
+            <li>{{ t.allowedAssetClasses.length }} asset classes</li>
+            <li>{{ t.features.trading ? 'Trading' : 'Portfolio only' }}</li>
+          </ul>
+        </section>
+      }
+
+      <div class="login__card">
+        <h2>Sign in</h2>
 
         <section aria-labelledby="brand-title" class="stack">
-          <h2 id="brand-title" class="muted" style="font-size: .85rem">Choose a broker</h2>
+          <h3 id="brand-title" class="muted" style="font-size: .85rem">Choose a broker</h3>
           <div class="brand-switcher">
             @if (brands.isLoading()) {
               @for (i of [1, 2, 3, 4]; track i) { <div class="skeleton" style="block-size: 64px"></div> }
@@ -67,6 +83,7 @@ import { TenantService } from '../../core/tenant';
           </div>
         </div>
       </div>
+      </div>
     </main>
   `,
 })
@@ -89,6 +106,21 @@ export class Login {
     username: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required],
   });
+
+  /** Pointer position → CSS variables: the stage tilts and the orbs drift (pure CSS does the rest). */
+  protected tilt(event: PointerEvent, stage: HTMLElement): void {
+    if (event.pointerType !== 'mouse' || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const x = (event.clientX / stage.clientWidth) * 2 - 1;
+    const y = (event.clientY / stage.clientHeight) * 2 - 1;
+    stage.style.setProperty('--ry', `${(x * 6).toFixed(2)}deg`);
+    stage.style.setProperty('--rx', `${(-y * 4).toFixed(2)}deg`);
+    stage.style.setProperty('--px', x.toFixed(3));
+    stage.style.setProperty('--py', y.toFixed(3));
+  }
+
+  protected level(stage: HTMLElement): void {
+    for (const v of ['--rx', '--ry', '--px', '--py']) stage.style.removeProperty(v);
+  }
 
   protected fill(role: 'trader' | 'viewer'): void {
     this.form.setValue({ username: `${role}@${this.tenant.id()}.test`, password: 'demo' });
