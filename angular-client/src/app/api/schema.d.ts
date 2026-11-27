@@ -22,6 +22,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tenant-admin/broker": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** This broker's configuration, feature flags, limits and usage */
+        get: operations["broker"];
+        /**
+         * Change this broker's settings
+         * @description Same validation and audit as the platform console, limited to the broker of the request.
+         */
+        put: operations["update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/simulator": {
         parameters: {
             query?: never;
@@ -57,7 +78,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/admin/tenants/{id}": {
+    "/api/platform/tenants/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -66,10 +87,10 @@ export interface paths {
         };
         get?: never;
         /**
-         * Change a broker's settings (branding, locale, currency, asset classes, spread, features, limits)
+         * Change any broker's settings
          * @description Validated with Bean Validation (400 with an errors map) and business rules (422). The change is live for the next request; the diff is written to the audit log.
          */
-        put: operations["update"];
+        put: operations["update_1"];
         post?: never;
         delete?: never;
         options?: never;
@@ -122,6 +143,26 @@ export interface paths {
         put?: never;
         /** Deposit demo cash (role TRADER) */
         post: operations["deposit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/platform/auth/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sign in to the platform console (super admin)
+         * @description User: admin@tradechameleon.com, password 'demo'. The token carries no tenant claim but platform=true, and is accepted only by /api/platform/**.
+         */
+        post: operations["platformToken"];
         delete?: never;
         options?: never;
         head?: never;
@@ -303,6 +344,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tenant-admin/settings-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Allowed values for the broker editor (currencies, asset classes, logo shapes) */
+        get: operations["options"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tenant-admin/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Audit log of this broker's settings, newest first */
+        get: operations["changes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portfolio": {
         parameters: {
             query?: never;
@@ -363,6 +438,57 @@ export interface paths {
         };
         /** Closed trades with realised P&L, newest first */
         get: operations["closedTrades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/platform/tenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** All brokers with configuration, feature flags, limits and usage */
+        get: operations["tenants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/platform/tenants/{id}/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Audit log of a broker's settings, newest first */
+        get: operations["changes_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/platform/settings-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Allowed values for the broker editor (currencies, asset classes, logo shapes) */
+        get: operations["options_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -639,57 +765,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/admin/tenants": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** All brokers with configuration, feature flags, limits and usage */
-        get: operations["tenants"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/tenants/{id}/changes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Audit log of a broker's settings, newest first */
-        get: operations["changes"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/settings-options": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Allowed values for the broker editor (currencies, asset classes, logo shapes) */
-        get: operations["options"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/.well-known/openid-configuration": {
         parameters: {
             query?: never;
@@ -728,48 +803,6 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        SimulatorSettings: {
-            /** Format: int32 */
-            latencyMs: number;
-            /** Format: int32 */
-            jitterMs: number;
-            /** Format: double */
-            failureRate: number;
-            /** Format: double */
-            volatilityMultiplier: number;
-            paused: boolean;
-        };
-        ProtectionRequest: {
-            stopLoss?: number | null;
-            takeProfit?: number | null;
-        };
-        PortfolioView: {
-            currency: string;
-            cash: number;
-            positionsValue: number;
-            totalValue: number;
-            unrealizedPnl: number;
-            unrealizedPnlPct: number;
-            realizedPnl: number;
-            positions: components["schemas"]["PositionView"][];
-        };
-        PositionView: {
-            symbol: string;
-            name: string;
-            /** @enum {string} */
-            assetClass: "STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND" | "COMMODITY" | "INDEX" | "OPTION";
-            currency: string;
-            /** Format: int32 */
-            decimals: number;
-            quantity: number;
-            avgPrice: number;
-            lastPrice: number;
-            marketValue: number;
-            pnl: number;
-            pnlPct: number;
-            stopLoss: number | null;
-            takeProfit: number | null;
-        };
         Features: {
             trading: boolean;
             limitOrders: boolean;
@@ -840,10 +873,54 @@ export interface components {
             /** Format: int32 */
             viewers: number;
             /** Format: int32 */
+            maintainers: number;
+            /** Format: int32 */
             openOrders: number;
             /** Format: int32 */
             filledOrders: number;
             totalCash: number;
+        };
+        SimulatorSettings: {
+            /** Format: int32 */
+            latencyMs: number;
+            /** Format: int32 */
+            jitterMs: number;
+            /** Format: double */
+            failureRate: number;
+            /** Format: double */
+            volatilityMultiplier: number;
+            paused: boolean;
+        };
+        ProtectionRequest: {
+            stopLoss?: number | null;
+            takeProfit?: number | null;
+        };
+        PortfolioView: {
+            currency: string;
+            cash: number;
+            positionsValue: number;
+            totalValue: number;
+            unrealizedPnl: number;
+            unrealizedPnlPct: number;
+            realizedPnl: number;
+            positions: components["schemas"]["PositionView"][];
+        };
+        PositionView: {
+            symbol: string;
+            name: string;
+            /** @enum {string} */
+            assetClass: "STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND" | "COMMODITY" | "INDEX" | "OPTION";
+            currency: string;
+            /** Format: int32 */
+            decimals: number;
+            quantity: number;
+            avgPrice: number;
+            lastPrice: number;
+            marketValue: number;
+            pnl: number;
+            pnlPct: number;
+            stopLoss: number | null;
+            takeProfit: number | null;
         };
         AmountRequest: {
             amount: number;
@@ -860,6 +937,24 @@ export interface components {
             description: string;
             /** Format: date-time */
             createdAt: string;
+        };
+        LoginRequest: {
+            username: string;
+            password: string;
+        };
+        TokenResponse: {
+            accessToken: string;
+            tokenType: string;
+            /** Format: int64 */
+            expiresIn: number;
+            user: components["schemas"]["UserProfile"];
+        };
+        UserProfile: {
+            id: string;
+            name: string;
+            email: string | null;
+            roles: string[];
+            tenant: string | null;
         };
         PlaceOrderRequest: {
             symbol: string;
@@ -900,24 +995,6 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
-        LoginRequest: {
-            username: string;
-            password: string;
-        };
-        TokenResponse: {
-            accessToken: string;
-            tokenType: string;
-            /** Format: int64 */
-            expiresIn: number;
-            user: components["schemas"]["UserProfile"];
-        };
-        UserProfile: {
-            id: string;
-            name: string;
-            email: string | null;
-            roles: string[];
-            tenant: string;
-        };
         CreateAlertRequest: {
             symbol: string;
             /** @enum {string} */
@@ -955,6 +1032,17 @@ export interface components {
             theme: components["schemas"]["Theme"];
             features: components["schemas"]["Features"];
             limits: components["schemas"]["Limits"];
+        };
+        SettingsOptions: {
+            currencies: string[];
+            assetClasses: ("STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND" | "COMMODITY" | "INDEX" | "OPTION")[];
+            logoShapes: string[];
+        };
+        TenantChange: {
+            changedBy: string;
+            /** Format: date-time */
+            changedAt: string;
+            changes: string[];
         };
         ClassRisk: {
             /** @enum {string} */
@@ -1152,17 +1240,6 @@ export interface components {
             surprise: string | null;
             symbols: string[];
         };
-        TenantChange: {
-            changedBy: string;
-            /** Format: date-time */
-            changedAt: string;
-            changes: string[];
-        };
-        SettingsOptions: {
-            currencies: string[];
-            assetClasses: ("STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND" | "COMMODITY" | "INDEX" | "OPTION")[];
-            logoShapes: string[];
-        };
     };
     responses: never;
     parameters: never;
@@ -1215,6 +1292,56 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    broker: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BrokerOverview"];
+                };
+            };
+        };
+    };
+    update: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TenantSettings"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BrokerOverview"];
+                };
             };
         };
     };
@@ -1297,7 +1424,7 @@ export interface operations {
             };
         };
     };
-    update: {
+    update_1: {
         parameters: {
             query?: never;
             header?: {
@@ -1399,6 +1526,33 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CashTransaction"];
+                };
+            };
+        };
+    };
+    platformToken: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TokenResponse"];
                 };
             };
         };
@@ -1702,6 +1856,54 @@ export interface operations {
             };
         };
     };
+    options: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SettingsOptions"];
+                };
+            };
+        };
+    };
+    changes: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TenantChange"][];
+                };
+            };
+        };
+    };
     portfolio: {
         parameters: {
             query?: never;
@@ -1794,6 +1996,79 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ClosedTrade"][];
+                };
+            };
+        };
+    };
+    tenants: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BrokerOverview"][];
+                };
+            };
+        };
+    };
+    changes_1: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TenantChange"][];
+                };
+            };
+        };
+    };
+    options_1: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SettingsOptions"];
                 };
             };
         };
@@ -2197,79 +2472,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["PriceAlert"][];
-                };
-            };
-        };
-    };
-    tenants: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
-                "X-Tenant-Id"?: string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["BrokerOverview"][];
-                };
-            };
-        };
-    };
-    changes: {
-        parameters: {
-            query?: {
-                limit?: number;
-            };
-            header?: {
-                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
-                "X-Tenant-Id"?: string;
-            };
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["TenantChange"][];
-                };
-            };
-        };
-    };
-    options: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
-                "X-Tenant-Id"?: string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["SettingsOptions"];
                 };
             };
         };

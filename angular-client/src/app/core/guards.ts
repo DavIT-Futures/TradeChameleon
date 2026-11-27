@@ -14,9 +14,9 @@ export const authGuard: CanActivateFn = (_route, state) => {
   return auth.isLoggedIn() ? true : inject(Router).createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
 };
 
-/** Platform admin only (role ADMIN). */
-export const adminGuard: CanActivateFn = () =>
-  inject(AuthService).isAdmin() ? true : inject(Router).createUrlTree(['/dashboard']);
+/** The broker's own admin page: maintainers only (role MAINTAINER). */
+export const maintainerGuard: CanActivateFn = () =>
+  inject(AuthService).isMaintainer() ? true : inject(Router).createUrlTree(['/dashboard']);
 
 /** Guard factory: the route exists only for brokers with the given feature flag. */
 export function featureGuard(flag: keyof Features): CanActivateFn {

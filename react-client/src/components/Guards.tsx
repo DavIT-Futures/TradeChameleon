@@ -16,10 +16,10 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   return children
 }
 
-/** Platform admin only (role ADMIN). */
-export function RequireAdmin({ children }: { children: ReactNode }) {
-  const { isAdmin } = useAuth()
-  return isAdmin ? children : <Navigate to="/dashboard" replace />
+/** The broker's own admin page: maintainers only (role MAINTAINER). */
+export function RequireMaintainer({ children }: { children: ReactNode }) {
+  const { isMaintainer } = useAuth()
+  return isMaintainer ? children : <Navigate to="/dashboard" replace />
 }
 
 /** The route exists only for brokers with the given feature flag. */

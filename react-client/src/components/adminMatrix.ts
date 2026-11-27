@@ -44,7 +44,7 @@ export function buildMatrix(brokers: readonly BrokerOverview[], fmt: (value: num
     row('Tools', 'Developer panel', (b) => b.features.simulatorPanel),
     row('Usage', 'Instruments offered', (b) => String(b.instruments)),
     row('Usage', 'Option chains', (b) => String(b.optionChains)),
-    row('Usage', 'Users (traders / viewers)', (b) => `${b.users} (${b.traders} / ${b.viewers})`),
+    row('Usage', 'Users (traders / viewers / maintainers)', (b) => `${b.users} (${b.traders} / ${b.viewers} / ${b.maintainers})`),
     row('Usage', 'Open orders', (b) => String(b.openOrders)),
     row('Usage', 'Filled orders', (b) => String(b.filledOrders)),
     row('Usage', 'Client cash', (b) => fmt(b.totalCash, b.currency)),

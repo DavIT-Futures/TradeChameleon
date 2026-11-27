@@ -111,10 +111,11 @@ export default function Login() {
           <div className="demo-users">
             <button type="button" className="btn btn--ghost btn--small" onClick={() => fill('trader')}>trader@{tenant.id}.test</button>
             <button type="button" className="btn btn--ghost btn--small" onClick={() => fill('viewer')}>viewer@{tenant.id}.test</button>
-            {tenant.id === 'aurora' && (
-              <button type="button" className="btn btn--ghost btn--small" onClick={() => fill('admin')}>admin@aurora.test</button>
-            )}
+            <button type="button" className="btn btn--ghost btn--small" onClick={() => fill('maintainer')}>maintainer@{tenant.id}.test</button>
           </div>
+          {/* the super admin console lives on its own address: admin.localhost on the same port */}
+          <a className="muted" style={{ fontSize: '.85rem' }}
+            href={`${location.protocol}//admin.localhost${location.port ? ':' + location.port : ''}/`}>Platform console (super admin) →</a>
         </div>
       </div>
       </div>

@@ -24,7 +24,8 @@ export class AuthService {
   readonly user = computed(() => this.session()?.user ?? null);
   readonly isLoggedIn = computed(() => this.session() !== null);
   readonly isTrader = computed(() => this.user()?.roles.includes('TRADER') ?? false);
-  readonly isAdmin = computed(() => this.user()?.roles.includes('ADMIN') ?? false);
+  /** Semi-admin of THIS broker: may edit its settings on the Admin page. */
+  readonly isMaintainer = computed(() => this.user()?.roles.includes('MAINTAINER') ?? false);
   readonly tenantId = computed(() => this.user()?.tenant ?? null);
 
   async login(username: string, password: string): Promise<UserProfile> {

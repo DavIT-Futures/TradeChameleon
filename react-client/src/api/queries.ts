@@ -10,14 +10,15 @@ import type { AssetClass, Order } from './types'
 const t = () => getRequestedTenant() ?? 'default'
 
 export const queries = {
-  adminTenants: () =>
-    queryOptions({ queryKey: ['admin', 'tenants'], queryFn: () => unwrap(api.GET('/api/admin/tenants')), refetchInterval: 10_000 }),
-  adminSettingsOptions: () =>
-    queryOptions({ queryKey: ['admin', 'options'], queryFn: () => unwrap(api.GET('/api/admin/settings-options')), staleTime: Infinity }),
-  adminTenantChanges: (id: string) =>
+  /** The maintainer's own broker: no id in the URL, the broker comes from the request. */
+  tenantAdminBroker: () =>
+    queryOptions({ queryKey: [t(), 'tenant-admin', 'broker'], queryFn: () => unwrap(api.GET('/api/tenant-admin/broker')) }),
+  tenantAdminOptions: () =>
+    queryOptions({ queryKey: [t(), 'tenant-admin', 'options'], queryFn: () => unwrap(api.GET('/api/tenant-admin/settings-options')), staleTime: Infinity }),
+  tenantAdminChanges: () =>
     queryOptions({
-      queryKey: ['admin', 'changes', id],
-      queryFn: () => unwrap(api.GET('/api/admin/tenants/{id}/changes', { params: { path: { id }, query: { limit: 20 } } })),
+      queryKey: [t(), 'tenant-admin', 'changes'],
+      queryFn: () => unwrap(api.GET('/api/tenant-admin/changes', { params: { query: { limit: 20 } } })),
     }),
   tenants: () => queryOptions({ queryKey: ['tenants'], queryFn: () => unwrap(api.GET('/api/tenants')), staleTime: 60_000 }),
   instruments: () =>

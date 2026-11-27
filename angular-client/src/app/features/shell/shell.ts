@@ -50,7 +50,7 @@ import { TenantService } from '../../core/tenant';
         @if (f?.simulatorPanel) {
           <a routerLink="/dev" routerLinkActive="active">⚙ Developer</a>
         }
-        @if (auth.isAdmin()) {
+        @if (auth.isMaintainer()) {
           <a routerLink="/admin" routerLinkActive="active">🛠 Admin</a>
         }
       </nav>

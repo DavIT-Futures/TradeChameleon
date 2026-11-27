@@ -80,10 +80,9 @@ import { TenantService } from '../../core/tenant';
           <div class="demo-users">
             <button type="button" class="btn btn--ghost btn--small" (click)="fill('trader')">trader&#64;{{ tenant.id() }}.test</button>
             <button type="button" class="btn btn--ghost btn--small" (click)="fill('viewer')">viewer&#64;{{ tenant.id() }}.test</button>
-            @if (tenant.id() === 'aurora') {
-              <button type="button" class="btn btn--ghost btn--small" (click)="fill('admin')">admin&#64;aurora.test</button>
-            }
+            <button type="button" class="btn btn--ghost btn--small" (click)="fill('maintainer')">maintainer&#64;{{ tenant.id() }}.test</button>
           </div>
+          <a class="muted" style="font-size: .85rem" [href]="platformUrl">Platform console (super admin) →</a>
         </div>
       </div>
       </div>
@@ -101,6 +100,9 @@ export class Login {
 
   /** httpResource: a signal-based GET. value(), isLoading(), error() are all signals. */
   protected readonly brands = httpResource<Tenant[]>(() => '/api/tenants');
+
+  /** The super admin console lives on its own address: admin.localhost on the same port. */
+  protected readonly platformUrl = `${location.protocol}//admin.localhost${location.port ? ':' + location.port : ''}/`;
 
   protected readonly busy = signal(false);
   protected readonly problem = signal<Problem | null>(null);
@@ -125,7 +127,7 @@ export class Login {
     for (const v of ['--rx', '--ry', '--px', '--py']) stage.style.removeProperty(v);
   }
 
-  protected fill(role: 'trader' | 'viewer' | 'admin'): void {
+  protected fill(role: 'trader' | 'viewer' | 'maintainer'): void {
     this.form.setValue({ username: `${role}@${this.tenant.id()}.test`, password: 'demo' });
   }
 

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { adminGuard, authGuard, featureGuard } from './core/guards';
+import { authGuard, maintainerGuard, featureGuard } from './core/guards';
 
 /** Every page is lazy-loaded with loadComponent: one JS chunk per screen. */
 export const routes: Routes = [
@@ -20,7 +20,7 @@ export const routes: Routes = [
       { path: 'portfolio', loadComponent: () => import('./features/portfolio/portfolio').then((m) => m.Portfolio), title: 'Portfolio' },
       { path: 'account', loadComponent: () => import('./features/account/account').then((m) => m.Account), title: 'Account' },
       { path: 'alerts', canActivate: [featureGuard('alerts')], loadComponent: () => import('./features/alerts/alerts').then((m) => m.Alerts), title: 'Alerts' },
-      { path: 'admin', canActivate: [adminGuard], loadComponent: () => import('./features/admin/admin').then((m) => m.Admin), title: 'Admin' },
+      { path: 'admin', canActivate: [maintainerGuard], loadComponent: () => import('./features/admin/admin').then((m) => m.Admin), title: 'Admin' },
       {
         path: 'dev',
         canActivate: [featureGuard('simulatorPanel')],

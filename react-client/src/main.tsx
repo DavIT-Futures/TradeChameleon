@@ -6,7 +6,7 @@ import { Navigate, Outlet, createBrowserRouter } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
 import { ApiError } from './api/client'
 import type { Features } from './api/types'
-import { RequireAdmin, RequireAuth, RequireFeature } from './components/Guards'
+import { RequireAuth, RequireFeature, RequireMaintainer } from './components/Guards'
 import { Toasts } from './components/Toasts'
 import { TenantProvider } from './core/TenantProvider'
 import { showToast } from './core/toast'
@@ -62,7 +62,7 @@ const router = createBrowserRouter([
       { path: 'portfolio', lazy: page(() => import('./pages/Portfolio')) },
       { path: 'account', lazy: page(() => import('./pages/Account')) },
       gated('alerts', 'alerts', () => import('./pages/Alerts')),
-      { element: <RequireAdmin><Outlet /></RequireAdmin>, children: [{ path: 'admin', lazy: page(() => import('./pages/Admin')) }] },
+      { element: <RequireMaintainer><Outlet /></RequireMaintainer>, children: [{ path: 'admin', lazy: page(() => import('./pages/Admin')) }] },
       { path: 'dev', element: <RequireFeature flag="simulatorPanel"><DevRoute /></RequireFeature> },
     ],
   },
@@ -78,13 +78,26 @@ function DevRoute() {
   return <Suspense fallback={null}><DevPanel /></Suspense>
 }
 
+/**
+ * Two applications in one bundle, chosen by address:
+ * - admin.localhost:5173      the platform console (super admin, all brokers)
+ * - <broker>.localhost:5173   the white-label trading site of one broker
+ * The console is a lazy chunk, so brokers' sites never download it.
+ */
+const PlatformApp = lazy(() => import('./platform/PlatformApp'))
+const isPlatform = window.location.hostname.startsWith('admin.')
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <TenantProvider>
-        <RouterProvider router={router} />
-        <Toasts />
-      </TenantProvider>
+      {isPlatform ? (
+        <Suspense fallback={null}><PlatformApp /></Suspense>
+      ) : (
+        <TenantProvider>
+          <RouterProvider router={router} />
+        </TenantProvider>
+      )}
+      <Toasts />
     </QueryClientProvider>
   </StrictMode>,
 )

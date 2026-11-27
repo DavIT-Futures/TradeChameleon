@@ -15,7 +15,7 @@ const broker = {
     calendar: false, compare: false, alerts: true, riskView: false,
   },
   limits: { maxOrderValue: 2000, maxOpenOrders: 0 },
-  instruments: 14, optionChains: 0, users: 2, traders: 1, viewers: 1, openOrders: 0, filledOrders: 0, totalCash: 20000,
+  instruments: 14, optionChains: 0, users: 2, traders: 1, viewers: 1, maintainers: 0, openOrders: 0, filledOrders: 0, totalCash: 20000,
 } as BrokerOverview;
 
 const ALL: AssetClass[] = ['STOCK', 'ETF', 'FX', 'CRYPTO', 'BOND', 'COMMODITY', 'INDEX', 'OPTION'];

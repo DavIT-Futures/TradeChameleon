@@ -10,7 +10,7 @@ import { useTenant } from '../core/TenantProvider'
 /** Authenticated layout: brand, navigation, user and the live-price connection. */
 export default function Shell() {
   const { tenant, scheme, cycleScheme } = useTenant()
-  const { user, isAdmin } = useAuth()
+  const { user, isMaintainer } = useAuth()
   const f = tenant.features
   const { status } = useStream()
   const navigate = useNavigate()
@@ -58,7 +58,7 @@ export default function Shell() {
         <NavLink to="/account">≡ Account</NavLink>
         {f.alerts && <NavLink to="/alerts">🔔 Alerts</NavLink>}
         {f.simulatorPanel && <NavLink to="/dev">⚙ Developer</NavLink>}
-        {isAdmin && <NavLink to="/admin">🛠 Admin</NavLink>}
+        {isMaintainer && <NavLink to="/admin">🛠 Admin</NavLink>}
       </nav>
       <main className="shell__main">
         <Outlet />

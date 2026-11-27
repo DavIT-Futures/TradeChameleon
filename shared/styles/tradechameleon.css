@@ -573,6 +573,19 @@
     & button { border: 0; border-radius: var(--b-radius); background: var(--b-primary); color: var(--b-on-primary); padding: 0.5rem; font-weight: 700; }
     & .chip { display: inline-block; border-radius: 999px; padding: 0.05rem 0.5rem; font-size: 0.72rem; background: color-mix(in oklab, var(--b-accent) 25%, transparent); }
   }
+  /* platform console (admin.localhost): neutral chrome, no broker theme */
+  .platform { min-block-size: 100dvh; background: var(--tc-bg);
+    & > main { max-inline-size: 90rem; margin-inline: auto; padding: 1rem; }
+  }
+  .platform__bar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;
+    padding: 0.75rem 1.25rem; background: #111827; color: #f9fafb;
+    & .muted { color: #9ca3af; } & .badge { background: #f59e0b; color: #111827; }
+    & .btn--ghost { color: #f9fafb; border-color: #4b5563; }
+  }
+  .platform-login { min-block-size: 100dvh; display: grid; place-items: center; padding: 1rem;
+    background: radial-gradient(circle at 30% 20%, #1f2937, #0b0f17);
+    & form { inline-size: min(26rem, 100%); }
+  }
   .audit { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.5rem; font-size: 0.85rem;
     & li { border-inline-start: 3px solid var(--tc-primary); padding-inline-start: 0.6rem; }
     & ul { margin: 0.2rem 0 0; padding-inline-start: 1rem; color: var(--tc-muted); }

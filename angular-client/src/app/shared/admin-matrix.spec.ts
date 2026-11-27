@@ -7,7 +7,7 @@ const broker = (id: string, over: Partial<BrokerOverview> = {}): BrokerOverview 
   allowedAssetClasses: ['STOCK'], spreadMarkupBps: 5,
   features: { trading: true, limitOrders: true, simulatorPanel: true, livePrices: true, screener: true, news: true, calendar: true, compare: true, alerts: true, riskView: true },
   limits: { maxOrderValue: null, maxOpenOrders: null },
-  instruments: 10, optionChains: 0, users: 2, traders: 1, viewers: 1, openOrders: 0, filledOrders: 0, totalCash: 1000,
+  instruments: 10, optionChains: 0, users: 2, traders: 1, viewers: 1, maintainers: 0, openOrders: 0, filledOrders: 0, totalCash: 1000,
   ...over,
 });
 
