@@ -16,6 +16,8 @@ public class LogoGenerator {
             case "kestrel" -> kestrel(t.primary(), t.accent());
             case "wisla" -> wisla(t.primary(), t.accent());
             case "sakura" -> sakura(t.primary(), t.accent());
+            case "alpenrose" -> alpenrose(t.primary(), t.accent());
+            case "pulse" -> pulse(t.primary(), t.accent());
             default -> monogram(t.primary(), t.onPrimary(), tenant.name().substring(0, 1));
         };
         return """
@@ -69,6 +71,26 @@ public class LogoGenerator {
                 <circle cx="32" cy="32" r="7" fill="%s"/>
                 <circle cx="32" cy="32" r="3" fill="#ffffff"/>
                 """.formatted(accent);
+    }
+
+    /** A shield with snowy peaks and a small alpine rose. */
+    private String alpenrose(String primary, String accent) {
+        return """
+                <path d="M32 3 L57 11 V30 C57 46 46 56 32 61 C18 56 7 46 7 30 V11 Z" fill="%1$s"/>
+                <path d="M12 40 L24 22 L31 31 L38 19 L52 40 Z" fill="#ffffff" opacity=".92"/>
+                <path d="M21 27 L24 22 L27 27 Z M35 24 L38 19 L41 24 Z" fill="%1$s" opacity=".35"/>
+                <circle cx="32" cy="47" r="5" fill="%2$s"/>
+                <circle cx="32" cy="47" r="2" fill="#ffffff"/>
+                """.formatted(primary, accent);
+    }
+
+    /** A neon heartbeat line on a dark rounded square. */
+    private String pulse(String primary, String accent) {
+        return """
+                <rect x="3" y="3" width="58" height="58" rx="16" fill="#151521"/>
+                <path d="M9 34 H22 L27 20 L34 46 L39 30 H55" fill="none" stroke="%1$s" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="55" cy="30" r="4" fill="%2$s"/>
+                """.formatted(primary, accent);
     }
 
     private String monogram(String bg, String fg, String letter) {

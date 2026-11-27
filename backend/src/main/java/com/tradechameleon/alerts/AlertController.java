@@ -1,6 +1,7 @@
 package com.tradechameleon.alerts;
 
 import com.tradechameleon.identity.CurrentUser;
+import com.tradechameleon.tenant.Feature;
 import com.tradechameleon.tenant.TenantContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -49,13 +50,13 @@ class AlertController {
     @GetMapping
     @Operation(summary = "Alerts of the caller, newest first")
     List<PriceAlert> list(@RequestParam(required = false) PriceAlert.Status status) {
-        return service.list(TenantContext.current(), CurrentUser.get().userId(), status);
+        return service.list(TenantContext.requireFeature(Feature.ALERTS), CurrentUser.get().userId(), status);
     }
 
     @PostMapping
     @Operation(summary = "Create a price alert (ABOVE / BELOW the mid price)")
     ResponseEntity<PriceAlert> create(@Valid @RequestBody CreateAlertRequest r) {
-        var alert = service.create(TenantContext.current(), CurrentUser.get().userId(), r.symbol(), r.condition(),
+        var alert = service.create(TenantContext.requireFeature(Feature.ALERTS), CurrentUser.get().userId(), r.symbol(), r.condition(),
                 r.price(), r.note());
         return ResponseEntity.created(URI.create("/api/alerts/" + alert.id())).body(alert);
     }
@@ -63,19 +64,19 @@ class AlertController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Cancel an active alert")
     PriceAlert cancel(@PathVariable UUID id) {
-        return service.cancel(TenantContext.current(), CurrentUser.get().userId(), id);
+        return service.cancel(TenantContext.requireFeature(Feature.ALERTS), CurrentUser.get().userId(), id);
     }
 
     @GetMapping("/notifications")
     @Operation(summary = "Triggered alerts the client has not shown yet (polled by the clients)")
     List<PriceAlert> notifications() {
-        return service.notifications(TenantContext.current(), CurrentUser.get().userId());
+        return service.notifications(TenantContext.requireFeature(Feature.ALERTS), CurrentUser.get().userId());
     }
 
     @PostMapping("/{id}/ack")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Mark a triggered alert as shown")
     void acknowledge(@PathVariable UUID id) {
-        service.acknowledge(TenantContext.current(), CurrentUser.get().userId(), id);
+        service.acknowledge(TenantContext.requireFeature(Feature.ALERTS), CurrentUser.get().userId(), id);
     }
 }

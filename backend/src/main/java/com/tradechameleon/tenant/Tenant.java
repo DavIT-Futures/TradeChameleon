@@ -17,7 +17,8 @@ public record Tenant(
         int spreadMarkupBps,
         String logoShape,
         Theme theme,
-        Features features) {
+        Features features,
+        Limits limits) {
 
     /** Visual identity, rendered by the clients as CSS custom properties. */
     public record Theme(
@@ -36,12 +37,41 @@ public record Tenant(
             String fontHeading) {
     }
 
-    /** Feature flags. A broker with {@code trading=false} is a portfolio-only (read-only) brand. */
+    /**
+     * Feature flags. A broker with {@code trading=false} is a portfolio-only (read-only) brand;
+     * {@code limitOrders=false} means market orders only (no LIMIT, STOP or STOP_LIMIT).
+     */
     public record Features(
             boolean trading,
             boolean limitOrders,
             boolean simulatorPanel,
-            boolean livePrices) {
+            boolean livePrices,
+            boolean screener,
+            boolean news,
+            boolean calendar,
+            boolean compare,
+            boolean alerts,
+            boolean riskView) {
+
+        public boolean enabled(Feature feature) {
+            return switch (feature) {
+                case SCREENER -> screener;
+                case NEWS -> news;
+                case CALENDAR -> calendar;
+                case COMPARE -> compare;
+                case ALERTS -> alerts;
+                case RISK_VIEW -> riskView;
+            };
+        }
+    }
+
+    /**
+     * Per-broker limits, null = unlimited.
+     *
+     * @param maxOrderValue maximum value of one order, in the broker currency
+     * @param maxOpenOrders maximum number of pending (limit/stop) orders per client; 0 = none allowed
+     */
+    public record Limits(java.math.BigDecimal maxOrderValue, Integer maxOpenOrders) {
     }
 
     public boolean allows(AssetClass assetClass) {

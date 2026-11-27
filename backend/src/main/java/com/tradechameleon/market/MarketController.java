@@ -95,7 +95,7 @@ class MarketController {
     @GetMapping("/stats")
     @Operation(summary = "Screener data: change, 1-hour volatility, RSI(14) on 1-minute candles, range position, spread, sentiment")
     List<InstrumentStats> stats() {
-        return analytics.stats(TenantContext.current());
+        return analytics.stats(TenantContext.requireFeature(com.tradechameleon.tenant.Feature.SCREENER));
     }
 
     @GetMapping("/instruments/{symbol}/options")

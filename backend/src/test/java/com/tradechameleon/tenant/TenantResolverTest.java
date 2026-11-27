@@ -26,7 +26,7 @@ class TenantResolverTest {
         var theme = new Tenant.Theme("#000", "#fff", "#111", "#fff", "#fff", "#000", "#666", "#0a0", "#a00",
                 "4px", "light", "sans-serif", "serif");
         return new Tenant(id, id, "", "en-GB", "GBP", Set.of(AssetClass.STOCK), 0, id, theme,
-                new Tenant.Features(true, true, true, true));
+                new Tenant.Features(true, true, true, true, true, true, true, true, true, true), new Tenant.Limits(null, null));
     }
 
     private static MockHttpServletRequest request(String host) {

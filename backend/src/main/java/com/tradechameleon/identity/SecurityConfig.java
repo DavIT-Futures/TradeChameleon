@@ -67,6 +67,7 @@ class SecurityConfig {
                         .requestMatchers(PUBLIC).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/orders/**").hasRole("TRADER")
                         .requestMatchers(HttpMethod.DELETE, "/api/orders/**").hasRole("TRADER")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/portfolio/**").hasRole("TRADER")
                         .requestMatchers(HttpMethod.PUT, "/api/portfolio/**").hasRole("TRADER")
                         .anyRequest().authenticated())

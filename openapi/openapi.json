@@ -50,6 +50,10 @@
     {
       "name": "Orders",
       "description": "Market and limit orders"
+    },
+    {
+      "name": "Admin",
+      "description": "Platform operator view of all brokers (role ADMIN)"
     }
   ],
   "paths": {
@@ -1841,6 +1845,46 @@
         ]
       }
     },
+    "/api/admin/tenants": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "All brokers with configuration, feature flags, limits and usage",
+        "operationId": "tenants",
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "description": "Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BrokerOverview"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/.well-known/openid-configuration": {
       "get": {
         "tags": [
@@ -2532,13 +2576,59 @@
           },
           "livePrices": {
             "type": "boolean"
+          },
+          "screener": {
+            "type": "boolean"
+          },
+          "news": {
+            "type": "boolean"
+          },
+          "calendar": {
+            "type": "boolean"
+          },
+          "compare": {
+            "type": "boolean"
+          },
+          "alerts": {
+            "type": "boolean"
+          },
+          "riskView": {
+            "type": "boolean"
           }
         },
         "required": [
+          "alerts",
+          "calendar",
+          "compare",
           "limitOrders",
           "livePrices",
+          "news",
+          "riskView",
+          "screener",
           "simulatorPanel",
           "trading"
+        ]
+      },
+      "Limits": {
+        "type": "object",
+        "properties": {
+          "maxOrderValue": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "maxOpenOrders": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          }
+        },
+        "required": [
+          "maxOpenOrders",
+          "maxOrderValue"
         ]
       },
       "TenantDto": {
@@ -2587,6 +2677,9 @@
           },
           "features": {
             "$ref": "#/components/schemas/Features"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/Limits"
           }
         },
         "required": [
@@ -2594,6 +2687,7 @@
           "currency",
           "features",
           "id",
+          "limits",
           "locale",
           "logoUrl",
           "name",
@@ -3434,6 +3528,110 @@
           "time",
           "title",
           "unit"
+        ]
+      },
+      "BrokerOverview": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "tagline": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "logoUrl": {
+            "type": "string"
+          },
+          "theme": {
+            "$ref": "#/components/schemas/Theme"
+          },
+          "allowedAssetClasses": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "STOCK",
+                "ETF",
+                "FX",
+                "CRYPTO",
+                "BOND",
+                "COMMODITY",
+                "INDEX",
+                "OPTION"
+              ]
+            }
+          },
+          "spreadMarkupBps": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "features": {
+            "$ref": "#/components/schemas/Features"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/Limits"
+          },
+          "instruments": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "optionChains": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "users": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "traders": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "viewers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "openOrders": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "filledOrders": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCash": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "allowedAssetClasses",
+          "currency",
+          "features",
+          "filledOrders",
+          "id",
+          "instruments",
+          "limits",
+          "locale",
+          "logoUrl",
+          "name",
+          "openOrders",
+          "optionChains",
+          "spreadMarkupBps",
+          "tagline",
+          "theme",
+          "totalCash",
+          "traders",
+          "users",
+          "viewers"
         ]
       }
     },

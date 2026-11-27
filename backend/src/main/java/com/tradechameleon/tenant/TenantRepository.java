@@ -47,7 +47,15 @@ class TenantRepository {
                 rs.getBoolean("feature_trading"),
                 rs.getBoolean("feature_limit_orders"),
                 rs.getBoolean("feature_simulator_panel"),
-                rs.getBoolean("feature_live_prices"));
+                rs.getBoolean("feature_live_prices"),
+                rs.getBoolean("feature_screener"),
+                rs.getBoolean("feature_news"),
+                rs.getBoolean("feature_calendar"),
+                rs.getBoolean("feature_compare"),
+                rs.getBoolean("feature_alerts"),
+                rs.getBoolean("feature_risk_view"));
+        var limits = new Tenant.Limits(rs.getBigDecimal("max_order_value"),
+                rs.getObject("max_open_orders") == null ? null : rs.getInt("max_open_orders"));
         return new Tenant(
                 rs.getString("id"),
                 rs.getString("name"),
@@ -58,7 +66,8 @@ class TenantRepository {
                 rs.getInt("spread_markup_bps"),
                 rs.getString("logo_shape"),
                 theme,
-                features);
+                features,
+                limits);
     }
 
     private static Set<AssetClass> assetClasses(Array array) throws SQLException {

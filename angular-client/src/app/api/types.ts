@@ -36,6 +36,8 @@ export type InstrumentStats = Schemas['InstrumentStats'];
 export type EconomicEvent = Schemas['EconomicEvent'];
 export type NewsItem = Schemas['NewsItem'];
 export type PortfolioRisk = Schemas['PortfolioRisk'];
+export type BrokerOverview = Schemas['BrokerOverview'];
+export type Limits = Schemas['Limits'];
 
 /** RFC 9457 Problem Details as returned by every error response of the API. */
 export interface Problem {

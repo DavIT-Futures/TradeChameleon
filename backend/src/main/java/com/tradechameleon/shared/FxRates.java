@@ -17,7 +17,8 @@ public final class FxRates {
             "EUR", new BigDecimal("1.0842"),
             "GBP", new BigDecimal("1.2715"),
             "PLN", new BigDecimal("0.2511"),
-            "JPY", new BigDecimal("0.00667"));
+            "JPY", new BigDecimal("0.00667"),
+            "CHF", new BigDecimal("1.1320"));
 
     private FxRates() {
     }

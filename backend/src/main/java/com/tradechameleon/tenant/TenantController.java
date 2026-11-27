@@ -63,12 +63,13 @@ class TenantController {
             int spreadMarkupBps,
             String logoUrl,
             Tenant.Theme theme,
-            Tenant.Features features) {
+            Tenant.Features features,
+            Tenant.Limits limits) {
 
         static TenantDto from(Tenant t) {
             return new TenantDto(t.id(), t.name(), t.tagline(), t.locale(), t.currency(),
                     t.allowedAssetClasses().stream().sorted().toList(),
-                    t.spreadMarkupBps(), "/api/tenants/" + t.id() + "/logo.svg", t.theme(), t.features());
+                    t.spreadMarkupBps(), "/api/tenants/" + t.id() + "/logo.svg", t.theme(), t.features(), t.limits());
         }
     }
 }

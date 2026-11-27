@@ -2,6 +2,7 @@ package com.tradechameleon.insights;
 
 import com.tradechameleon.shared.AssetClass;
 import com.tradechameleon.shared.DomainException;
+import com.tradechameleon.tenant.Feature;
 import com.tradechameleon.tenant.TenantContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -47,7 +48,7 @@ class InsightsController {
             throw new DomainException(HttpStatus.BAD_REQUEST, "validation", "Validation failed",
                     "The range must be 0 to 31 days long.", Map.of("errors", Map.of("to", "within 31 days of from")));
         }
-        return calendar.events(TenantContext.current(), start, end, minImportance);
+        return calendar.events(TenantContext.requireFeature(Feature.CALENDAR), start, end, minImportance);
     }
 
     @GetMapping("/news")
@@ -55,6 +56,6 @@ class InsightsController {
     List<NewsItem> news(@RequestParam(required = false) String symbol,
                         @RequestParam(required = false) AssetClass assetClass,
                         @RequestParam(defaultValue = "30") @Min(1) @Max(200) int limit) {
-        return news.latest(TenantContext.current(), symbol, assetClass, limit);
+        return news.latest(TenantContext.requireFeature(Feature.NEWS), symbol, assetClass, limit);
     }
 }

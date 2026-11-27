@@ -46,10 +46,10 @@ class TradingApiIntegrationTests {
     class Tenants {
 
         @Test
-        void listsFourBrokers() {
+        void listsAllBrokers() {
             var r = api.get("/api/tenants", null, null);
             assertThat(r.status()).isEqualTo(200);
-            assertThat(r.body().size()).isEqualTo(4);
+            assertThat(r.body().size()).isEqualTo(6);
         }
 
         @Test

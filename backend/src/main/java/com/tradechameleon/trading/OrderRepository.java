@@ -72,6 +72,13 @@ class OrderRepository {
                 .update() == 1;
     }
 
+    int countOpen(String tenantId, String userId) {
+        return jdbc.sql("select count(*) from trade_order where tenant_id = ? and user_id = ? and status = 'OPEN'")
+                .params(tenantId, userId)
+                .query(Integer.class)
+                .single();
+    }
+
     Optional<Order> find(String tenantId, String userId, UUID id) {
         return jdbc.sql("select * from trade_order where id = ? and tenant_id = ? and user_id = ?")
                 .params(id, tenantId, userId)

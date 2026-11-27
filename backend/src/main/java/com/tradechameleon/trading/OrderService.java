@@ -88,6 +88,7 @@ public class OrderService {
         BigDecimal takeProfit = scaled(request.takeProfit(), scale);
         validateProtection(side, entry, stopLoss, takeProfit);
         checkHoldings(tenant, userId, instrument, side, request.quantity(), entry);
+        checkLimits(tenant, userId, instrument, type, request.quantity(), entry);
 
         Instant now = Instant.now();
         var order = new Order(UUID.randomUUID(), tenant.id(), userId, instrument.symbol(), side, type,
@@ -215,6 +216,31 @@ public class OrderService {
                     "You hold " + holdings.quantity(instrument.symbol()).stripTrailingZeros().toPlainString() + " "
                             + instrument.symbol() + "; short selling is not supported.",
                     Map.of("held", holdings.quantity(instrument.symbol()).stripTrailingZeros()));
+        }
+    }
+
+    /** Broker-specific limits: maximum order value and maximum number of pending orders. */
+    private void checkLimits(Tenant tenant, String userId, Instrument instrument, Order.OrderType type,
+                             BigDecimal quantity, BigDecimal price) {
+        var limits = tenant.limits();
+        if (limits.maxOrderValue() != null) {
+            BigDecimal value = FxRates.convert(quantity.multiply(price), instrument.currency(), tenant.currency());
+            if (value.compareTo(limits.maxOrderValue()) > 0) {
+                throw DomainException.unprocessable("order-limit-exceeded", "Order value limit exceeded",
+                        "This order is worth " + value.setScale(2, RoundingMode.HALF_UP) + " " + tenant.currency() + "; "
+                                + tenant.name() + " accepts at most " + limits.maxOrderValue() + " " + tenant.currency()
+                                + " per order.",
+                        Map.of("maxOrderValue", limits.maxOrderValue(), "orderValue", value.setScale(2, RoundingMode.HALF_UP),
+                                "currency", tenant.currency()));
+            }
+        }
+        if (type != Order.OrderType.MARKET && limits.maxOpenOrders() != null) {
+            int open = orders.countOpen(tenant.id(), userId);
+            if (open >= limits.maxOpenOrders()) {
+                throw DomainException.unprocessable("open-orders-limit", "Too many pending orders",
+                        tenant.name() + " allows at most " + limits.maxOpenOrders() + " pending orders; you have " + open + ".",
+                        Map.of("maxOpenOrders", limits.maxOpenOrders(), "openOrders", open));
+            }
         }
     }
 

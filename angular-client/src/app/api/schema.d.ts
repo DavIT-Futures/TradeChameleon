@@ -619,6 +619,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/tenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** All brokers with configuration, feature flags, limits and usage */
+        get: operations["tenants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/.well-known/openid-configuration": {
         parameters: {
             query?: never;
@@ -801,6 +818,17 @@ export interface components {
             limitOrders: boolean;
             simulatorPanel: boolean;
             livePrices: boolean;
+            screener: boolean;
+            news: boolean;
+            calendar: boolean;
+            compare: boolean;
+            alerts: boolean;
+            riskView: boolean;
+        };
+        Limits: {
+            maxOrderValue: number | null;
+            /** Format: int32 */
+            maxOpenOrders: number | null;
         };
         TenantDto: {
             id: string;
@@ -814,6 +842,7 @@ export interface components {
             logoUrl: string;
             theme: components["schemas"]["Theme"];
             features: components["schemas"]["Features"];
+            limits: components["schemas"]["Limits"];
         };
         Theme: {
             primary: string;
@@ -1025,6 +1054,35 @@ export interface components {
             actual: number | null;
             surprise: string | null;
             symbols: string[];
+        };
+        BrokerOverview: {
+            id: string;
+            name: string;
+            tagline: string;
+            locale: string;
+            currency: string;
+            logoUrl: string;
+            theme: components["schemas"]["Theme"];
+            allowedAssetClasses: ("STOCK" | "ETF" | "FX" | "CRYPTO" | "BOND" | "COMMODITY" | "INDEX" | "OPTION")[];
+            /** Format: int32 */
+            spreadMarkupBps: number;
+            features: components["schemas"]["Features"];
+            limits: components["schemas"]["Limits"];
+            /** Format: int32 */
+            instruments: number;
+            /** Format: int32 */
+            optionChains: number;
+            /** Format: int32 */
+            users: number;
+            /** Format: int32 */
+            traders: number;
+            /** Format: int32 */
+            viewers: number;
+            /** Format: int32 */
+            openOrders: number;
+            /** Format: int32 */
+            filledOrders: number;
+            totalCash: number;
         };
     };
     responses: never;
@@ -2031,6 +2089,29 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["PriceAlert"][];
+                };
+            };
+        };
+    };
+    tenants: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Broker id (aurora, kestrel, wisla, sakura). Optional: subdomain or ?tenant= work too. */
+                "X-Tenant-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BrokerOverview"][];
                 };
             };
         };

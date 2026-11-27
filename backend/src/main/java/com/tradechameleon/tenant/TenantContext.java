@@ -21,6 +21,16 @@ public final class TenantContext {
         return CURRENT.get();
     }
 
+    /** Guards an endpoint behind a broker feature flag: 403 problem "feature-disabled" when it is off. */
+    public static Tenant requireFeature(Feature feature) {
+        Tenant tenant = current();
+        if (!tenant.features().enabled(feature)) {
+            throw com.tradechameleon.shared.DomainException.forbidden("feature-disabled", "Feature not offered",
+                    tenant.name() + " does not offer " + feature.label() + ".");
+        }
+        return tenant;
+    }
+
     public static boolean isBound() {
         return CURRENT.isBound();
     }

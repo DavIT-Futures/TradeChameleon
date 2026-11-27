@@ -57,7 +57,7 @@ class PortfolioController {
     @GetMapping("/risk")
     @Operation(summary = "Exposure, CFD margin requirement, margin level and concentration warnings")
     PortfolioRisk risk() {
-        return portfolios.risk(TenantContext.current(), CurrentUser.get().userId());
+        return portfolios.risk(TenantContext.requireFeature(com.tradechameleon.tenant.Feature.RISK_VIEW), CurrentUser.get().userId());
     }
 
     @PutMapping("/positions/{symbol}/protection")
