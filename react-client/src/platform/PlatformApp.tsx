@@ -30,11 +30,16 @@ export default function PlatformApp() {
   )
 }
 
+/** pulse -> http://pulse.localhost:5173/login (same protocol and port as the console). */
+const siteUrl = (id: string) => `${location.protocol}//${id}.localhost${location.port ? ':' + location.port : ''}/login`
+
 function PlatformLogin() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const login = useMutation({ mutationFn: () => platformLogin(email, password) })
   const problem = login.error instanceof ApiError ? login.error.problem : null
+  // Public list of brokers: links to each white-label site from the console's login screen.
+  const { data: sites = [] } = useQuery({ queryKey: ['platform', 'sites'], queryFn: () => unwrap(platformApi.GET('/api/tenants')) })
 
   return (
     <main className="platform-login">
@@ -49,6 +54,14 @@ function PlatformLogin() {
         <button className="btn" type="submit" disabled={login.isPending}>{login.isPending ? 'Signing in…' : 'Sign in'}</button>
         <button className="btn btn--ghost btn--small" type="button"
           onClick={() => { setEmail('admin@tradechameleon.com'); setPassword('demo') }}>Demo: admin@tradechameleon.com / demo</button>
+        <nav className="platform-sites" aria-label="Broker sites">
+          <span className="muted">Broker sites</span>
+          {sites.map((t) => (
+            <a key={t.id} href={siteUrl(t.id)} style={{ '--b-primary': t.theme.primary } as CSSProperties} title={t.tagline}>
+              <img src={t.logoUrl} alt="" /> <span>{t.name}<small>{t.id}.localhost</small></span>
+            </a>
+          ))}
+        </nav>
       </form>
     </main>
   )

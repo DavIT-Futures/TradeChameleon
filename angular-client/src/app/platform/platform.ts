@@ -1,6 +1,6 @@
 import { HttpErrorResponse, httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import type { BrokerOverview, Problem } from '../api/types';
+import type { BrokerOverview, Problem, Tenant } from '../api/types';
 import { formatMoney } from '../core/format';
 import { BrokerEditor } from '../features/admin/broker-editor';
 import { UserManager } from '../features/admin/user-manager';
@@ -127,6 +127,13 @@ export class PlatformConsole {
           <button class="btn" type="submit" [disabled]="busy()">{{ busy() ? 'Signing in…' : 'Sign in' }}</button>
           <button class="btn btn--ghost btn--small" type="button" (click)="email.value = 'admin@tradechameleon.com'; password.value = 'demo'">
             Demo: admin&#64;tradechameleon.com / demo</button>
+          <nav class="platform-sites" aria-label="Broker sites">
+            <span class="muted">Broker sites</span>
+            @for (t of sites.value(); track t.id) {
+              <a [href]="siteUrl(t.id)" [style.--b-primary]="t.theme.primary" [title]="t.tagline">
+                <img [src]="t.logoUrl" alt="" /> <span>{{ t.name }}<small>{{ t.id }}.localhost</small></span></a>
+            }
+          </nav>
         </form>
       </main>
     }
@@ -137,6 +144,13 @@ export class PlatformApp {
   protected readonly auth = inject(PlatformAuth);
   protected readonly busy = signal(false);
   protected readonly problem = signal<Problem | null>(null);
+  /** Public list of brokers: links to each white-label site from the console's login screen. */
+  protected readonly sites = httpResource<Tenant[]>(() => '/api/tenants', { defaultValue: [] });
+
+  /** pulse -> http://pulse.localhost:4200/login (same protocol and port as the console). */
+  protected siteUrl(id: string): string {
+    return `${location.protocol}//${id}.localhost${location.port ? ':' + location.port : ''}/login`;
+  }
 
   constructor() {
     document.title = 'Platform console · TradeChameleon';

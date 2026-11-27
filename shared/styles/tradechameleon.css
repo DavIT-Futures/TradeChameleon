@@ -603,6 +603,16 @@
     & tr.is-disabled td { opacity: 0.6; }
     & .actions-cell { white-space: nowrap; text-align: end; }
   }
+  .platform-sites { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.4rem; margin-block-start: 0.5rem;
+    padding-block-start: 0.75rem; border-block-start: 1px solid var(--tc-border);
+    & > .muted { grid-column: 1 / -1; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    & a { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.5rem; border-radius: var(--tc-radius-sm);
+      border: 1px solid var(--tc-border); border-inline-start: 4px solid var(--b-primary); text-decoration: none; color: inherit;
+      font-size: 0.85rem; transition: background 0.15s;
+      &:hover { background: color-mix(in oklab, var(--b-primary) 12%, transparent); } }
+    & img { inline-size: 24px; block-size: 24px; }
+    & small { display: block; color: var(--tc-muted); font-size: 0.72rem; }
+  }
   .audit { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.5rem; font-size: 0.85rem;
     & li { border-inline-start: 3px solid var(--tc-primary); padding-inline-start: 0.6rem; }
     & ul { margin: 0.2rem 0 0; padding-inline-start: 1rem; color: var(--tc-muted); }
