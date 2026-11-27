@@ -26,7 +26,7 @@ whole tools (screener, calendar, risk view…) or cap order sizes, enforced by t
 | React client | React 19, Vite, React Router, TanStack Query, `useSyncExternalStore`, Vitest + Testing Library |
 | Styling | Plain modern CSS shared by both clients, themed with custom properties |
 
-📘 **Technical guide (43 chapters, Polish/English, Mermaid diagrams, real code and real API responses):
+📘 **Technical guide (44 chapters, Polish/English, Mermaid diagrams, real code and real API responses):
 [davit-futures.github.io/TradeChameleon](https://davit-futures.github.io/TradeChameleon/)**. The source is
 [`docs/guide.html`](docs/guide.html); the [Publish guide](.github/workflows/pages.yml) workflow deploys it to GitHub Pages on every push to `main`.
 
@@ -46,7 +46,8 @@ whole tools (screener, calendar, risk view…) or cap order sizes, enforced by t
 - **Light/dark override** on top of each broker's theme
 - Portfolio valued live in the broker currency, **account statement** (deposits, withdrawals, trade cash flows)
   and **closed trades with realised P&L**
-- **Admin panel** (`admin@aurora.test`): all brokers side by side, a feature/limit matrix with differences highlighted, live usage,
+- **Two admin levels**: each broker's **maintainer** edits only that broker on its own site (`/admin`);
+  the **platform super admin** has a separate console at `admin.localhost` with all brokers side by side, a feature/limit matrix with differences highlighted, live usage,
   and an **editor for every broker setting** (branding, colours, fonts, locale, currency, asset classes, spread, feature flags,
   limits) with a live preview, server-side validation, changes live on the next request and an audit log
 - Developer panel: latency, jitter, failure rate, volatility and pause for the simulated market
@@ -66,7 +67,9 @@ The broker is resolved from the `*.localhost` subdomain, then `?tenant=`, then t
 otherwise the default (`aurora`).
 
 Demo users (password `demo` for all): `trader@<tenant>.test` (role TRADER) and `viewer@<tenant>.test` (role VIEWER).
-Platform admin: `admin@aurora.test` (role ADMIN) opens the **Admin** screen comparing all brokers.
+Broker maintainer: `maintainer@<tenant>.test` (roles MAINTAINER + VIEWER) gets an **Admin** page on that broker's site.
+Platform super admin: `admin@tradechameleon.com` signs in to the separate console at `http://admin.localhost:4200`
+(or `:5173`); its token has no tenant and works only on `/api/platform/**`.
 
 ## Getting started
 

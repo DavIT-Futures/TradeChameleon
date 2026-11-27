@@ -2402,12 +2402,12 @@ const gated = (flag: keyof Features, path: string, load: () =&gt; Promise&lt;{ d
 // …
 gated('calendar', 'calendar', () =&gt; import('./pages/Calendar')),</code></pre>
 <div class="pl"><h3>Panel admina</h3>
-<p>Nowy moduł Modulith <code>admin</code> udostępnia <code>GET /api/admin/tenants</code>, chroniony rolą <code>ADMIN</code> (<code>.requestMatchers("/api/admin/**").hasRole("ADMIN")</code>). To read model: konfiguracja z tabeli <code>tenant</code> plus jedno zapytanie agregujące użytkowników, zlecenia i gotówkę per broker. Użytkownik demo: <code>admin@aurora.test</code> / <code>demo</code> (przycisk na ekranie logowania Aurory).</p>
+<p>Nowy moduł Modulith <code>admin</code> udostępnia <code>GET /api/platform/tenants</code>, chroniony rolą <code>ADMIN</code> (<code>.requestMatchers("/api/platform/**").hasRole("ADMIN")</code>). To read model: konfiguracja z tabeli <code>tenant</code> plus jedno zapytanie agregujące użytkowników, zlecenia i gotówkę per broker. Użytkownik demo: <code>admin@tradechameleon.com</code> / <code>demo</code> w osobnej konsoli <code>admin.localhost</code> (rozdział o dwóch poziomach administracji).</p>
 <p>Ekran <em>Admin · brokers</em> pokazuje karty marek (każda w swoich kolorach dzięki zmiennym <code>--b-primary</code>, <code>--b-bg</code>… ustawionym inline) i macierz: wiersz = ustawienie, kolumna = broker. Czysta funkcja <code>buildMatrix()</code> (identyczna kopia w obu klientach, z testami) grupuje wiersze (marka, klasy aktywów, handel, narzędzia, użycie) i oznacza <code>differs</code>, gdy brokerzy się różnią. Przełącznik „Show only differences” zostawia tylko te wiersze; dane odświeżają się co 10 s.</p></div>
 <div class="en"><h3>The admin panel</h3>
-<p>A new Modulith module <code>admin</code> exposes <code>GET /api/admin/tenants</code>, guarded by the <code>ADMIN</code> role (<code>.requestMatchers("/api/admin/**").hasRole("ADMIN")</code>). It is a read model: configuration from the <code>tenant</code> table plus one aggregate query of users, orders and cash per broker. Demo user: <code>admin@aurora.test</code> / <code>demo</code> (a button on Aurora's login screen).</p>
+<p>A new Modulith module <code>admin</code> exposes <code>GET /api/platform/tenants</code>, guarded by the <code>ADMIN</code> role (<code>.requestMatchers("/api/platform/**").hasRole("ADMIN")</code>). It is a read model: configuration from the <code>tenant</code> table plus one aggregate query of users, orders and cash per broker. Demo user: <code>admin@tradechameleon.com</code> / <code>demo</code> in the separate console at <code>admin.localhost</code> (see the chapter on the two levels of administration).</p>
 <p>The <em>Admin · brokers</em> screen shows brand cards (each in its own colours via <code>--b-primary</code>, <code>--b-bg</code>… set inline) and a matrix: row = setting, column = broker. The pure function <code>buildMatrix()</code> (an identical copy in both clients, with tests) groups rows (brand, asset classes, trading, tools, usage) and marks <code>differs</code> when brokers disagree. The "Show only differences" toggle keeps only those rows; data refreshes every 10 s.</p></div>
-<p class="file">GET /api/admin/tenants (<span class="pl">jeden broker, fragment</span><span class="en">one broker, excerpt</span>)</p>
+<p class="file">GET /api/platform/tenants (<span class="pl">jeden broker, fragment</span><span class="en">one broker, excerpt</span>)</p>
 <pre><code class="language-json">{
   "id": "pulse", "name": "Pulse", "locale": "en-US", "currency": "USD",
   "allowedAssetClasses": ["STOCK", "ETF", "CRYPTO"], "spreadMarkupBps": 35,
@@ -2418,7 +2418,7 @@ gated('calendar', 'calendar', () =&gt; import('./pages/Calendar')),</code></pre>
   "openOrders": 0, "filledOrders": 0, "totalCash": 20000.0
 }</code></pre>
 <pre class="mermaid">flowchart LR
-  A["admin@aurora.test<br/>roles: ADMIN"] -->|Bearer JWT| S{"SecurityConfig<br/>hasRole ADMIN"}
+  A["admin@tradechameleon.com<br/>roles: ADMIN"] -->|Bearer JWT| S{"SecurityConfig<br/>hasRole ADMIN"}
   S -->|403 for TRADER / VIEWER| X[Problem Details]
   S --> C[AdminController]
   C --> T[(tenant)]
@@ -2442,7 +2442,7 @@ gated('calendar', 'calendar', () =&gt; import('./pages/Calendar')),</code></pre>
   participant D as TenantDirectory (tenant module)
   participant DB as PostgreSQL
   participant A as TenantAuditLog (admin module)
-  UI->>C: PUT /api/admin/tenants/pulse (TenantSettings JSON)
+  UI->>C: PUT /api/platform/tenants/pulse (TenantSettings JSON)
   C->>C: @Valid: Bean Validation (400 + errors map)
   C->>D: update(id, settings, admin e-mail)
   D->>D: business rules (422: unsupported currency, unknown logo)
@@ -2453,7 +2453,7 @@ gated('calendar', 'calendar', () =&gt; import('./pages/Calendar')),</code></pre>
   A->>DB: INSERT INTO tenant_change (after commit)</pre>
 <div class="pl"><p><strong>Walidacja dwuwarstwowa.</strong> Kształt sprawdza Bean Validation na rekordach: <code>TenantSettings</code> (locale <code>xx-XX</code>, waluta <code>[A-Z]{3}</code>, co najmniej jedna klasa aktywów, narzut 0–500), a <code>Tenant.Theme</code> i <code>Tenant.Limits</code> mają adnotacje na komponentach rekordu i są walidowane kaskadowo przez <code>@Valid</code>. Wartości trafiają do CSS i do SVG logo, więc wzorce są restrykcyjne: kolor tylko <code>#rrggbb</code>, promień <code>0–39px</code>, czcionki bez <code>; { } &lt; &gt;</code> (nie da się wstrzyknąć CSS). Reguły wymagające wiedzy o systemie sprawdza <code>TenantDirectory.update()</code>: waluta musi być w tabeli <code>FxRates</code>, kształt logo w <code>LogoGenerator.SHAPES</code> (422). Formularze mają <code>novalidate</code>, więc jedynym źródłem prawdy jest serwer, a błędy z mapy <code>errors</code> lądują przy polach (<code>theme.primary</code>, <code>limits.maxOrderValue</code>…).</p></div>
 <div class="en"><p><strong>Two layers of validation.</strong> Bean Validation checks the shape on records: <code>TenantSettings</code> (locale <code>xx-XX</code>, currency <code>[A-Z]{3}</code>, at least one asset class, markup 0–500), while <code>Tenant.Theme</code> and <code>Tenant.Limits</code> carry annotations on their record components and are validated in cascade via <code>@Valid</code>. Values end up in CSS and in the SVG logo, so the patterns are strict: colours only <code>#rrggbb</code>, radius <code>0–39px</code>, fonts without <code>; { } &lt; &gt;</code> (no CSS injection). Rules that need knowledge of the system live in <code>TenantDirectory.update()</code>: the currency must be in <code>FxRates</code>, the logo shape in <code>LogoGenerator.SHAPES</code> (422). The forms use <code>novalidate</code>, so the server is the single source of truth and the <code>errors</code> map lands next to the fields (<code>theme.primary</code>, <code>limits.maxOrderValue</code>…).</p></div>
-<p class="file">PUT /api/admin/tenants/wisla <span class="pl">(błędne dane, prawdziwa odpowiedź)</span><span class="en">(invalid input, real response)</span></p>
+<p class="file">PUT /api/platform/tenants/wisla <span class="pl">(błędne dane, prawdziwa odpowiedź)</span><span class="en">(invalid input, real response)</span></p>
 <pre><code class="language-json">{
   "type": "https://tradechameleon.dev/problems/validation",
   "title": "Validation failed",
@@ -2468,10 +2468,10 @@ gated('calendar', 'calendar', () =&gt; import('./pages/Calendar')),</code></pre>
   }
 }</code></pre>
 <div class="pl"><p><strong>Natychmiastowe działanie.</strong> Wszystkie moduły pytają <code>TenantDirectory</code> o brokera przy każdym żądaniu (filtr tenantów, silnik cen, dopasowanie zleceń, SL/TP), więc wystarczy podmienić kopię w pamięci. Mapa jest <em>copy-on-write</em> w polu <code>volatile</code>: czytelnicy nigdy nie blokują, a rzadki zapis tworzy nową mapę. Następne żądanie widzi nowy spread, flagi i limity, bez restartu i bez ponownego logowania. URL logo zawiera wersję liczoną z nazwy, kształtu i kolorów (<code>logo.svg?v=…</code>), więc godzinny cache przeglądarki nie pokaże starego logo. Klienci odświeżają brokera przy powrocie do karty i co 30 s (Angular: <code>TenantService.refresh()</code>, React: <code>refetchInterval</code> w <code>TenantProvider</code>), a admin edytujący własnego brokera widzi zmianę od razu.</p>
-<p><strong>Audyt przez zdarzenie.</strong> <code>TenantDirectory</code> liczy różnicę refleksją po komponentach rekordów (<code>"features.calendar: false → true"</code>) i publikuje <code>TenantUpdated</code>. Moduł <code>tenant</code> nic nie wie o audycie: <code>TenantAuditLog</code> w module <code>admin</code> to <code>@ApplicationModuleListener</code>, który po commicie zapisuje wpis do tabeli <code>tenant_change</code> (migracja V7), a rejestr publikacji zdarzeń ponowi zapis po awarii. <code>GET /api/admin/tenants/{id}/changes</code> zwraca dziennik, a <code>GET /api/admin/settings-options</code> dozwolone waluty, klasy i kształty logo dla list wyboru.</p>
+<p><strong>Audyt przez zdarzenie.</strong> <code>TenantDirectory</code> liczy różnicę refleksją po komponentach rekordów (<code>"features.calendar: false → true"</code>) i publikuje <code>TenantUpdated</code>. Moduł <code>tenant</code> nic nie wie o audycie: <code>TenantAuditLog</code> w module <code>admin</code> to <code>@ApplicationModuleListener</code>, który po commicie zapisuje wpis do tabeli <code>tenant_change</code> (migracja V7), a rejestr publikacji zdarzeń ponowi zapis po awarii. <code>GET /api/platform/tenants/{id}/changes</code> zwraca dziennik, a <code>GET /api/platform/settings-options</code> dozwolone waluty, klasy i kształty logo dla list wyboru.</p>
 <p><strong>Waluta.</strong> Zmiana waluty brokera dotyczy nowych kont, limitów i wyświetlania w bilecie zlecenia; istniejące konta zachowują swoją walutę (kolumna <code>account.currency</code>), bo przeliczenie sald to osobna operacja księgowa.</p></div>
 <div class="en"><p><strong>Immediate effect.</strong> Every module asks <code>TenantDirectory</code> for the broker on each request (tenant filter, price engine, order matching, SL/TP), so swapping the in-memory copy is enough. The map is <em>copy-on-write</em> in a <code>volatile</code> field: readers never lock and the rare writer builds a new map. The next request sees the new spread, flags and limits, with no restart and no new login. The logo URL carries a version computed from name, shape and colours (<code>logo.svg?v=…</code>), so the hour-long browser cache never shows an old logo. Clients reload the broker when the tab regains focus and every 30 s (Angular: <code>TenantService.refresh()</code>, React: <code>refetchInterval</code> in <code>TenantProvider</code>), and an admin editing their own broker sees the change at once.</p>
-<p><strong>Audit through an event.</strong> <code>TenantDirectory</code> computes a diff by walking record components with reflection (<code>"features.calendar: false → true"</code>) and publishes <code>TenantUpdated</code>. The <code>tenant</code> module knows nothing about auditing: <code>TenantAuditLog</code> in the <code>admin</code> module is an <code>@ApplicationModuleListener</code> that writes the entry to <code>tenant_change</code> (migration V7) after commit, and the event publication registry retries it after a crash. <code>GET /api/admin/tenants/{id}/changes</code> returns the log and <code>GET /api/admin/settings-options</code> the allowed currencies, classes and logo shapes for the selects.</p>
+<p><strong>Audit through an event.</strong> <code>TenantDirectory</code> computes a diff by walking record components with reflection (<code>"features.calendar: false → true"</code>) and publishes <code>TenantUpdated</code>. The <code>tenant</code> module knows nothing about auditing: <code>TenantAuditLog</code> in the <code>admin</code> module is an <code>@ApplicationModuleListener</code> that writes the entry to <code>tenant_change</code> (migration V7) after commit, and the event publication registry retries it after a crash. <code>GET /api/platform/tenants/{id}/changes</code> returns the log and <code>GET /api/platform/settings-options</code> the allowed currencies, classes and logo shapes for the selects.</p>
 <p><strong>Currency.</strong> Changing a broker's currency affects new accounts, limits and the order ticket; existing accounts keep their currency (<code>account.currency</code>), because converting balances is a separate accounting operation.</p></div>
 <p class="file">backend/src/main/java/com/tradechameleon/tenant/TenantDirectory.java</p>
 <pre><code class="language-java">@Transactional
@@ -2490,9 +2490,9 @@ public synchronized Tenant update(String id, TenantSettings settings, String cha
     events.publishEvent(new TenantUpdated(after.id(), changedBy, Instant.now(), changes));
     return after;
 }</code></pre>
-<p class="file">GET /api/admin/tenants/pulse/changes</p>
+<p class="file">GET /api/platform/tenants/pulse/changes</p>
 <pre><code class="language-json">[ {
-  "changedBy": "admin@aurora.test",
+  "changedBy": "admin@tradechameleon.com",
   "changedAt": "2026-11-27T01:26:07.011623Z",
   "changes": [ "name: Pulse → Pulse Pro", "features.calendar: false → true", "limits.maxOrderValue: 2000.00 → 5000" ]
 } ]</code></pre>
@@ -2500,6 +2500,64 @@ public synchronized Tenant update(String id, TenantSettings settings, String cha
 <p>Testy tej części: <code>AdminSettingsIntegrationTests</code> (401/403/404, błędy pól 400, 422 dla waluty, zmiana działa od razu i trafia do dziennika, przywrócenie ustawień), <code>TenantSettingsDiffTest</code> oraz testy <code>admin-settings</code> w obu klientach. Razem: backend 100, Angular 36, React 35.</p></div>
 <div class="en"><p><strong>Forms in both clients.</strong> Pure functions in <code>admin-settings.ts</code> (copied to React) hold the logic: <code>toSettings()</code> (deep copy of the editable part), <code>toggleClass()</code> (canonical order), <code>parseLimit()</code> (empty = unlimited), <code>changedFields()</code> (the "Unsaved" badge) and <code>fieldError()</code>. In Angular the draft is a signal updated immutably with <code>set('theme.primary', …)</code> and "Unsaved" is a <code>computed</code>; in React the draft is <code>useState</code>, saving is a <code>useMutation</code>, and the editor component has <code>key={broker.id}</code> so every broker gets fresh state.</p>
 <p>Tests for this part: <code>AdminSettingsIntegrationTests</code> (401/403/404, 400 field errors, 422 for the currency, the change is live at once and lands in the log, settings restored), <code>TenantSettingsDiffTest</code> and the <code>admin-settings</code> tests in both clients. In total: backend 100, Angular 36, React 35.</p></div>
+</section>
+
+<section class="chapter" id="admin-roles">
+<h2><span class="pl">Dwa poziomy administracji: maintainer brokera i super admin platformy</span><span class="en">Two levels of administration: broker maintainer and platform super admin</span></h2>
+<div class="pl"><p>Jeden admin „wszystkiego” mieszkający na brokerze Aurora to zły model: łączy dwie różne odpowiedzialności i dwie różne granice zaufania. Migracja <code>V8__maintainers_and_platform_admin.sql</code> rozdziela je:</p></div>
+<div class="en"><p>One admin of "everything" living on the Aurora broker is the wrong model: it mixes two responsibilities and two trust boundaries. Migration <code>V8__maintainers_and_platform_admin.sql</code> separates them:</p></div>
+<table>
+<thead><tr><th></th><th><span class="pl">Maintainer brokera</span><span class="en">Broker maintainer</span></th><th><span class="pl">Super admin platformy</span><span class="en">Platform super admin</span></th></tr></thead>
+<tbody>
+<tr><td><span class="pl">Konto demo</span><span class="en">Demo account</span></td><td><code>maintainer@&lt;broker&gt;.test</code> / demo</td><td><code>admin@tradechameleon.com</code> / demo</td></tr>
+<tr><td><span class="pl">Tabela</span><span class="en">Table</span></td><td><code>app_user</code> (tenant_id), <span class="pl">role</span><span class="en">roles</span> <code>{MAINTAINER, VIEWER}</code></td><td><code>platform_user</code>, <span class="pl">rola</span><span class="en">role</span> <code>{ADMIN}</code></td></tr>
+<tr><td><span class="pl">Logowanie</span><span class="en">Sign-in</span></td><td><code>POST /api/auth/token</code> <span class="pl">na stronie brokera</span><span class="en">on the broker's site</span></td><td><code>POST /api/platform/auth/token</code></td></tr>
+<tr><td>Token</td><td><code>tenant: "pulse"</code>, <code>aud: tradechameleon-api</code></td><td><span class="pl">bez tenanta</span><span class="en">no tenant</span>, <code>platform: true</code>, <code>aud: tradechameleon-platform</code></td></tr>
+<tr><td><span class="pl">Adres UI</span><span class="en">UI address</span></td><td><code>pulse.localhost:4200/admin</code> <span class="pl">(strona brokera)</span><span class="en">(the broker's site)</span></td><td><code>admin.localhost:4200</code> <span class="pl">(osobna aplikacja)</span><span class="en">(a separate app)</span></td></tr>
+<tr><td>API</td><td><code>/api/tenant-admin/broker</code>, <code>/changes</code>, <code>/settings-options</code></td><td><code>/api/platform/tenants</code>, <code>/tenants/{id}</code>, <code>/tenants/{id}/changes</code></td></tr>
+<tr><td><span class="pl">Zakres</span><span class="en">Scope</span></td><td><span class="pl">tylko własny broker</span><span class="en">own broker only</span></td><td><span class="pl">wszyscy brokerzy, macierz różnic</span><span class="en">all brokers, comparison matrix</span></td></tr>
+</tbody>
+</table>
+<div class="pl"><p><strong>Jak egzekwowany jest zakres maintainera.</strong> W URL-ach <code>/api/tenant-admin/**</code> <em>nie ma</em> identyfikatora brokera: <code>TenantAdminController</code> bierze go z <code>TenantContext</code>, czyli z żądania. Zanim kontroler się wykona, <code>TenantMatchFilter</code> porównuje claim <code>tenant</code> tokenu z brokerem żądania, więc maintainer Pulse, który wyśle nagłówek <code>X-Tenant-Id: kestrel</code>, dostaje 403. Nie ma czego „podmienić” w URL-u, a reguła działa na krawędzi, dla wszystkich endpointów naraz. Logika (przegląd, zapis, audyt) jest wspólna w pakietowo-prywatnym <code>BrokerAdmin</code>; dwa kontrolery decydują tylko <em>kto</em> i <em>którego</em> brokera.</p>
+<p><strong>Dlaczego osobny rodzaj tokenu dla super admina.</strong> Token platformy nie ma tenanta, a filtr przepuszcza tokeny bez tenanta (tak wyglądają tokeny korporacyjnego SSO). Bez dodatkowej reguły super admin mógłby więc działać na stronie brokera domyślnego. Dlatego <code>TenantMatchFilter</code> sprawdza claim <code>platform</code> w obie strony: token platformy działa tylko na <code>/api/platform/**</code>, a <code>/api/platform/**</code> przyjmuje tylko tokeny platformy (403 <code>wrong-audience</code>). Ścieżki publiczne (branding, notowania) działają z każdym tokenem, bo i tak go ignorują.</p></div>
+<div class="en"><p><strong>How the maintainer's scope is enforced.</strong> The <code>/api/tenant-admin/**</code> URLs contain <em>no</em> broker id: <code>TenantAdminController</code> takes it from <code>TenantContext</code>, i.e. from the request. Before the controller runs, <code>TenantMatchFilter</code> compares the token's <code>tenant</code> claim with the request's broker, so a Pulse maintainer sending <code>X-Tenant-Id: kestrel</code> gets a 403. There is nothing to swap in the URL, and the rule sits at the edge, for every endpoint at once. The logic (overview, save, audit) is shared in the package-private <code>BrokerAdmin</code>; the two controllers only decide <em>who</em> may touch <em>which</em> broker.</p>
+<p><strong>Why a separate kind of token for the super admin.</strong> A platform token has no tenant, and the filter lets tenant-less tokens through (that is what corporate SSO tokens look like). Without an extra rule the super admin could therefore act on the default broker's site. So <code>TenantMatchFilter</code> checks the <code>platform</code> claim both ways: a platform token works only on <code>/api/platform/**</code>, and <code>/api/platform/**</code> accepts only platform tokens (403 <code>wrong-audience</code>). Public paths (branding, quotes) work with any token because they ignore it anyway.</p></div>
+<p class="file">backend/src/main/java/com/tradechameleon/identity/TenantMatchFilter.java</p>
+<pre><code class="language-java">boolean platformToken = Boolean.TRUE.equals(jwt.getToken().getClaimAsBoolean(DevIdentityController.PLATFORM_CLAIM));
+boolean platformPath = request.getRequestURI().startsWith(request.getContextPath() + "/api/platform/");
+if (platformToken != platformPath &amp;&amp; !isPublic(request)) {
+    problems.write(request, response, HttpStatus.FORBIDDEN, "wrong-audience", "Wrong kind of token", ...);
+    return;
+}
+// then: token tenant must equal request tenant (403 tenant-mismatch)</code></pre>
+<p class="file"><span class="pl">Prawdziwe odpowiedzi</span><span class="en">Real responses</span></p>
+<pre><code class="language-json">GET /api/tenant-admin/broker  (maintainer@pulse.test, X-Tenant-Id: kestrel)  →  403
+{"type":"https://tradechameleon.dev/problems/tenant-mismatch","title":"Tenant mismatch","status":403,
+ "detail":"The token was issued for tenant 'pulse' but the request targets 'kestrel'."}
+
+GET /api/portfolio  (admin@tradechameleon.com)  →  403
+{"type":"https://tradechameleon.dev/problems/wrong-audience","title":"Wrong kind of token","status":403,
+ "detail":"A platform console token can only be used on /api/platform/**."}
+
+// payload of the platform token
+{"sub":"00000000-0000-4000-8000-0000000000ad","aud":"tradechameleon-platform","roles":["ADMIN"],
+ "scope":"platform:admin","name":"Platform Admin","email":"admin@tradechameleon.com","platform":true, …}</code></pre>
+<pre class="mermaid">flowchart TB
+  subgraph Broker["pulse.localhost:4200 (Pulse site)"]
+    T[trader / viewer] --> S[Trading screens]
+    MT["maintainer@pulse.test<br/>MAINTAINER"] --> AP["/admin page"]
+  end
+  subgraph Console["admin.localhost:4200 (platform console)"]
+    SA["admin@tradechameleon.com<br/>ADMIN, platform token"] --> PC[All brokers + matrix + editor]
+  end
+  AP -->|"/api/tenant-admin/** (tenant from request)"| B[BrokerAdmin]
+  PC -->|"/api/platform/** (any broker id)"| B
+  B --> D[TenantDirectory.update]
+  D -->|TenantUpdated| L[(tenant_change audit)]</pre>
+<div class="pl"><p><strong>Dwie aplikacje w jednym kliencie.</strong> Konsola platformy to osobna aplikacja wybierana po adresie: w Angularze <code>main.ts</code> robi <code>bootstrapApplication(PlatformApp, platformConfig)</code> dla <code>admin.*</code>, a w pozostałych przypadkach <code>App</code> (oba przez dynamiczny <code>import()</code>, więc strona brokera nie pobiera kodu konsoli i odwrotnie). Konsola ma własne providery: brak routera, brak tenanta i jego motywu, własny <code>PlatformAuth</code> z interceptorem. W React <code>main.tsx</code> renderuje leniwy <code>&lt;PlatformApp /&gt;</code> zamiast <code>TenantProvider</code> i routera, a <code>platformApi</code> to osobna instancja <code>openapi-fetch</code> z własnym middleware (bez <code>X-Tenant-Id</code>). Formularz brokera jest wspólny: komponent <code>BrokerEditor</code> dostaje URL-e (Angular) albo funkcję zapisu i opcje zapytań (React), więc nie wie, któremu poziomowi służy.</p>
+<p>Testy: <code>AdminRolesIntegrationTests</code> (maintainer widzi i zmienia tylko swojego brokera, 403 dla innego brokera i dla konsoli, trader/viewer bez strony admina, osobne logowania i 401 dla starego <code>admin@aurora.test</code>, token platformy odrzucany na endpointach brokera). Razem: backend 103, Angular 36, React 35.</p></div>
+<div class="en"><p><strong>Two applications in one client.</strong> The platform console is a separate app chosen by address: in Angular <code>main.ts</code> calls <code>bootstrapApplication(PlatformApp, platformConfig)</code> for <code>admin.*</code> and <code>App</code> otherwise (both through a dynamic <code>import()</code>, so a broker's site never downloads the console's code and vice versa). The console has its own providers: no router, no tenant and no broker theme, its own <code>PlatformAuth</code> with an interceptor. In React <code>main.tsx</code> renders a lazy <code>&lt;PlatformApp /&gt;</code> instead of <code>TenantProvider</code> and the router, and <code>platformApi</code> is a separate <code>openapi-fetch</code> instance with its own middleware (no <code>X-Tenant-Id</code>). The broker form is shared: the <code>BrokerEditor</code> component receives URLs (Angular) or a save function and query options (React), so it does not know which level it serves.</p>
+<p>Tests: <code>AdminRolesIntegrationTests</code> (a maintainer sees and changes only their own broker, 403 for another broker and for the console, no admin page for traders/viewers, separate sign-ins and 401 for the old <code>admin@aurora.test</code>, platform token rejected on broker endpoints). In total: backend 103, Angular 36, React 35.</p></div>
 </section>
 
 <section class="chapter" id="next-steps">
