@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Pulse logo">
+  <title>Pulse</title>
+  <rect x="3" y="3" width="58" height="58" rx="16" fill="#151521"/>
+<path d="M9 34 H22 L27 20 L34 46 L39 30 H55" fill="none" stroke="#a3e635" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="55" cy="30" r="4" fill="#f472b6"/>
+
+</svg>

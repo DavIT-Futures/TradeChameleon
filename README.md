@@ -11,9 +11,10 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Author](https://img.shields.io/badge/Author-Dawid%20Domaga%C5%82a%20(DavIT--Futures)-orange.svg)](https://github.com/DavIT-Futures)
 
-A multi-tenant, white-label **training** trading platform. Four fictional brokers share one code base;
+A multi-tenant, white-label **training** trading platform. Six fictional brokers share one code base;
 each has its own generated SVG logo, colors, fonts, locale, currency, allowed asset classes, spread
-markup and feature flags. One broker is portfolio-only (no trading).
+markup, feature flags and order limits. One broker is portfolio-only (no trading); others switch off
+whole tools (screener, calendar, risk view…) or cap order sizes, enforced by the API, not just hidden in the UI.
 
 | Layer | Stack |
 |---|---|
@@ -25,7 +26,7 @@ markup and feature flags. One broker is portfolio-only (no trading).
 | React client | React 19, Vite, React Router, TanStack Query, `useSyncExternalStore`, Vitest + Testing Library |
 | Styling | Plain modern CSS shared by both clients, themed with custom properties |
 
-📘 **Technical guide (41 chapters, Polish/English, Mermaid diagrams, real code and real API responses):
+📘 **Technical guide (42 chapters, Polish/English, Mermaid diagrams, real code and real API responses):
 [davit-futures.github.io/TradeChameleon](https://davit-futures.github.io/TradeChameleon/)**. The source is
 [`docs/guide.html`](docs/guide.html); the [Publish guide](.github/workflows/pages.yml) workflow deploys it to GitHub Pages on every push to `main`.
 
@@ -45,6 +46,7 @@ markup and feature flags. One broker is portfolio-only (no trading).
 - **Light/dark override** on top of each broker's theme
 - Portfolio valued live in the broker currency, **account statement** (deposits, withdrawals, trade cash flows)
   and **closed trades with realised P&L**
+- **Admin panel** (`admin@aurora.test`): all brokers side by side, a feature/limit matrix with differences highlighted, live usage
 - Developer panel: latency, jitter, failure rate, volatility and pause for the simulated market
 
 ## Brokers
@@ -52,14 +54,17 @@ markup and feature flags. One broker is portfolio-only (no trading).
 | Id | Name | Locale / currency | Asset classes | Markup | Notes |
 |---|---|---|---|---|---|
 | `aurora` | Aurora Markets | en-GB / GBP | STOCK, ETF, FX, CRYPTO, COMMODITY, INDEX, OPTION | 5 bps | default broker |
-| `kestrel` | Kestrel Trade | de-DE / EUR | STOCK, ETF, CRYPTO, INDEX, OPTION | 12 bps | dark theme |
-| `wisla` | Wisła Invest | pl-PL / PLN | STOCK, ETF, BOND, FX, COMMODITY, INDEX | 20 bps | market orders only |
-| `sakura` | Sakura Wealth | ja-JP / JPY | STOCK, ETF, BOND, INDEX | 0 bps | portfolio only |
+| `kestrel` | Kestrel Trade | de-DE / EUR | STOCK, ETF, CRYPTO, INDEX, OPTION | 12 bps | dark theme, max 20 pending orders |
+| `wisla` | Wisła Invest | pl-PL / PLN | STOCK, ETF, BOND, FX, COMMODITY, INDEX | 20 bps | market orders only, no compare, max 200,000 PLN per order |
+| `sakura` | Sakura Wealth | ja-JP / JPY | STOCK, ETF, BOND, INDEX | 0 bps | portfolio only, no screener or alerts |
+| `alpenrose` | Alpenrose Private Bank | de-CH / CHF | STOCK, ETF, BOND, INDEX | 8 bps | all tools, max 50,000 CHF per order, max 5 pending orders |
+| `pulse` | Pulse | en-US / USD | STOCK, ETF, CRYPTO | 35 bps | dark, market orders only, max 2,000 USD per order, no screener / calendar / compare / risk view |
 
 The broker is resolved from the `*.localhost` subdomain, then `?tenant=`, then the `X-Tenant-Id` header,
 otherwise the default (`aurora`).
 
 Demo users (password `demo` for all): `trader@<tenant>.test` (role TRADER) and `viewer@<tenant>.test` (role VIEWER).
+Platform admin: `admin@aurora.test` (role ADMIN) opens the **Admin** screen comparing all brokers.
 
 ## Getting started
 
@@ -108,7 +113,7 @@ cd react-client;   npm run gen:api
 ## Repository layout
 
 ```
-backend/          Spring Boot 4 modular monolith (tenant, identity, market, simulator, trading, portfolio, shared)
+backend/          Spring Boot 4 modular monolith (tenant, identity, market, simulator, trading, portfolio, watchlist, alerts, insights, admin, shared)
 angular-client/   Angular 21 client
 react-client/     React 19 client
 shared/styles/    CSS design system shared by both clients

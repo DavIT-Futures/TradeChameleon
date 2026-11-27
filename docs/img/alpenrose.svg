@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Alpenrose Private Bank logo">
+  <title>Alpenrose Private Bank</title>
+  <path d="M32 3 L57 11 V30 C57 46 46 56 32 61 C18 56 7 46 7 30 V11 Z" fill="#14532d"/>
+<path d="M12 40 L24 22 L31 31 L38 19 L52 40 Z" fill="#ffffff" opacity=".92"/>
+<path d="M21 27 L24 22 L27 27 Z M35 24 L38 19 L41 24 Z" fill="#14532d" opacity=".35"/>
+<circle cx="32" cy="47" r="5" fill="#b45309"/>
+<circle cx="32" cy="47" r="2" fill="#ffffff"/>
+
+</svg>
