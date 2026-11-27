@@ -76,6 +76,10 @@ class DevIdentityController {
                     "Unknown user or wrong password for broker '" + tenant.id() + "'.");
         }
         var u = user.get();
+        if (!u.enabled()) {
+            throw DomainException.forbidden("account-disabled", "Account disabled",
+                    "This account has been disabled by the broker's administrator.");
+        }
         Instant now = Instant.now();
         var claims = JwtClaimsSet.builder()
                 .issuer(props.issuer())

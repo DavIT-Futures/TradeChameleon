@@ -1,5 +1,6 @@
 package com.tradechameleon.admin;
 
+import com.tradechameleon.identity.UserAccountsChanged;
 import com.tradechameleon.tenant.TenantUpdated;
 import java.sql.Timestamp;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -22,6 +23,13 @@ class TenantAuditLog {
 
     @ApplicationModuleListener
     void on(TenantUpdated event) {
+        jdbc.sql("insert into tenant_change (tenant_id, changed_by, changed_at, changes) values (?, ?, ?, cast(? as text[]))")
+                .params(event.tenantId(), event.changedBy(), Timestamp.from(event.changedAt()), toArray(event.changes()))
+                .update();
+    }
+
+    @ApplicationModuleListener
+    void on(UserAccountsChanged event) {
         jdbc.sql("insert into tenant_change (tenant_id, changed_by, changed_at, changes) values (?, ?, ?, cast(? as text[]))")
                 .params(event.tenantId(), event.changedBy(), Timestamp.from(event.changedAt()), toArray(event.changes()))
                 .update();

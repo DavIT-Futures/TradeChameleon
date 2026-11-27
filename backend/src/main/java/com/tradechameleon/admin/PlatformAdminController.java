@@ -1,6 +1,11 @@
 package com.tradechameleon.admin;
 
 import com.tradechameleon.tenant.TenantSettings;
+import com.tradechameleon.identity.UserManagement;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,9 +32,13 @@ import org.springframework.web.bind.annotation.RestController;
 class PlatformAdminController {
 
     private final BrokerAdmin admin;
+    private final UserManagement users;
+    private final com.tradechameleon.tenant.TenantDirectory tenants;
 
-    PlatformAdminController(BrokerAdmin admin) {
+    PlatformAdminController(BrokerAdmin admin, UserManagement users, com.tradechameleon.tenant.TenantDirectory tenants) {
         this.admin = admin;
+        this.users = users;
+        this.tenants = tenants;
     }
 
     @GetMapping("/tenants")
@@ -56,5 +65,39 @@ class PlatformAdminController {
     @Operation(summary = "Allowed values for the broker editor (currencies, asset classes, logo shapes)")
     BrokerAdmin.SettingsOptions options() {
         return admin.options();
+    }
+    // ---- users of any broker ----------------------------------------------------------------
+
+    @GetMapping("/tenants/{id}/users")
+    @Operation(summary = "Users of a broker")
+    List<UserManagement.ManagedUser> users(@PathVariable String id) {
+        return users.list(tenants.get(id).id());
+    }
+
+    @PostMapping("/tenants/{id}/users")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Create a user at a broker", description = "Roles: TRADER, VIEWER, MAINTAINER. 409 if the e-mail is taken.")
+    UserManagement.ManagedUser createUser(@PathVariable String id, @Valid @RequestBody UserManagement.NewUser user, Authentication auth) {
+        return users.create(tenants.get(id).id(), user, BrokerAdmin.actor(auth));
+    }
+
+    @PutMapping("/tenants/{id}/users/{userId}")
+    @Operation(summary = "Change a user's name, roles, enabled flag or password",
+            description = "422 self-lockout when you would disable yourself or drop your own MAINTAINER role.")
+    UserManagement.ManagedUser updateUser(@PathVariable String id, @PathVariable String userId,
+                                          @Valid @RequestBody UserManagement.UserUpdate update, Authentication auth) {
+        return users.update(tenants.get(id).id(), userId, update, subject(auth), BrokerAdmin.actor(auth));
+    }
+
+    @DeleteMapping("/tenants/{id}/users/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Delete a user", description = "Open orders are cancelled, alerts and watchlist removed; account history is kept.")
+    void deleteUser(@PathVariable String id, @PathVariable String userId, Authentication auth) {
+        users.delete(tenants.get(id).id(), userId, subject(auth), BrokerAdmin.actor(auth));
+    }
+
+    private static String subject(Authentication auth) {
+        return auth instanceof org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken jwt
+                ? jwt.getToken().getSubject() : null;
     }
 }

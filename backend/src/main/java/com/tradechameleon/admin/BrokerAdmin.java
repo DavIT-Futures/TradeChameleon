@@ -88,7 +88,7 @@ class BrokerAdmin {
     }
 
     /** The e-mail of the caller for the audit log (the display name if the token has no e-mail). */
-    private static String actor(Authentication auth) {
+    static String actor(Authentication auth) {
         if (auth instanceof JwtAuthenticationToken jwt && jwt.getToken().getClaimAsString("email") != null) {
             return jwt.getToken().getClaimAsString("email");
         }
