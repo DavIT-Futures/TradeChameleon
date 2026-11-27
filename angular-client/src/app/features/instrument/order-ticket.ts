@@ -79,6 +79,12 @@ const TYPE_LABELS: Record<OrderType, string> = { MARKET: 'Market', LIMIT: 'Limit
             <span class="muted">Estimated {{ side() === 'BUY' ? 'cost' : 'proceeds' }}</span>
             <strong class="num">{{ estimate() | price: 2 }} {{ instrument().currency }}</strong>
           </div>
+          @if (limits(); as l) {
+            <div class="margin-hint">
+              <span>{{ tenant.tenant()?.name }} limits</span>
+              <span>{{ l }}</span>
+            </div>
+          }
           <div class="margin-hint">
             <span>As a CFD (1:{{ instrument().leverage }}) margin would be</span>
             <span class="num">{{ estimate() * instrument().marginRate | price: 2 }} {{ instrument().currency }}</span>
@@ -103,6 +109,16 @@ export class OrderTicket {
   protected readonly auth = inject(AuthService);
   private readonly http = inject(HttpClient);
   private readonly toasts = inject(ToastService);
+
+  /** Broker limits as one line, e.g. "max 2,000 USD per order · no pending orders". */
+  protected readonly limits = computed(() => {
+    const t = this.tenant.tenant();
+    if (!t) return null;
+    const parts: string[] = [];
+    if (t.limits.maxOrderValue != null) parts.push(`max ${t.limits.maxOrderValue.toLocaleString(t.locale)} ${t.currency} per order`);
+    if (t.limits.maxOpenOrders != null && t.features.limitOrders) parts.push(`max ${t.limits.maxOpenOrders} pending orders`);
+    return parts.length ? parts.join(' · ') : null;
+  });
 
   protected readonly types: OrderType[] = ['MARKET', 'LIMIT', 'STOP', 'STOP_LIMIT'];
   protected readonly labels = TYPE_LABELS;

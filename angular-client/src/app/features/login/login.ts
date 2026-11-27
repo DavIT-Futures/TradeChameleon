@@ -80,6 +80,9 @@ import { TenantService } from '../../core/tenant';
           <div class="demo-users">
             <button type="button" class="btn btn--ghost btn--small" (click)="fill('trader')">trader&#64;{{ tenant.id() }}.test</button>
             <button type="button" class="btn btn--ghost btn--small" (click)="fill('viewer')">viewer&#64;{{ tenant.id() }}.test</button>
+            @if (tenant.id() === 'aurora') {
+              <button type="button" class="btn btn--ghost btn--small" (click)="fill('admin')">admin&#64;aurora.test</button>
+            }
           </div>
         </div>
       </div>
@@ -122,7 +125,7 @@ export class Login {
     for (const v of ['--rx', '--ry', '--px', '--py']) stage.style.removeProperty(v);
   }
 
-  protected fill(role: 'trader' | 'viewer'): void {
+  protected fill(role: 'trader' | 'viewer' | 'admin'): void {
     this.form.setValue({ username: `${role}@${this.tenant.id()}.test`, password: 'demo' });
   }
 

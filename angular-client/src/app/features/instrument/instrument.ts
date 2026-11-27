@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import type { Candle, InstrumentView, PricePoint } from '../../api/types';
 import { PercentPipe, PricePipe } from '../../core/format';
 import { PriceStreamService } from '../../core/price-stream';
+import { TenantService } from '../../core/tenant';
 import { WatchlistService } from '../../core/watchlist';
 import { CandleChart } from '../../shared/candle-chart';
 import { IndicatorFlags, OhlcCandle } from '../../shared/candle-geometry';
@@ -80,13 +81,13 @@ const INTERVAL_MS: Record<Interval, number> = { '5s': 5_000, '15s': 15_000, '1m'
               }
             </section>
             <tc-depth-card [symbol]="i.symbol" [decimals]="i.decimals" />
-            <tc-news-card [symbol]="i.symbol" />
+            @if (features()?.news) { <tc-news-card [symbol]="i.symbol" /> }
           </div>
           <div class="stack">
             @if (quote(); as q) {
               <tc-order-ticket [instrument]="i" [quote]="q" />
               <tc-contract-card [instrument]="i" [quote]="q" />
-              <tc-alert-card [instrument]="i" [mid]="q.mid" />
+              @if (features()?.alerts) { <tc-alert-card [instrument]="i" [mid]="q.mid" /> }
             }
           </div>
         </div>
@@ -105,6 +106,7 @@ const INTERVAL_MS: Record<Interval, number> = { '5s': 5_000, '15s': 15_000, '1m'
 export class Instrument {
   private readonly stream = inject(PriceStreamService);
   protected readonly watchlist = inject(WatchlistService);
+  protected readonly features = inject(TenantService).features;
 
   /** Route parameter :symbol, bound by withComponentInputBinding(). */
   readonly symbol = input.required<string>();

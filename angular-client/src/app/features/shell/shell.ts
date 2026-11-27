@@ -36,18 +36,22 @@ import { TenantService } from '../../core/tenant';
           <button class="btn btn--ghost btn--small" (click)="logout()">Sign out</button>
         </div>
       </header>
+      @let f = tenant.features();
       <nav class="shell__nav" aria-label="Main">
         <a routerLink="/dashboard" routerLinkActive="active">▦ Dashboard</a>
         <a routerLink="/markets" routerLinkActive="active">↗ Markets</a>
-        <a routerLink="/screener" routerLinkActive="active">⌕ Screener</a>
-        <a routerLink="/compare" routerLinkActive="active">⇄ Compare</a>
-        <a routerLink="/calendar" routerLinkActive="active">▤ Calendar</a>
-        <a routerLink="/news" routerLinkActive="active">✎ News</a>
+        @if (f?.screener) { <a routerLink="/screener" routerLinkActive="active">⌕ Screener</a> }
+        @if (f?.compare) { <a routerLink="/compare" routerLinkActive="active">⇄ Compare</a> }
+        @if (f?.calendar) { <a routerLink="/calendar" routerLinkActive="active">▤ Calendar</a> }
+        @if (f?.news) { <a routerLink="/news" routerLinkActive="active">✎ News</a> }
         <a routerLink="/portfolio" routerLinkActive="active">◔ Portfolio</a>
         <a routerLink="/account" routerLinkActive="active">≡ Account</a>
-        <a routerLink="/alerts" routerLinkActive="active">🔔 Alerts</a>
-        @if (tenant.features()?.simulatorPanel) {
+        @if (f?.alerts) { <a routerLink="/alerts" routerLinkActive="active">🔔 Alerts</a> }
+        @if (f?.simulatorPanel) {
           <a routerLink="/dev" routerLinkActive="active">⚙ Developer</a>
+        }
+        @if (auth.isAdmin()) {
+          <a routerLink="/admin" routerLinkActive="active">🛠 Admin</a>
         }
       </nav>
       <main class="shell__main">
@@ -67,7 +71,7 @@ export class Shell implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.stream.connect();
     void this.watchlist.load();
-    this.alerts.start();
+    if (this.tenant.features()?.alerts) this.alerts.start();
   }
 
   ngOnDestroy(): void {

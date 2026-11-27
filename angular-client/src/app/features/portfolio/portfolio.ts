@@ -7,6 +7,7 @@ import { AuthService } from '../../core/auth';
 import { MoneyPipe, PercentPipe, PricePipe, QuantityPipe } from '../../core/format';
 import { PriceStreamService } from '../../core/price-stream';
 import { toProblem } from '../../core/problem';
+import { TenantService } from '../../core/tenant';
 import { ToastService } from '../../core/toast';
 import { RiskCard } from './risk-card';
 
@@ -73,7 +74,7 @@ type StatusFilter = Order['status'] | 'ALL';
             </table>
           </div>
         </section>
-        <tc-risk-card />
+        @if (tenant.features()?.riskView) { <tc-risk-card /> }
       } @else if (portfolio.isLoading()) {
         <div class="card"><div class="skeleton" style="block-size: 8rem"></div></div>
       }
@@ -120,6 +121,7 @@ type StatusFilter = Order['status'] | 'ALL';
 })
 export class Portfolio {
   protected readonly auth = inject(AuthService);
+  protected readonly tenant = inject(TenantService);
   private readonly stream = inject(PriceStreamService);
   private readonly http = inject(HttpClient);
   private readonly toasts = inject(ToastService);

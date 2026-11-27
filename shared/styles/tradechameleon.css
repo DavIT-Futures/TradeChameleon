@@ -371,7 +371,7 @@
     .login__stage, .login__card, .login__logo, .login__orb { transform: none !important; }
   }
   .brand-switcher {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;
     & button {
       display: grid; justify-items: center; gap: 0.25rem; padding: 0.5rem 0.25rem;
       background: var(--tc-surface); border: 1px solid var(--tc-border); border-radius: var(--tc-radius-sm);
@@ -516,6 +516,34 @@
     & i { position: absolute; inset-block: -3px; inline-size: 3px; background: var(--tc-text); border-radius: 2px; }
   }
   .warning-list { margin: 0; padding-inline-start: 1.1rem; color: var(--tc-negative); font-size: 0.88rem; }
+
+  /* ---- admin panel ------------------------------------------------------------------------------ */
+
+  .admin-brands { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0.75rem; }
+  /* each card is painted with ITS broker's colours (custom properties set inline per card) */
+  .admin-brand {
+    display: grid; grid-template-columns: auto 1fr auto; gap: 0.25rem 0.75rem; align-items: center;
+    padding: 0.85rem 1rem; border-radius: var(--b-radius); background: var(--b-surface); color: var(--b-text);
+    border: 2px solid var(--b-primary); box-shadow: 0 10px 24px -14px var(--b-primary);
+    & img { inline-size: 40px; block-size: 40px; grid-row: span 2; }
+    & strong { display: block; }
+    & small { opacity: 0.7; font-size: 0.75rem; }
+    & .swatches { display: flex; gap: 3px; grid-column: 2; }
+    & .swatches i { inline-size: 1.1rem; block-size: 0.5rem; border-radius: 2px; border: 1px solid color-mix(in oklab, var(--b-text) 20%, transparent); }
+    & .swatches .p { background: var(--b-primary); } & .swatches .a { background: var(--b-accent); } & .swatches .bg { background: var(--b-bg); }
+    & .score { grid-row: 1 / span 2; grid-column: 3; font-weight: 800; font-size: 1.3rem; color: var(--b-primary); }
+  }
+  table.admin-matrix {
+    & th img { inline-size: 18px; block-size: 18px; display: inline-block; vertical-align: -3px; }
+    & thead th { white-space: nowrap; text-transform: none; font-size: 0.8rem; }
+    & tbody th { font-weight: 500; color: var(--tc-text); text-transform: none; font-size: 0.88rem; letter-spacing: 0; }
+    & td { text-align: center; font-size: 0.88rem; }
+    & tr.group td { text-align: start; font-weight: 700; color: var(--tc-primary); background: var(--tc-surface-2); text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.06em; }
+    & tr.same td, & tr.same th { color: var(--tc-muted); }
+    & tr:not(.same):not(.group) th { font-weight: 700; }
+    & .yes { color: var(--tc-positive); font-weight: 800; }
+    & .no { color: var(--tc-negative); opacity: 0.7; }
+  }
 
   code, pre { font-family: "Cascadia Mono", ui-monospace, monospace; font-size: 0.85rem; }
   pre.token { white-space: pre-wrap; word-break: break-all; background: var(--tc-surface-2); padding: 0.75rem; border-radius: var(--tc-radius-sm); max-block-size: 16rem; overflow: auto; }
