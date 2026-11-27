@@ -31,14 +31,14 @@ class AdminSettingsIntegrationTests {
     @BeforeEach
     void setUp() {
         api = new ApiClient(port);
-        admin = api.login("aurora", "admin");
+        admin = api.platformLogin();
     }
 
     /** The editable part of a broker, as the admin client sends it (BrokerOverview minus usage figures). */
     @SuppressWarnings("unchecked")
     private Map<String, Object> settingsOf(String id) {
         JsonNode broker = null;
-        for (JsonNode b : api.get("/api/admin/tenants", "aurora", admin).body()) {
+        for (JsonNode b : api.get("/api/platform/tenants", "aurora", admin).body()) {
             if (b.get("id").asString().equals(id)) {
                 broker = b;
             }
@@ -60,10 +60,10 @@ class AdminSettingsIntegrationTests {
     @Test
     void onlyAdminsMayChangeBrokers() {
         var settings = settingsOf("wisla");
-        assertThat(api.put("/api/admin/tenants/wisla", "wisla", api.login("wisla", "trader"), settings).status())
+        assertThat(api.put("/api/platform/tenants/wisla", "wisla", api.login("wisla", "trader"), settings).status())
                 .isEqualTo(403);
-        assertThat(api.put("/api/admin/tenants/wisla", "aurora", null, settings).status()).isEqualTo(401);
-        assertThat(api.put("/api/admin/tenants/nope", "aurora", admin, settings).status()).isEqualTo(404);
+        assertThat(api.put("/api/platform/tenants/wisla", "aurora", null, settings).status()).isEqualTo(401);
+        assertThat(api.put("/api/platform/tenants/nope", "aurora", admin, settings).status()).isEqualTo(404);
     }
 
     @Test
@@ -75,7 +75,7 @@ class AdminSettingsIntegrationTests {
         nested(settings, "theme").put("primary", "red; background:url(x)");
         nested(settings, "limits").put("maxOrderValue", 0);
 
-        var r = api.put("/api/admin/tenants/wisla", "aurora", admin, settings);
+        var r = api.put("/api/platform/tenants/wisla", "aurora", admin, settings);
         assertThat(r.status()).isEqualTo(400);
         assertThat(r.body().get("type").asString()).endsWith("/validation");
         assertThat(r.body().get("errors").propertyNames())
@@ -85,7 +85,7 @@ class AdminSettingsIntegrationTests {
 
         var currency = settingsOf("wisla");
         currency.put("currency", "XYZ");
-        var unsupported = api.put("/api/admin/tenants/wisla", "aurora", admin, currency);
+        var unsupported = api.put("/api/platform/tenants/wisla", "aurora", admin, currency);
         assertThat(unsupported.status()).isEqualTo(422);
         assertThat(unsupported.body().get("type").asString()).endsWith("/unsupported-currency");
     }
@@ -104,7 +104,7 @@ class AdminSettingsIntegrationTests {
         nested(changed, "theme").put("primary", "#22d3ee");
         String oldLogo = api.get("/api/tenants/pulse", null, null).body().get("logoUrl").asString();
         try {
-            var r = api.put("/api/admin/tenants/pulse", "aurora", admin, changed);
+            var r = api.put("/api/platform/tenants/pulse", "aurora", admin, changed);
             assertThat(r.status()).isEqualTo(200);
             assertThat(r.body().get("name").asString()).isEqualTo("Pulse Pro");
 
@@ -117,22 +117,22 @@ class AdminSettingsIntegrationTests {
             assertThat(api.get("/api/market/instruments/SAP", "pulse", null).status()).isEqualTo(404);
 
             await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-                var log = api.get("/api/admin/tenants/pulse/changes", "aurora", admin).body();
-                assertThat(log.get(0).get("changedBy").asString()).isEqualTo("admin@aurora.test");
+                var log = api.get("/api/platform/tenants/pulse/changes", "aurora", admin).body();
+                assertThat(log.get(0).get("changedBy").asString()).isEqualTo("admin@tradechameleon.com");
                 assertThat(log.get(0).get("changes").toString())
                         .contains("name: Pulse → Pulse Pro")
                         .contains("features.calendar: false → true")
                         .contains("theme.primary: #a3e635 → #22d3ee");
             });
         } finally {
-            assertThat(api.put("/api/admin/tenants/pulse", "aurora", admin, original).status()).isEqualTo(200);
+            assertThat(api.put("/api/platform/tenants/pulse", "aurora", admin, original).status()).isEqualTo(200);
         }
         assertThat(api.get("/api/market/calendar", "pulse", null).status()).isEqualTo(403);
     }
 
     @Test
     void editorOptionsListSupportedValues() {
-        var options = api.get("/api/admin/settings-options", "aurora", admin).body();
+        var options = api.get("/api/platform/settings-options", "aurora", admin).body();
         assertThat(options.get("currencies").toString()).contains("CHF", "PLN", "USD");
         assertThat(options.get("assetClasses")).hasSize(8);
         assertThat(options.get("logoShapes").toString()).contains("monogram", "pulse");

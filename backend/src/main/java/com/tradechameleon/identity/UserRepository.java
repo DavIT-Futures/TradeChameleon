@@ -20,6 +20,23 @@ class UserRepository {
         this.jdbc = jdbc;
     }
 
+    /** A platform operator (super admin): not a user of any broker, see migration V8. */
+    Optional<UserRow> findPlatformUser(String email) {
+        return jdbc.sql("""
+                        select id, email, display_name, password_hash, roles
+                        from platform_user where lower(email) = lower(:email)
+                        """)
+                .param("email", email)
+                .query((rs, n) -> new UserRow(
+                        rs.getObject("id", UUID.class),
+                        null,
+                        rs.getString("email"),
+                        rs.getString("display_name"),
+                        rs.getString("password_hash"),
+                        Arrays.asList((String[]) rs.getArray("roles").getArray())))
+                .optional();
+    }
+
     Optional<UserRow> findByTenantAndEmail(String tenantId, String email) {
         return jdbc.sql("""
                         select id, tenant_id, email, display_name, password_hash, roles

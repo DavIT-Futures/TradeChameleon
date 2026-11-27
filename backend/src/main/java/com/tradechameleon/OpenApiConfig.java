@@ -58,7 +58,7 @@ class OpenApiConfig {
             "Order.rejectReason",
             "PlaceOrderRequest.limitPrice", "PlaceOrderRequest.stopPrice", "PlaceOrderRequest.stopLoss",
             "PlaceOrderRequest.takeProfit",
-            "PositionView.stopLoss", "PositionView.takeProfit",
+            "PositionView.stopLoss", "PositionView.takeProfit", "UserProfile.tenant",
             "ProtectionRequest.stopLoss", "ProtectionRequest.takeProfit",
             "CashTransaction.reference",
             "PriceAlert.note", "PriceAlert.triggeredAt", "PriceAlert.triggeredPrice",

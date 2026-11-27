@@ -36,6 +36,9 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Auth", description = "Built-in development identity provider (RS256 JWT)")
 class DevIdentityController {
 
+    /** Claim that marks a platform console token (super admin); such tokens have no tenant. */
+    static final String PLATFORM_CLAIM = "platform";
+
     /** A valid BCrypt hash used to keep response time constant when the user does not exist. */
     private static final String DUMMY_HASH = "{bcrypt}$2a$10$B5UiSXMlkg34inOSZx8v2eWvBq1B6P/U7selgJZIf4/DDV13OmnXm";
 
@@ -89,6 +92,37 @@ class DevIdentityController {
         var header = JwsHeader.with(SignatureAlgorithm.RS256).keyId(key.rsaKey().getKeyID()).type("JWT").build();
         String token = encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
         var profile = new UserProfile(u.id().toString(), u.displayName(), u.email(), u.roles(), tenant.id());
+        return new TokenResponse(token, "Bearer", props.tokenTtl().toSeconds(), profile);
+    }
+
+    @PostMapping("/api/platform/auth/token")
+    @Operation(summary = "Sign in to the platform console (super admin)",
+            description = "User: admin@tradechameleon.com, password 'demo'. The token carries no tenant claim but "
+                    + "platform=true, and is accepted only by /api/platform/**.")
+    TokenResponse platformToken(@Valid @RequestBody LoginRequest request) {
+        var user = users.findPlatformUser(request.username());
+        boolean ok = passwords.matches(request.password(), user.map(UserRepository.UserRow::passwordHash).orElse(DUMMY_HASH));
+        if (user.isEmpty() || !ok) {
+            throw new DomainException(HttpStatus.UNAUTHORIZED, "invalid-credentials", "Invalid credentials",
+                    "Unknown platform user or wrong password.");
+        }
+        var u = user.get();
+        Instant now = Instant.now();
+        var claims = JwtClaimsSet.builder()
+                .issuer(props.issuer())
+                .subject(u.id().toString())
+                .audience(List.of("tradechameleon-platform"))
+                .issuedAt(now)
+                .expiresAt(now.plus(props.tokenTtl()))
+                .claim("name", u.displayName())
+                .claim("email", u.email())
+                .claim(PLATFORM_CLAIM, true)
+                .claim(props.rolesClaim(), u.roles())
+                .claim("scope", "platform:admin")
+                .build();
+        var header = JwsHeader.with(SignatureAlgorithm.RS256).keyId(key.rsaKey().getKeyID()).type("JWT").build();
+        String token = encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
+        var profile = new UserProfile(u.id().toString(), u.displayName(), u.email(), u.roles(), null);
         return new TokenResponse(token, "Bearer", props.tokenTtl().toSeconds(), profile);
     }
 

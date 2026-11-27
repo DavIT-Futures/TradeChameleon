@@ -98,10 +98,10 @@ class BrokerProfilesIntegrationTests {
 
     @Test
     void adminPanelComparesAllBrokers() {
-        assertThat(api.get("/api/admin/tenants", "aurora", api.login("aurora", "trader")).status()).isEqualTo(403);
-        assertThat(api.get("/api/admin/tenants", "aurora", null).status()).isEqualTo(401);
+        assertThat(api.get("/api/platform/tenants", "aurora", api.login("aurora", "trader")).status()).isEqualTo(403);
+        assertThat(api.get("/api/platform/tenants", "aurora", null).status()).isEqualTo(401);
 
-        var brokers = api.get("/api/admin/tenants", "aurora", api.login("aurora", "admin")).body();
+        var brokers = api.get("/api/platform/tenants", "aurora", api.platformLogin()).body();
         assertThat(brokers.size()).isEqualTo(6);
         JsonNode pulse = null;
         for (JsonNode b : brokers) {
@@ -111,7 +111,8 @@ class BrokerProfilesIntegrationTests {
         assertThat(pulse).isNotNull();
         assertThat(pulse.get("features").get("screener").asBoolean()).isFalse();
         assertThat(pulse.get("limits").get("maxOrderValue").decimalValue()).isEqualByComparingTo("2000");
-        assertThat(pulse.get("users").asInt()).isEqualTo(2);
+        assertThat(pulse.get("users").asInt()).isEqualTo(3);
+        assertThat(pulse.get("maintainers").asInt()).isEqualTo(1);
         assertThat(pulse.get("optionChains").asInt()).isZero();
     }
 }

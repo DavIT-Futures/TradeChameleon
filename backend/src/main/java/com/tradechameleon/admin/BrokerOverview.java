@@ -31,6 +31,7 @@ public record BrokerOverview(
         int users,
         int traders,
         int viewers,
+        int maintainers,
         int openOrders,
         int filledOrders,
         BigDecimal totalCash) {

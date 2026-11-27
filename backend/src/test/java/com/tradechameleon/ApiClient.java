@@ -54,6 +54,16 @@ final class ApiClient {
         return r.body().get("accessToken").asString();
     }
 
+    /** Platform console (super admin) token: no tenant, accepted only by /api/platform/**. */
+    String platformLogin() {
+        var r = post("/api/platform/auth/token", null, null,
+                java.util.Map.of("username", "admin@tradechameleon.com", "password", "demo"));
+        if (r.status() != 200) {
+            throw new IllegalStateException("Platform login failed: " + r.raw());
+        }
+        return r.body().get("accessToken").asString();
+    }
+
     HttpClient http() {
         return http;
     }

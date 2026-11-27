@@ -26,10 +26,34 @@ class TenantMatchFilter extends OncePerRequestFilter {
         this.problems = problems;
     }
 
+    private static boolean isPublic(HttpServletRequest request) {
+        String path = request.getRequestURI().substring(request.getContextPath().length());
+        var matcher = new org.springframework.util.AntPathMatcher();
+        for (String pattern : SecurityConfig.PUBLIC) {
+            if (matcher.match(pattern, path)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth instanceof JwtAuthenticationToken jwt) {
+            // Platform console tokens (super admin) belong to /api/platform/** and nowhere else:
+            // they have no tenant, so on a broker's endpoints they would act on the default broker.
+            boolean platformToken = Boolean.TRUE.equals(jwt.getToken().getClaimAsBoolean(DevIdentityController.PLATFORM_CLAIM));
+            boolean platformPath = request.getRequestURI().startsWith(request.getContextPath() + "/api/platform/");
+            if (platformToken != platformPath && !isPublic(request)) {
+                problems.write(request, response, HttpStatus.FORBIDDEN, "wrong-audience", "Wrong kind of token",
+                        platformToken
+                                ? "A platform console token can only be used on /api/platform/**."
+                                : "The platform console needs a platform token (POST /api/platform/auth/token).");
+                return;
+            }
+        }
         if (auth instanceof JwtAuthenticationToken jwt && TenantContext.isBound()) {
             String tokenTenant = jwt.getToken().getClaimAsString(props.tenantClaim());
             String requestTenant = TenantContext.current().id();
