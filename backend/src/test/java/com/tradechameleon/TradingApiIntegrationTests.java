@@ -110,6 +110,13 @@ class TradingApiIntegrationTests {
         }
 
         @Test
+        void staleTokensAreIgnoredOnPublicEndpointsButRejectedOnProtectedOnes() {
+            assertThat(api.get("/api/tenants/current", "aurora", "stale.token.value").status()).isEqualTo(200);
+            assertThat(api.get("/api/market/instruments", "aurora", "stale.token.value").status()).isEqualTo(200);
+            assertThat(api.get("/api/portfolio", "aurora", "stale.token.value").status()).isEqualTo(401);
+        }
+
+        @Test
         void wrongPasswordIs401Problem() {
             var r = api.post("/api/auth/token", "aurora", null, Map.of("username", "trader@aurora.test", "password", "nope"));
             assertThat(r.status()).isEqualTo(401);

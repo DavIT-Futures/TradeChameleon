@@ -26,7 +26,10 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -72,6 +75,7 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/portfolio/**").hasRole("TRADER")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(rs -> rs
+                        .bearerTokenResolver(publicEndpointsIgnoreTokens())
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter(props)))
                         .authenticationEntryPoint(problems)
                         .accessDeniedHandler(problems))
@@ -80,6 +84,25 @@ class SecurityConfig {
                         .accessDeniedHandler(problems))
                 .addFilterAfter(new TenantMatchFilter(props, problems), BearerTokenAuthenticationFilter.class);
         return http.build();
+    }
+
+    /**
+     * Public endpoints never look at the Authorization header. Otherwise a stale token (e.g. after a
+     * backend restart rotated the dev signing key) would turn even GET /api/tenants/current into a 401,
+     * and the client could not load its branding to show the login page.
+     */
+    static BearerTokenResolver publicEndpointsIgnoreTokens() {
+        var delegate = new DefaultBearerTokenResolver();
+        var matcher = new AntPathMatcher();
+        return request -> {
+            String path = request.getRequestURI().substring(request.getContextPath().length());
+            for (String pattern : PUBLIC) {
+                if (matcher.match(pattern, path)) {
+                    return null;
+                }
+            }
+            return delegate.resolve(request);
+        };
     }
 
     /** Maps the {@code roles} claim (e.g. ["TRADER"]) to Spring authorities (ROLE_TRADER). */
