@@ -24,4 +24,11 @@ class FxRatesTest {
         assertThatThrownBy(() -> FxRates.convert(BigDecimal.ONE, "XXX", "USD"))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void supportedCurrenciesAreSortedAndRejectUnknownTarget() {
+        assertThat(FxRates.supported()).containsExactly("CHF", "EUR", "GBP", "JPY", "PLN", "USD");
+        assertThatThrownBy(() -> FxRates.convert(BigDecimal.ONE, "USD", "XXX"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }
